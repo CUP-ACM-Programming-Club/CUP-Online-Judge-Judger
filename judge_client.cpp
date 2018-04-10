@@ -170,8 +170,10 @@ long get_file_size(const char *filename) {
     return (long) f_stat.st_size;
 }
 
-void write_log(const char *fmt, ...) {
+void write_log(const char *_fmt, ...) {
     va_list ap;
+    char fmt[4096];
+    strncpy(fmt,_fmt,4096);
     char buffer[4096];
     //      time_t          t = time(NULL);
     //int l;
@@ -181,7 +183,7 @@ void write_log(const char *fmt, ...) {
         fprintf(stderr, "openfile error!\n");
         system("pwd");
     }
-    va_start(ap, fmt);
+    va_start(ap, _fmt);
     //l =
     vsprintf(buffer, fmt, ap);
     fprintf(fp, "%s\n", buffer);
@@ -1892,7 +1894,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
             write_log(contents.c_str());
             print_runtimeerror(contents.c_str());
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
-            print_runtimeerror(contents.c_str());
+            //print_runtimeerror(contents.c_str());
             break;
         }
         if ((lang < RUBY || lang == CSHARP) && get_file_size("error.out") && !oi_mode) {
@@ -1901,6 +1903,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
             break;
         }
+
 
         if (!isspj
             && get_file_size(userfile)
