@@ -173,7 +173,7 @@ long get_file_size(const char *filename) {
 void write_log(const char *_fmt, ...) {
     va_list ap;
     char fmt[4096];
-    strncpy(fmt,_fmt,4096);
+    strncpy(fmt, _fmt, 4096);
     char buffer[4096];
     //      time_t          t = time(NULL);
     //int l;
@@ -208,10 +208,10 @@ int execute_cmd(const char *fmt, ...) {
 }
 
 string ws_send(const int &solution_id, const int &state, const int &finished, const double &time,
-               const int &memory, const int &pass_point,const double &pass_rate, const string &test_run_result = "",
+               const int &memory, const int &pass_point, const double &pass_rate, const string &test_run_result = "",
                const string &compile_info = "") {
     json send_msg;
-    int len = (int)test_run_result.length();
+    int len = (int) test_run_result.length();
     string ntest_run_result;
     for (int i = 0; i < len; ++i) {
         if (test_run_result[i] >= 128)
@@ -1886,14 +1886,14 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
                 while (getline(err, tmp))
                     cerr << tmp << endl;
             }
-            ACflg = OJ_RE;
-            fstream file("error.out");
+            //ACflg = OJ_RE;
+            fstream file("error.out",ios::ate);
             stringstream buffer;
             buffer << file.rdbuf();
             string contents(buffer.str());
             write_log(contents.c_str());
             print_runtimeerror(contents.c_str());
-            ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            //ptrace(PTRACE_KILL, pidApp, NULL, NULL);
             //print_runtimeerror(contents.c_str());
             break;
         }
@@ -1998,10 +1998,10 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
             char error[BUFFER_SIZE];
             sprintf(error,
                     "[ERROR] A Not allowed system call: runid:%d CALLID:%ld\n"
-                            " TO FIX THIS , ask admin to add the CALLID into corresponding LANG_XXV[] located at okcalls32/64.h ,\n"
-                            "and recompile judge_client. \n"
-                            "if you are admin and you don't know what to do ,\n"
-                            " tech support can be found on http://hustoj.taobao.com\n",
+                    " TO FIX THIS , ask admin to add the CALLID into corresponding LANG_XXV[] located at okcalls32/64.h ,\n"
+                    "and recompile judge_client. \n"
+                    "if you are admin and you don't know what to do ,\n"
+                    " tech support can be found on http://hustoj.taobao.com\n",
                     solution_id, (long) reg.REG_SYSCALL);
 
             write_log(error);
@@ -2218,7 +2218,7 @@ int main(int argc, char **argv) {
             _compile_info += tmp + "\n";
         }
         if (webSocket.isconnected()) {
-            webSocket << ws_send(solution_id, OJ_CE, 1, 0, 0, 0, 0,"", _compile_info);
+            webSocket << ws_send(solution_id, OJ_CE, 1, 0, 0, 0, 0, "", _compile_info);
         }
         update_solution(solution_id, OJ_CE, 0, 0, 0, 0, 0.0);
         update_user(user_id);
@@ -2345,7 +2345,7 @@ int main(int argc, char **argv) {
             if (test_run_out.length() > 4096)
                 test_run_out = test_run_out.substr(0, 4096);
             cout << "come here5" << endl;
-            webSocket << ws_send(solution_id, OJ_TR, 1, usedtime, topmemory >> 10, 0,0, test_run_out);
+            webSocket << ws_send(solution_id, OJ_TR, 1, usedtime, topmemory >> 10, 0, 0, test_run_out);
         }
         cout << "come here3" << endl;
         update_solution(solution_id, OJ_TR, usedtime, topmemory >> 10, 0, 0, 0);
@@ -2411,7 +2411,7 @@ int main(int argc, char **argv) {
         }
 
         if (webSocket.isconnected()) {
-            webSocket << ws_send(solution_id, 3, 0, 0, 0, pass_point,pass_rate/num_of_test);
+            webSocket << ws_send(solution_id, 3, 0, 0, 0, pass_point, pass_rate / num_of_test);
         }
     }
     if (ACflg == OJ_AC && PEflg == OJ_PE)
@@ -2437,7 +2437,8 @@ int main(int argc, char **argv) {
     }
 
     if (webSocket.isconnected()) {
-        webSocket << ws_send(solution_id, oi_mode ? finalACflg : ACflg, 1, usedtime, topmemory >> 10, pass_point,pass_rate/num_of_test);
+        webSocket << ws_send(solution_id, oi_mode ? finalACflg : ACflg, 1, usedtime, topmemory >> 10, pass_point,
+                             pass_rate / num_of_test);
     }
     if (oi_mode) {
         if (num_of_test > 0)
