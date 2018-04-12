@@ -1887,15 +1887,18 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
                     cerr << tmp << endl;
             }
             //ACflg = OJ_RE;
-            fstream file("error.out",ios::ate);
+            fstream file("error.out", ios::ate);
             stringstream buffer;
             buffer << file.rdbuf();
             string contents(buffer.str());
-            write_log(contents.c_str());
-            print_runtimeerror(contents.c_str());
-            //ptrace(PTRACE_KILL, pidApp, NULL, NULL);
-            //print_runtimeerror(contents.c_str());
-            break;
+            if (contents.find("Killed") != contents.npos) {
+                write_log(contents.c_str());
+                print_runtimeerror(contents.c_str());
+                //ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+                //print_runtimeerror(contents.c_str());
+                if (!oi_mode)
+                    break;
+            }
         }
         if ((lang < RUBY || lang == CSHARP) && get_file_size("error.out") && !oi_mode) {
             ACflg = OJ_RE;
@@ -2373,6 +2376,10 @@ int main(int argc, char **argv) {
             run_solution(lang, work_dir, time_lmt, usedtime, mem_lmt);
         } else {
             ++num_of_test;
+            if(DEBUG)
+            {
+                cout<<"Run test point:"<<num_of_test<<endl;
+            }
             watch_solution(pidApp, infile, ACflg, isspj, userfile, outfile,
                            solution_id, lang, topmemory, mem_lmt, usedtime, time_lmt,
                            p_id, PEflg, work_dir);
