@@ -214,7 +214,7 @@ string ws_send(const int &solution_id, const int &state, const int &finished, co
     int len = (int) test_run_result.length();
     string ntest_run_result;
     for (int i = 0; i < len; ++i) {
-        if (test_run_result[i] >= 128)
+        if (test_run_result[i] >= 128 || test_run_result[i] < 0)
             ntest_run_result += '?';
         else
             ntest_run_result += test_run_result[i];
@@ -651,7 +651,7 @@ void _update_solution_mysql(int solution_id, int result, double time, int memory
     }
     //      printf("sql= %s\n",sql);
     if (mysql_real_query(conn, sql, strlen(sql))) {
-        //              printf("..update failed! %s\n",mysql_error(conn));
+        printf("..update failed! %s\n", mysql_error(conn));
     }
     if (sim) {
         sprintf(sql,
@@ -1110,8 +1110,10 @@ void get_solution(int solution_id, char *work_dir, int lang, char *usercode) {
     sprintf(usercode, "%s", row[0]);
     // create the src file
     sprintf(src_pth, "Main.%s", lang_ext[lang]);
-    if (DEBUG)
+    if (DEBUG) {
         printf("Main=%s", src_pth);
+        cout << usercode << endl;
+    }
     FILE *fp_src = fopen(src_pth, "we");
     fprintf(fp_src, "%s", row[0]);
     mysql_free_result(res);
@@ -1744,6 +1746,9 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         if (~access((dir + "spj").c_str(), 0)) {
             ret = execute_cmd((dir + "spj %s %s %s %s").c_str(),
                               infile, outfile, userfile, outfiled.c_str());
+            //cout<<(dir + "spj %s %s %s %s")<<ret<<endl;    
+            //cout<<infile<<" "<<outfile<<" "<<userfile<<" "<<outfiled<<endl;
+            //cout<<"Hrere"<<endl;
         } else if (~access((dir + "spj.js").c_str(), 0)) {
             ret = execute_cmd(("node " + dir + "spj.js %s %s %s %s").c_str(),
                               infile, outfile, userfile, outfiled.c_str());
@@ -1756,13 +1761,19 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         if (get_file_size("spjresult.out")) {
             spjout >> ret;
         }
+        cout << "Debug return code:" << ret << endl;
         if (DEBUG)
             printf("spj1=%d\n", ret);
+        ret = WEXITSTATUS(ret);
+        if (ret < 4) {
+            ret = 6;
+        }
         exit(ret);
     } else {
         int status;
 
         waitpid(pid, &status, 0);
+        cout << "status:" << status << endl;
         ret = WEXITSTATUS(status);
         if (DEBUG)
             printf("spj2=%d\n", ret);
@@ -1787,9 +1798,16 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
     if (ACflg == OJ_AC) {
         if (isspj) {
             comp_res = special_judge(oj_home, p_id, infile, outfile, userfile, usercode);
-
-            if (comp_res == 0)
-                comp_res = OJ_AC;
+            if (comp_res < 4) {
+                if (comp_res == 0)
+                    comp_res = OJ_AC;
+                else {
+                    if (DEBUG) {
+                        cout << "Fail test " << infile << endl;
+                    }
+                    comp_res = OJ_WA;
+                }
+            }
             /*
         else {
             if (DEBUG)
@@ -2343,14 +2361,10 @@ int main(int argc, char **argv) {
                     break;
             }
             fclose(fp);
-
-            cout << "come here4" << endl;
             if (test_run_out.length() > 4096)
                 test_run_out = test_run_out.substr(0, 4096);
-            cout << "come here5" << endl;
             webSocket << ws_send(solution_id, OJ_TR, 1, usedtime, topmemory >> 10, 0, 0, test_run_out);
         }
-        cout << "come here3" << endl;
         update_solution(solution_id, OJ_TR, usedtime, topmemory >> 10, 0, 0, 0);
         clean_workdir(work_dir);
         exit(0);
@@ -2376,9 +2390,8 @@ int main(int argc, char **argv) {
             run_solution(lang, work_dir, time_lmt, usedtime, mem_lmt);
         } else {
             ++num_of_test;
-            if(DEBUG)
-            {
-                cout<<"Run test point:"<<num_of_test<<endl;
+            if (DEBUG) {
+                cout << "Run test point:" << num_of_test << endl;
             }
             watch_solution(pidApp, infile, ACflg, isspj, userfile, outfile,
                            solution_id, lang, topmemory, mem_lmt, usedtime, time_lmt,
