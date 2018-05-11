@@ -173,7 +173,7 @@ long get_file_size(const char *filename) {
 void write_log(const char *_fmt, ...) {
     va_list ap;
     char fmt[4096];
-    strncpy(fmt,_fmt,4096);
+    strncpy(fmt, _fmt, 4096);
     char buffer[4096];
     //      time_t          t = time(NULL);
     //int l;
@@ -208,13 +208,13 @@ int execute_cmd(const char *fmt, ...) {
 }
 
 string ws_send(const int &solution_id, const int &state, const int &finished, const double &time,
-               const int &memory, const int &pass_point,const double &pass_rate, const string &test_run_result = "",
+               const int &memory, const int &pass_point, const double &pass_rate, const string &test_run_result = "",
                const string &compile_info = "") {
     json send_msg;
-    int len = (int)test_run_result.length();
+    int len = (int) test_run_result.length();
     string ntest_run_result;
     for (int i = 0; i < len; ++i) {
-        if (test_run_result[i] >= 128)
+        if (test_run_result[i] >= 128 || test_run_result[i] < 0)
             ntest_run_result += '?';
         else
             ntest_run_result += test_run_result[i];
@@ -651,7 +651,7 @@ void _update_solution_mysql(int solution_id, int result, double time, int memory
     }
     //      printf("sql= %s\n",sql);
     if (mysql_real_query(conn, sql, strlen(sql))) {
-        //              printf("..update failed! %s\n",mysql_error(conn));
+        printf("..update failed! %s\n", mysql_error(conn));
     }
     if (sim) {
         sprintf(sql,
@@ -1110,8 +1110,10 @@ void get_solution(int solution_id, char *work_dir, int lang, char *usercode) {
     sprintf(usercode, "%s", row[0]);
     // create the src file
     sprintf(src_pth, "Main.%s", lang_ext[lang]);
-    if (DEBUG)
+    if (DEBUG) {
         printf("Main=%s", src_pth);
+        cout << usercode << endl;
+    }
     FILE *fp_src = fopen(src_pth, "we");
     fprintf(fp_src, "%s", row[0]);
     mysql_free_result(res);
@@ -1744,6 +1746,9 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         if (~access((dir + "spj").c_str(), 0)) {
             ret = execute_cmd((dir + "spj %s %s %s %s").c_str(),
                               infile, outfile, userfile, outfiled.c_str());
+            //cout<<(dir + "spj %s %s %s %s")<<ret<<endl;    
+            //cout<<infile<<" "<<outfile<<" "<<userfile<<" "<<outfiled<<endl;
+            //cout<<"Hrere"<<endl;
         } else if (~access((dir + "spj.js").c_str(), 0)) {
             ret = execute_cmd(("node " + dir + "spj.js %s %s %s %s").c_str(),
                               infile, outfile, userfile, outfiled.c_str());
@@ -1756,13 +1761,19 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         if (get_file_size("spjresult.out")) {
             spjout >> ret;
         }
+        cout << "Debug return code:" << ret << endl;
         if (DEBUG)
             printf("spj1=%d\n", ret);
+        ret = WEXITSTATUS(ret);
+        if (ret < 4) {
+            ret = 6;
+        }
         exit(ret);
     } else {
         int status;
 
         waitpid(pid, &status, 0);
+        cout << "status:" << status << endl;
         ret = WEXITSTATUS(status);
         if (DEBUG)
             printf("spj2=%d\n", ret);
@@ -1787,9 +1798,16 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
     if (ACflg == OJ_AC) {
         if (isspj) {
             comp_res = special_judge(oj_home, p_id, infile, outfile, userfile, usercode);
-
-            if (comp_res == 0)
-                comp_res = OJ_AC;
+            if (comp_res < 4) {
+                if (comp_res == 0)
+                    comp_res = OJ_AC;
+                else {
+                    if (DEBUG) {
+                        cout << "Fail test " << infile << endl;
+                    }
+                    comp_res = OJ_WA;
+                }
+            }
             /*
         else {
             if (DEBUG)
@@ -1886,16 +1904,19 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
                 while (getline(err, tmp))
                     cerr << tmp << endl;
             }
-            ACflg = OJ_RE;
-            fstream file("error.out");
+            //ACflg = OJ_RE;
+            fstream file("error.out", ios::ate);
             stringstream buffer;
             buffer << file.rdbuf();
             string contents(buffer.str());
-            write_log(contents.c_str());
-            print_runtimeerror(contents.c_str());
-            ptrace(PTRACE_KILL, pidApp, NULL, NULL);
-            //print_runtimeerror(contents.c_str());
-            break;
+            if (contents.find("Killed") != contents.npos) {
+                write_log(contents.c_str());
+                print_runtimeerror(contents.c_str());
+                //ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+                //print_runtimeerror(contents.c_str());
+                if (!oi_mode)
+                    break;
+            }
         }
         if ((lang < RUBY || lang == CSHARP) && get_file_size("error.out") && !oi_mode) {
             ACflg = OJ_RE;
@@ -1998,10 +2019,10 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
             char error[BUFFER_SIZE];
             sprintf(error,
                     "[ERROR] A Not allowed system call: runid:%d CALLID:%ld\n"
-                            " TO FIX THIS , ask admin to add the CALLID into corresponding LANG_XXV[] located at okcalls32/64.h ,\n"
-                            "and recompile judge_client. \n"
-                            "if you are admin and you don't know what to do ,\n"
-                            " tech support can be found on http://hustoj.taobao.com\n",
+                    " TO FIX THIS , ask admin to add the CALLID into corresponding LANG_XXV[] located at okcalls32/64.h ,\n"
+                    "and recompile judge_client. \n"
+                    "if you are admin and you don't know what to do ,\n"
+                    " tech support can be found on http://hustoj.taobao.com\n",
                     solution_id, (long) reg.REG_SYSCALL);
 
             write_log(error);
@@ -2218,7 +2239,7 @@ int main(int argc, char **argv) {
             _compile_info += tmp + "\n";
         }
         if (webSocket.isconnected()) {
-            webSocket << ws_send(solution_id, OJ_CE, 1, 0, 0, 0, 0,"", _compile_info);
+            webSocket << ws_send(solution_id, OJ_CE, 1, 0, 0, 0, 0, "", _compile_info);
         }
         update_solution(solution_id, OJ_CE, 0, 0, 0, 0, 0.0);
         update_user(user_id);
@@ -2340,14 +2361,10 @@ int main(int argc, char **argv) {
                     break;
             }
             fclose(fp);
-
-            cout << "come here4" << endl;
             if (test_run_out.length() > 4096)
                 test_run_out = test_run_out.substr(0, 4096);
-            cout << "come here5" << endl;
-            webSocket << ws_send(solution_id, OJ_TR, 1, usedtime, topmemory >> 10, 0,0, test_run_out);
+            webSocket << ws_send(solution_id, OJ_TR, 1, usedtime, topmemory >> 10, 0, 0, test_run_out);
         }
-        cout << "come here3" << endl;
         update_solution(solution_id, OJ_TR, usedtime, topmemory >> 10, 0, 0, 0);
         clean_workdir(work_dir);
         exit(0);
@@ -2373,6 +2390,9 @@ int main(int argc, char **argv) {
             run_solution(lang, work_dir, time_lmt, usedtime, mem_lmt);
         } else {
             ++num_of_test;
+            if (DEBUG) {
+                cout << "Run test point:" << num_of_test << endl;
+            }
             watch_solution(pidApp, infile, ACflg, isspj, userfile, outfile,
                            solution_id, lang, topmemory, mem_lmt, usedtime, time_lmt,
                            p_id, PEflg, work_dir);
@@ -2411,7 +2431,7 @@ int main(int argc, char **argv) {
         }
 
         if (webSocket.isconnected()) {
-            webSocket << ws_send(solution_id, 3, 0, 0, 0, pass_point,pass_rate/num_of_test);
+            webSocket << ws_send(solution_id, 3, 0, 0, 0, pass_point, pass_rate / num_of_test);
         }
     }
     if (ACflg == OJ_AC && PEflg == OJ_PE)
@@ -2437,7 +2457,8 @@ int main(int argc, char **argv) {
     }
 
     if (webSocket.isconnected()) {
-        webSocket << ws_send(solution_id, oi_mode ? finalACflg : ACflg, 1, usedtime, topmemory >> 10, pass_point,pass_rate/num_of_test);
+        webSocket << ws_send(solution_id, oi_mode ? finalACflg : ACflg, 1, usedtime, topmemory >> 10, pass_point,
+                             pass_rate / num_of_test);
     }
     if (oi_mode) {
         if (num_of_test > 0)
