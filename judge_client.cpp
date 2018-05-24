@@ -1510,7 +1510,7 @@ void copy_js_runtime(char *work_dir) {
     execute_cmd("/bin/cp /lib/x86_64-linux-gnu/libgcc_s.so.1  %s/lib/x86_64-linux-gnu/", work_dir);
     execute_cmd("/bin/cp /lib64/ld-linux-x86-64.so.2  %s/lib/x86_64-linux-gnu/", work_dir);
 
-    execute_cmd("/bin/cp /usr/bin/nodejs %s/", work_dir);
+    execute_cmd("/bin/cp /usr/bin/node %s/", work_dir);
 
 }
 
@@ -1638,7 +1638,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
             execl("/lua", "/lua", "Main", (char *) nullptr);
             break;
         case JAVASCRIPT: //SpiderMonkey
-            execl("/nodejs", "/nodejs", "Main.js", (char *) nullptr);
+            execl("/node", "/node", "Main.js", (char *) nullptr);
             break;
         case PYTHON3://python 3
             //system("./python3 Main.py<data.in>>user.out");
@@ -1764,8 +1764,9 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         cout << "Debug return code:" << ret << endl;
         if (DEBUG)
             printf("spj1=%d\n", ret);
-        ret = WEXITSTATUS(ret);
-        if (ret < 4) {
+        if (ret)
+            ret = WEXITSTATUS(ret);
+        if (ret && ret < 4) {
             ret = 6;
         }
         exit(ret);
@@ -1796,6 +1797,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
         ACflg = OJ_ML; //issues79
     // compare
     if (ACflg == OJ_AC) {
+        cout<<"isspj:"<<isspj<<endl;
         if (isspj) {
             comp_res = special_judge(oj_home, p_id, infile, outfile, userfile, usercode);
             if (comp_res < 4) {
@@ -2408,6 +2410,10 @@ int main(int argc, char **argv) {
             //clean_session(pidApp);
         }
 
+        if (usedtime > time_lmt * 1000) {
+            ACflg = OJ_TL;
+        }
+
         if (ACflg == OJ_AC) {
             ++pass_point;
             //MYSQL_RES* res;
@@ -2452,6 +2458,8 @@ int main(int argc, char **argv) {
     if (use_max_time) {
         usedtime = max_case_time;
     }
+
+
     if (ACflg == OJ_TL) {
         usedtime = time_lmt * 1000;
     }
