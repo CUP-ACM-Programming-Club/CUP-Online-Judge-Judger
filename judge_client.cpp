@@ -844,15 +844,15 @@ int compile(int lang, char *work_dir) {
     if (webSocket.isconnected()) {
         webSocket << ws_send(solution_id, 2, 0, 0, 0, 0, 0);
     }
-    const char *CP_C[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main", "-fno-asm", "-Wall", "-O2",
+    const char *CP_C[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main","-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
                           "-lm", "--static", "-std=c11", "-DONLINE_JUDGE", nullptr};
-    const char *CP_CC[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main", "-fno-asm", "-Wall", "-O2",
+    const char *CP_CC[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main","-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
                            "-lm", "--static", "-std=c99", "-DONLINE_JUDGE", nullptr};
-    const char *CP_X[] = {"/usr/local/bin/g++", "-fno-asm", "-Wall", "-O2",
+    const char *CP_X[] = {"/usr/local/bin/g++","-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
                           "-lm", "--static", "-std=c++17", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", nullptr};
-    const char *CP_XX[] = {"/usr/local/bin/g++", "-fno-asm", "-Wall", "-O2",
+    const char *CP_XX[] = {"/usr/local/bin/g++","-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
                            "-lm", "--static", "-std=c++11", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", nullptr};
-    const char *CP_XXX[] = {"/usr/local/bin/g++", "-fno-asm", "-Wall", "-O2",
+    const char *CP_XXX[] = {"/usr/local/bin/g++","-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
                             "-lm", "--static", "-std=c++98", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", nullptr};
     const char *CP_P[] =
             {"fpc", "Main.pas", "-Cs32000000", "-Sh", "-O2", "-Co", "-Ct", "-Ci", nullptr};
@@ -872,9 +872,9 @@ int compile(int lang, char *work_dir) {
                            "/usr/include/GNUstep/", "-L", "/usr/lib/GNUstep/Libraries/",
                            "-lobjc", "-lgnustep-base", nullptr};
     const char *CP_BS[] = {"fbc", "-lang", "qb", "Main.bas", nullptr};
-    const char *CP_CLANG[] = {"clang", "Main.c", "-o", "Main", "-fno-asm", "-Wall",
+    const char *CP_CLANG[] = {"clang", "Main.c", "-o", "Main","-ferror-limit=10", "-fno-asm", "-Wall",
                               "-lm", "--static", "-std=c99", "-DONLINE_JUDGE", nullptr};
-    const char *CP_CLANG_CPP[] = {"clang++", "Main.cc", "-o", "Main", "-fno-asm", "-Wall",
+    const char *CP_CLANG_CPP[] = {"clang++", "Main.cc", "-o", "Main", "-ferror-limit=10","-fno-asm", "-Wall",
                                   "-lm", "--static", "-std=c++11", "-DONLINE_JUDGE", nullptr};
     const char *CP_LUA[] = {"luac", "-o", "Main", "Main.lua", nullptr};
     //const char * CP_JS[] = { "js24","-c", "Main.js", NULL };
