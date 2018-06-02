@@ -844,15 +844,15 @@ int compile(int lang, char *work_dir) {
     if (webSocket.isconnected()) {
         webSocket << ws_send(solution_id, 2, 0, 0, 0, 0, 0);
     }
-    const char *CP_C[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main","-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
+    const char *CP_C[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main", "-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
                           "-lm", "--static", "-std=c11", "-DONLINE_JUDGE", nullptr};
-    const char *CP_CC[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main","-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
+    const char *CP_CC[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main", "-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
                            "-lm", "--static", "-std=c99", "-DONLINE_JUDGE", nullptr};
-    const char *CP_X[] = {"/usr/local/bin/g++","-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
+    const char *CP_X[] = {"/usr/local/bin/g++", "-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
                           "-lm", "--static", "-std=c++17", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", nullptr};
-    const char *CP_XX[] = {"/usr/local/bin/g++","-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
+    const char *CP_XX[] = {"/usr/local/bin/g++", "-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
                            "-lm", "--static", "-std=c++11", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", nullptr};
-    const char *CP_XXX[] = {"/usr/local/bin/g++","-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
+    const char *CP_XXX[] = {"/usr/local/bin/g++", "-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
                             "-lm", "--static", "-std=c++98", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", nullptr};
     const char *CP_P[] =
             {"fpc", "Main.pas", "-Cs32000000", "-Sh", "-O2", "-Co", "-Ct", "-Ci", nullptr};
@@ -872,9 +872,9 @@ int compile(int lang, char *work_dir) {
                            "/usr/include/GNUstep/", "-L", "/usr/lib/GNUstep/Libraries/",
                            "-lobjc", "-lgnustep-base", nullptr};
     const char *CP_BS[] = {"fbc", "-lang", "qb", "Main.bas", nullptr};
-    const char *CP_CLANG[] = {"clang", "Main.c", "-o", "Main","-ferror-limit=10", "-fno-asm", "-Wall",
+    const char *CP_CLANG[] = {"clang", "Main.c", "-o", "Main", "-ferror-limit=10", "-fno-asm", "-Wall",
                               "-lm", "--static", "-std=c99", "-DONLINE_JUDGE", nullptr};
-    const char *CP_CLANG_CPP[] = {"clang++", "Main.cc", "-o", "Main", "-ferror-limit=10","-fno-asm", "-Wall",
+    const char *CP_CLANG_CPP[] = {"clang++", "Main.cc", "-o", "Main", "-ferror-limit=10", "-fno-asm", "-Wall",
                                   "-lm", "--static", "-std=c++11", "-DONLINE_JUDGE", nullptr};
     const char *CP_LUA[] = {"luac", "-o", "Main", "Main.lua", nullptr};
     //const char * CP_JS[] = { "js24","-c", "Main.js", NULL };
@@ -1031,7 +1031,6 @@ int compile(int lang, char *work_dir) {
         exit(0);
     } else {
         int status = 0;
-
         waitpid(pid, &status, 0);
         if (lang > JAVA && lang < PHP)
             status = static_cast<int>(get_file_size("ce.txt"));
@@ -1797,7 +1796,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
         ACflg = OJ_ML; //issues79
     // compare
     if (ACflg == OJ_AC) {
-        cout<<"isspj:"<<isspj<<endl;
+        cout << "isspj:" << isspj << endl;
         if (isspj) {
             comp_res = special_judge(oj_home, p_id, infile, outfile, userfile, usercode);
             if (comp_res < 4) {
@@ -2177,7 +2176,8 @@ void print_call_array() {
 int main(int argc, char **argv) {
     webSocket.connect("ws://localhost:5100");
     char work_dir[BUFFER_SIZE];
-    char usercode[BUFFER_SIZE];
+    const int codesize = 64 * 1024;
+    char usercode[codesize];
     char user_id[BUFFER_SIZE];
     solution_id = 1000;
     int runner_id = 0;
