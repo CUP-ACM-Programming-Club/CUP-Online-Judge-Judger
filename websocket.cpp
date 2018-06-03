@@ -9,63 +9,66 @@ using json = nlohmann::json;
 using easywsclient::WebSocket;
 
 websocket::websocket() {
-	connected = false;
+    connected = false;
 }
 
 websocket::websocket(const string &url) {
-	wsconnect=WebSocket::from_url(url);
-	connected = true;
+    wsconnect = WebSocket::from_url(url);
+    connected = true;
 }
 
 bool websocket::connect(const string &url) {
-	wsconnect=WebSocket::from_url(url);
-	connected=true;
-	return true;
+    wsconnect = WebSocket::from_url(url);
+    connected = true;
+    return true;
 }
 
 websocket &websocket::emit(const string &str) {
-	wsconnect->send(str);
-	wsconnect->poll();
-	return *this;
+    wsconnect->send(str);
+    wsconnect->poll();
+    return *this;
 }
 
 WebSocket::pointer websocket::get_pointer() {
-	return wsconnect;
+    return wsconnect;
 }
 
 websocket::~websocket() {
-	connected = false;
-	wsconnect->close();
-	delete wsconnect;
+    connected = false;
+    wsconnect->close();
+    delete wsconnect;
 }
 
 websocket &websocket::operator<<(const string &str) {
-	return emit(str);
+    return emit(str);
 }
 
 websocket &websocket::emit(const json &json) {
-	return emit(json.dump());
+    return emit(json.dump());
 }
 
 websocket &websocket::operator<<(const json &json) {
-	return emit(json.dump());
+    if (isConnected())
+        return emit(json.dump());
+    else
+        return *this;
 }
 
-bool websocket::isconnected() {
-	return connected;
+bool websocket::isConnected() {
+    return connected;
 }
 
 websocket &websocket::send(const string &str) {
-	return emit(str);
+    return emit(str);
 }
 
 websocket &websocket::send(const json &json) {
-	return emit(json);
+    return emit(json);
 }
 
 bool websocket::close() {
-	wsconnect->close();
-	connected=false;
-	delete wsconnect;
-	return !connected;
+    wsconnect->close();
+    connected = false;
+    delete wsconnect;
+    return !connected;
 }
