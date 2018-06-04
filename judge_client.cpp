@@ -2110,17 +2110,18 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     sprintf(src_pth, "Main.%s", lang_ext[lang]);
 
     int sim = execute_cmd("/usr/bin/sim.sh %s %d", src_pth, pid);
+
     if (!sim) {
         execute_cmd("/bin/mkdir ../data/%d/ac/", pid);
 
         execute_cmd("/bin/cp %s ../data/%d/ac/%d.%s", src_pth, pid, solution_id,
                     lang_ext[lang]);
         //c cpp will
-        if (lang == C11)
+        if (lang == C11 || lang == C99)
             execute_cmd("/bin/ln ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
                         solution_id, lang_ext[lang], pid, solution_id,
                         lang_ext[lang + 1]);
-        if (lang == CPP17)
+        if (lang == CPP17 || lang == CPP11 || lang == CPP98)
             execute_cmd("/bin/ln ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
                         solution_id, lang_ext[lang], pid, solution_id,
                         lang_ext[lang - 1]);
@@ -2135,6 +2136,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
         }
 
     }
+
     MYSQL_RES *res;
     MYSQL_ROW row;
     string sql = "SELECT user_id FROM solution WHERE solution_id=" + to_string(solution_id);
@@ -2158,6 +2160,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
         sim = 0;
     if (solution_id <= sim_s_id)
         sim = 0;
+
     return sim;
 }
 
