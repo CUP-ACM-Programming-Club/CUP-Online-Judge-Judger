@@ -22,7 +22,7 @@ public:
 
 	bool close();
 
-	bool isconnected();
+	bool isConnected();
 
 	websocket &emit(const std::string &str);
 
