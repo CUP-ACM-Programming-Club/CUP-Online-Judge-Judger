@@ -273,16 +273,9 @@ int execute_cmd(const char *fmt, ...) {
 
 string ws_send(const int &solution_id, const int &state, const int &finished, const double &time,
                const int &memory, const int &pass_point, const double &pass_rate, const string &test_run_result = "",
-               const string &compile_info = "") {
+               const string &compile_info = "", const int sim = 0, const int sim_s_id = 0) {
     json send_msg;
-    int len = (int) test_run_result.length();
-    string ntest_run_result;
-    for (int i = 0; i < len; ++i) {
-        if (test_run_result[i] >= 128 || test_run_result[i] < 0)
-            ntest_run_result += '?';
-        else
-            ntest_run_result += test_run_result[i];
-    }
+    string ntest_run_result(test_run_result.begin(),test_run_result.end());
     send_msg["type"] = "judger";
     send_msg["value"]["judger"] = judger_number;
     send_msg["value"]["solution_id"] = solution_id;
@@ -292,6 +285,8 @@ string ws_send(const int &solution_id, const int &state, const int &finished, co
     send_msg["value"]["memory"] = memory;
     send_msg["value"]["pass_rate"] = pass_rate;
     send_msg["value"]["pass_point"] = pass_point;
+    send_msg["value"]["sim"] = sim;
+    send_msg["value"]["sim_s_id"] = sim_s_id;
     if (test_run_result.length())
         send_msg["value"]["test_run_result"] = ntest_run_result;
     if (compile_info.length())
@@ -1856,12 +1851,16 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
                     int lang, char *work_dir, int &topmemory, int mem_lmt,
                     int solution_id, int num_of_test) {
     //usedtime-=1000;
+    cout << "Used time" << endl;
+    cout << usedtime << endl;
+    cout << time_lmt * 1000 * (use_max_time ? 1 : num_of_test) << endl;
     int comp_res;
     if (!OI_MODE)
         num_of_test = static_cast<int>(1.0);
     if (ACflg == OJ_AC
-        && usedtime > time_lmt * 1000 * (use_max_time ? 1 : num_of_test))
+        && usedtime > time_lmt * 1000 * (use_max_time ? 1 : num_of_test)) {
         ACflg = OJ_TL;
+    }
     if (topmemory > mem_lmt * STD_MB)
         ACflg = OJ_ML; //issues79
     // compare
@@ -2104,6 +2103,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
 
         ptrace(PTRACE_SYSCALL, pidApp, NULL, NULL);
     }
+
     usedtime += (ruse.ru_utime.tv_sec * 1000 + ruse.ru_utime.tv_usec / 1000);
     usedtime += (ruse.ru_stime.tv_sec * 1000 + ruse.ru_stime.tv_usec / 1000);
 
@@ -2285,7 +2285,7 @@ int main(int argc, char **argv) {
     if (lang >= JAVA && lang != OBJC && lang != CLANG && lang != CLANGPP &&
         lang < CPP11) {  // Clang Clang++ not VM or Script
         // the limit for java
-        time_lmt = time_lmt * java_time_bonus;
+        time_lmt = time_lmt * java_time_bonus + java_time_bonus;
         mem_lmt = mem_lmt + java_memory_bonus;
         // copy java.policy
         if (lang == JAVA) {
@@ -2541,7 +2541,7 @@ int main(int argc, char **argv) {
 
     webSocket << ws_send(solution_id, OI_MODE ? finalACflg : ACflg, FINISHED, usedtime, topmemory / ONE_KILOBYTE,
                          pass_point,
-                         pass_rate / num_of_test);
+                         pass_rate / num_of_test, "", "", sim, sim_s_id);
     if (OI_MODE) {
         if (num_of_test > 0)
             pass_rate /= num_of_test;
