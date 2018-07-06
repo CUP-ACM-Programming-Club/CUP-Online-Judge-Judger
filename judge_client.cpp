@@ -46,6 +46,7 @@
 #include <mysql/mysql.h>
 #include "okcalls.h"
 #include <iostream>
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 #include "websocket.h"
@@ -148,6 +149,7 @@ enum judge_status {
     ZERO_PASSPOINT = 0,
     ZERO_PASSRATE = 0,
     CHILD_PROCESS = 0,
+    TEST_RUN_SUBMIT = 0,
     TEST_RUN_PROBLEM = 0,
     NONE_SPECIAL_JUDGE = 0,
 };
@@ -271,11 +273,34 @@ int execute_cmd(const char *fmt, ...) {
     return ret;
 }
 
+bool utf8_check_is_valid(const string& string)
+{
+    int c,i,ix,n,j;
+    for (i=0, ix= static_cast<int>(string.length()); i < ix; i++)
+    {
+        c = (unsigned char) string[i];
+        //if (c==0x09 || c==0x0a || c==0x0d || (0x20 <= c && c <= 0x7e) ) n = 0; // is_printable_ascii
+        if (0x00 <= c && c <= 0x7f) n=0; // 0bbbbbbb
+        else if ((c & 0xE0) == 0xC0) n=1; // 110bbbbb
+        else if ( c==0xed && i<(ix-1) && ((unsigned char)string[i+1] & 0xa0)==0xa0) return false; //U+d800 to U+dfff
+        else if ((c & 0xF0) == 0xE0) n=2; // 1110bbbb
+        else if ((c & 0xF8) == 0xF0) n=3; // 11110bbb
+            //else if (($c & 0xFC) == 0xF8) n=4; // 111110bb //byte 5, unnecessary in 4 byte UTF-8
+            //else if (($c & 0xFE) == 0xFC) n=5; // 1111110b //byte 6, unnecessary in 4 byte UTF-8
+        else return false;
+        for (j=0; j<n && i<ix; j++) { // n bytes matching 10bbbbbb follow ?
+            if ((++i == ix) || (( (unsigned char)string[i] & 0xC0) != 0x80))
+                return false;
+        }
+    }
+    return true;
+}
+
 string ws_send(const int &solution_id, const int &state, const int &finished, const double &time,
                const int &memory, const int &pass_point, const double &pass_rate, const string &test_run_result = "",
                const string &compile_info = "", const int sim = 0, const int sim_s_id = 0) {
     json send_msg;
-    string ntest_run_result(test_run_result.begin(),test_run_result.end());
+    string ntest_run_result(test_run_result.begin(), test_run_result.end());
     send_msg["type"] = "judger";
     send_msg["value"]["judger"] = judger_number;
     send_msg["value"]["solution_id"] = solution_id;
@@ -287,10 +312,20 @@ string ws_send(const int &solution_id, const int &state, const int &finished, co
     send_msg["value"]["pass_point"] = pass_point;
     send_msg["value"]["sim"] = sim;
     send_msg["value"]["sim_s_id"] = sim_s_id;
-    if (test_run_result.length())
-        send_msg["value"]["test_run_result"] = ntest_run_result;
-    if (compile_info.length())
-        send_msg["value"]["compile_info"] = compile_info;
+    if (test_run_result.length()) {
+        if(utf8_check_is_valid(test_run_result)) {
+            send_msg["value"]["test_run_result"] = ntest_run_result;
+        }
+        else {
+            send_msg["value"]["test_run_result"] = string("检测到非法UTF-8输出");
+        }
+    }
+    if (compile_info.length()) {
+        if(utf8_check_is_valid(compile_info)) {
+            send_msg["value"]["compile_info"] = compile_info;
+        }
+        send_msg["value"]["compile_info"] = string("检测到非法UTF-8输出");
+    }
     return send_msg.dump();
     /*
     string s="{\"solution_id\":"+to_string(solution_id)+",\"state\":"+to_string(state)+",\"finish\":"+to_string(finished);
@@ -1604,7 +1639,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     //      char java_p1[BUFFER_SIZE], java_p2[BUFFER_SIZE];
     // child
     // set the limit
-    struct rlimit LIM; // time limit, file limit& memory limit
+    struct rlimit LIM{}; // time limit, file limit& memory limit
     // time limit
     if (OI_MODE)
         LIM.rlim_cur = static_cast<rlim_t>(time_lmt + 1);
@@ -1615,7 +1650,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     setrlimit(RLIMIT_CPU, &LIM);
     alarm(0);
     // alarm(time_lmt * 10);
-    alarm(static_cast<unsigned int>(time_lmt * 2));
+    alarm(static_cast<unsigned int>(time_lmt * 10));
 
     // file limit
     LIM.rlim_max = (STD_F_LIM + STD_MB);
@@ -1859,6 +1894,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
         num_of_test = static_cast<int>(1.0);
     if (ACflg == OJ_AC
         && usedtime > time_lmt * 1000 * (use_max_time ? 1 : num_of_test)) {
+        cout << "Time Limit Exceeded" << endl;
         ACflg = OJ_TL;
     }
     if (topmemory > mem_lmt * STD_MB)
@@ -2271,13 +2307,10 @@ int main(int argc, char **argv) {
 
     chdir(work_dir);
     get_solution_info(solution_id, p_id, user_id, lang);
+    get_problem_info(abs(p_id), time_lmt, mem_lmt, SPECIAL_JUDGE);
     //get the limit
-    if (p_id <= CHILD_PROCESS) {//Is custom input
-        time_lmt = FIVE;
-        mem_lmt = 128;
+    if (p_id <= TEST_RUN_SUBMIT) {//Is custom input
         SPECIAL_JUDGE = NONE_SPECIAL_JUDGE;
-    } else {
-        get_problem_info(p_id, time_lmt, mem_lmt, SPECIAL_JUDGE);
     }
     //copy source file
     get_solution(solution_id, work_dir, lang, usercode);
@@ -2425,10 +2458,8 @@ int main(int argc, char **argv) {
         }
         if (webSocket.isConnected()) {
             string test_run_out;
-            char *end;
-            char reinfo[(1 << 16)], *rend;
+            char reinfo[(1 << 16)];
             FILE *fp = fopen("user.out", "re");
-            rend = reinfo;
             while (fgets(reinfo, 1 << 16, fp)) {
                 string tmp(reinfo);
                 test_run_out += tmp;
@@ -2450,68 +2481,71 @@ int main(int argc, char **argv) {
     webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
                          ZERO_PASSRATE);
     int pass_point = ZERO_PASSPOINT;
-    for (; (OI_MODE || ACflg == OJ_AC || ACflg == OJ_PE) && (dirp = readdir(dp)) != nullptr;) {
+    for (; (OI_MODE || ACflg == OJ_AC || ACflg == OJ_PE) && (dirp = readdir(dp)) != nullptr; ++num_of_test) {
+        if (ACflg <= OJ_PE) {
+            namelen = isInFile(dirp->d_name); // check if the file is *.in or not
+            if (namelen == 0)
+                continue;
+            prepare_files(dirp->d_name, namelen, infile, p_id, work_dir, outfile,
+                          userfile, runner_id);
+            init_syscalls_limits(lang);
 
-        namelen = isInFile(dirp->d_name); // check if the file is *.in or not
-        if (namelen == 0)
-            continue;
-        prepare_files(dirp->d_name, namelen, infile, p_id, work_dir, outfile,
-                      userfile, runner_id);
-        init_syscalls_limits(lang);
+            pid_t pidApp = fork();
 
-        pid_t pidApp = fork();
+            if (pidApp == 0) {
+                printf("Running solution\n");
+                cout << "Time limit OI_MODE:" << (time_lmt + 1) << endl;
+                cout << "Time limit NORMAL:" << ((time_lmt - usedtime / 1000) + 1) << endl;
+                run_solution(lang, work_dir, time_lmt, usedtime, mem_lmt);
+            } else {
 
-        if (pidApp == 0) {
-            printf("Running solution\n");
-            run_solution(lang, work_dir, time_lmt, usedtime, mem_lmt);
-        } else {
-            ++num_of_test;
-            if (DEBUG) {
-                cout << "Run test point:" << num_of_test << endl;
+                if (DEBUG) {
+                    cout << "Run test point:" << num_of_test << endl;
+                }
+                watch_solution(pidApp, infile, ACflg, SPECIAL_JUDGE, userfile, outfile,
+                               solution_id, lang, topmemory, mem_lmt, usedtime, time_lmt,
+                               p_id, PEflg, work_dir);
+                judge_solution(ACflg, usedtime, time_lmt, SPECIAL_JUDGE, p_id, infile,
+                               outfile, userfile, usercode, PEflg, lang, work_dir, topmemory,
+                               mem_lmt, solution_id, num_of_test);
+                if (use_max_time) {
+                    max_case_time = max(usedtime, max_case_time);
+                    usedtime = ZERO_TIME;
+                }
+                //clean_session(pidApp);
             }
-            watch_solution(pidApp, infile, ACflg, SPECIAL_JUDGE, userfile, outfile,
-                           solution_id, lang, topmemory, mem_lmt, usedtime, time_lmt,
-                           p_id, PEflg, work_dir);
 
-            judge_solution(ACflg, usedtime, time_lmt, SPECIAL_JUDGE, p_id, infile,
-                           outfile, userfile, usercode, PEflg, lang, work_dir, topmemory,
-                           mem_lmt, solution_id, num_of_test);
-            if (use_max_time) {
-                max_case_time =
-                        usedtime > max_case_time ? usedtime : max_case_time;
-                usedtime = ZERO_TIME;
+            if (usedtime > time_lmt * 1000) {
+                cout << "Time Limit Exceeded" << endl;
+                ACflg = OJ_TL;
             }
-            //clean_session(pidApp);
-        }
 
-        if (usedtime > time_lmt * 1000) {
-            ACflg = OJ_TL;
-        }
-
-        if (ACflg == OJ_AC) {
-            ++pass_point;
-            //MYSQL_RES* res;
-            //MYSQL_ROW row;
-            // string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
-            //             to_string(solution_id);
-            // mysql_real_query(conn, sql.c_str(), sql.length());
-            //res=mysql_store_result(conn);
-            //string
-        }
-
-        if (OI_MODE) {
             if (ACflg == OJ_AC) {
-                ++pass_rate;
-            }
-            if (finalACflg < ACflg) {
-                finalACflg = ACflg;
+                ++pass_point;
+                //MYSQL_RES* res;
+                //MYSQL_ROW row;
+                // string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
+                //             to_string(solution_id);
+                // mysql_real_query(conn, sql.c_str(), sql.length());
+                //res=mysql_store_result(conn);
+                //string
             }
 
-            ACflg = OJ_AC;
+            if (OI_MODE) {
+                if (ACflg == OJ_AC) {
+                    ++pass_rate;
+                }
+                if (finalACflg < ACflg) {
+                    finalACflg = ACflg;
+                }
+
+                ACflg = OJ_AC;
+            }
+
+            webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, max(usedtime, time_lmt * 1000),
+                                 max(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
+                                 pass_rate / num_of_test);
         }
-
-        webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, max(usedtime, time_lmt * 1000),
-                             max(topmemory, mem_lmt * STD_MB), pass_point, pass_rate / num_of_test);
     }
     if (ACflg == OJ_AC && PEflg == OJ_PE)
         ACflg = OJ_PE;
