@@ -2542,8 +2542,8 @@ int main(int argc, char **argv) {
                 ACflg = OJ_AC;
             }
 
-            webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, max(usedtime, time_lmt * 1000),
-                                 max(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
+            webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, min(usedtime, time_lmt * 1000),
+                                 min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
                                  pass_rate / num_of_test);
         }
     }
