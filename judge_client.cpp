@@ -46,6 +46,7 @@
 #include <mysql/mysql.h>
 #include "okcalls.h"
 #include <iostream>
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 #include "websocket.h"
@@ -99,27 +100,30 @@ enum space_size {
 
 enum language {
     C11 = 0,
-    CPP17,
-    PASCAL,
-    JAVA,
-    RUBY,
-    BASH,
-    PYTHON2,
-    PHP,
-    PERL,
-    CSHARP,
-    OBJC,
-    FREEBASIC,
-    SCHEMA,
-    CLANG,
-    CLANGPP,
-    LUA,
-    JAVASCRIPT,
-    GO,
-    PYTHON3,
-    CPP11,
-    CPP98,
-    C99,
+    CPP17 = 1,
+    PASCAL = 2,
+    JAVA = 3,
+    RUBY = 4,
+    BASH = 5,
+    PYTHON2 = 6,
+    PHP = 7,
+    PERL = 8,
+    CSHARP = 9,
+    OBJC = 10,
+    FREEBASIC = 11,
+    SCHEMA = 12,
+    CLANG = 13,
+    CLANGPP = 14,
+    LUA = 15,
+    JAVASCRIPT = 16,
+    GO = 17,
+    PYTHON3 = 18,
+    CPP11 = 19,
+    CPP98 = 20,
+    C99 = 21,
+    KOTLIN = 22,
+    JAVA8 = 23,
+    JAVA7 = 24,
     OTHER
 };
 enum status {
@@ -148,6 +152,7 @@ enum judge_status {
     ZERO_PASSPOINT = 0,
     ZERO_PASSRATE = 0,
     CHILD_PROCESS = 0,
+    TEST_RUN_SUBMIT = 0,
     TEST_RUN_PROBLEM = 0,
     NONE_SPECIAL_JUDGE = 0,
 };
@@ -219,9 +224,9 @@ MYSQL *conn;
 
 websocket webSocket;
 string global_work_dir;
-static char lang_ext[22][8] = {"c", "cc", "pas", "java", "rb", "sh", "py",
+static char lang_ext[25][8] = {"c", "cc", "pas", "java", "rb", "sh", "py",
                                "php", "pl", "cs", "m", "bas", "scm", "c", "cc", "lua", "js", "go", "py", "cc", "cc",
-                               "c"};
+                               "c", "kt", "java", "java"};
 
 
 long get_file_size(const char *filename) {
@@ -271,11 +276,34 @@ int execute_cmd(const char *fmt, ...) {
     return ret;
 }
 
+bool utf8_check_is_valid(const string& string)
+{
+    int c,i,ix,n,j;
+    for (i=0, ix= static_cast<int>(string.length()); i < ix; i++)
+    {
+        c = (unsigned char) string[i];
+        //if (c==0x09 || c==0x0a || c==0x0d || (0x20 <= c && c <= 0x7e) ) n = 0; // is_printable_ascii
+        if (0x00 <= c && c <= 0x7f) n=0; // 0bbbbbbb
+        else if ((c & 0xE0) == 0xC0) n=1; // 110bbbbb
+        else if ( c==0xed && i<(ix-1) && ((unsigned char)string[i+1] & 0xa0)==0xa0) return false; //U+d800 to U+dfff
+        else if ((c & 0xF0) == 0xE0) n=2; // 1110bbbb
+        else if ((c & 0xF8) == 0xF0) n=3; // 11110bbb
+            //else if (($c & 0xFC) == 0xF8) n=4; // 111110bb //byte 5, unnecessary in 4 byte UTF-8
+            //else if (($c & 0xFE) == 0xFC) n=5; // 1111110b //byte 6, unnecessary in 4 byte UTF-8
+        else return false;
+        for (j=0; j<n && i<ix; j++) { // n bytes matching 10bbbbbb follow ?
+            if ((++i == ix) || (( (unsigned char)string[i] & 0xC0) != 0x80))
+                return false;
+        }
+    }
+    return true;
+}
+
 string ws_send(const int &solution_id, const int &state, const int &finished, const double &time,
                const int &memory, const int &pass_point, const double &pass_rate, const string &test_run_result = "",
                const string &compile_info = "", const int sim = 0, const int sim_s_id = 0) {
     json send_msg;
-    string ntest_run_result(test_run_result.begin(),test_run_result.end());
+    string ntest_run_result(test_run_result.begin(), test_run_result.end());
     send_msg["type"] = "judger";
     send_msg["value"]["judger"] = judger_number;
     send_msg["value"]["solution_id"] = solution_id;
@@ -287,10 +315,20 @@ string ws_send(const int &solution_id, const int &state, const int &finished, co
     send_msg["value"]["pass_point"] = pass_point;
     send_msg["value"]["sim"] = sim;
     send_msg["value"]["sim_s_id"] = sim_s_id;
-    if (test_run_result.length())
-        send_msg["value"]["test_run_result"] = ntest_run_result;
-    if (compile_info.length())
-        send_msg["value"]["compile_info"] = compile_info;
+    if (test_run_result.length()) {
+        if(utf8_check_is_valid(test_run_result)) {
+            send_msg["value"]["test_run_result"] = ntest_run_result;
+        }
+        else {
+            send_msg["value"]["test_run_result"] = string("检测到非法UTF-8输出");
+        }
+    }
+    if (compile_info.length()) {
+        if(utf8_check_is_valid(compile_info)) {
+            send_msg["value"]["compile_info"] = compile_info;
+        }
+        send_msg["value"]["compile_info"] = string("检测到非法UTF-8输出");
+    }
     return send_msg.dump();
     /*
     string s="{\"solution_id\":"+to_string(solution_id)+",\"state\":"+to_string(state)+",\"finish\":"+to_string(finished);
@@ -321,7 +359,7 @@ void init_syscalls_limits(int lang) {
     } else if (lang == PASCAL) { // Pascal
         for (i = 0; i == 0 || LANG_PV[i]; i++)
             call_counter[LANG_PV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == JAVA) { // Java
+    } else if (lang == JAVA || lang == JAVA7 || lang == JAVA8) { // Java
         for (i = 0; i == 0 || LANG_JV[i]; i++)
             call_counter[LANG_JV[i]] = HOJ_MAX_LIMIT;
     } else if (lang == RUBY) { // Ruby
@@ -938,11 +976,18 @@ int compile(int lang, char *work_dir) {
     const char *CP_GO[] = {"go", "build", "-o", "Main", "Main.go", nullptr};
 
     char javac_buf[7][32];
+    char javac7_buf[7][32];
+    char javac8_buf[7][32];
     char *CP_J[7];
-
-    for (int i = 0; i < 7; i++)
+    char *CP_J7[7];
+    char *CP_J8[7];
+    for (int i = 0; i < 7; i++) {
         CP_J[i] = javac_buf[i];
-
+        CP_J7[i] = javac7_buf[i];
+        CP_J8[i] = javac8_buf[i];
+    }
+    sprintf(CP_J7[0], "javac-7");
+    sprintf(CP_J8[0], "javac-8");
     sprintf(CP_J[0], "javac");
     sprintf(CP_J[1], "-J%s", java_xms);
     sprintf(CP_J[2], "-J%s", java_xmx);
@@ -950,23 +995,35 @@ int compile(int lang, char *work_dir) {
     sprintf(CP_J[4], "UTF-8");
     sprintf(CP_J[5], "Main.java");
     CP_J[6] = (char *) nullptr;
+    sprintf(CP_J7[1], "-J%s", java_xms);
+    sprintf(CP_J7[2], "-J%s", java_xmx);
+    sprintf(CP_J7[3], "-encoding");
+    sprintf(CP_J7[4], "UTF-8");
+    sprintf(CP_J7[5], "Main.java");
+    CP_J7[6] = (char *) nullptr;
+    sprintf(CP_J8[1], "-J%s", java_xms);
+    sprintf(CP_J8[2], "-J%s", java_xmx);
+    sprintf(CP_J8[3], "-encoding");
+    sprintf(CP_J8[4], "UTF-8");
+    sprintf(CP_J8[5], "Main.java");
+    CP_J8[6] = (char *) nullptr;
 
     pid = fork();
-    if (pid == 0) {
+    if (pid == CHILD_PROCESS) {
         struct rlimit LIM{};
         LIM.rlim_max = 60;
         LIM.rlim_cur = 60;
         setrlimit(RLIMIT_CPU, &LIM);
         int cpu_alarm_limit = 10;
-        if (lang == JAVA) {
+        if (lang == JAVA || lang == JAVA7 || lang == JAVA8) {
             cpu_alarm_limit = 30;
         }
-        alarm(cpu_alarm_limit);
+        alarm(static_cast<unsigned int>(cpu_alarm_limit));
         LIM.rlim_max = static_cast<rlim_t>(10 * COMPILE_STD_MB);
         LIM.rlim_cur = static_cast<rlim_t>(10 * COMPILE_STD_MB);
         setrlimit(RLIMIT_FSIZE, &LIM);
 
-        if (lang == 3 || lang == 17) {
+        if (lang == JAVA || lang == GO || lang == JAVA8 || lang == JAVA7) {
             LIM.rlim_max = static_cast<rlim_t>(COMPILE_STD_MB << 11);
             LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB << 11);
         } else {
@@ -974,13 +1031,14 @@ int compile(int lang, char *work_dir) {
             LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB * 256);
         }
         setrlimit(RLIMIT_AS, &LIM);
-        if (lang != 2 && lang != 11) {
+        if (lang != PASCAL && lang != 11) {
             freopen("ce.txt", "w", stderr);
             //freopen("/dev/null", "w", stdout);
         } else {
             freopen("ce.txt", "w", stdout);
         }
-        if (lang != 1 && lang != 3 && lang != 9 && lang != 6 && lang != 11 && lang != 18) {
+        if (lang != CPP17 && lang != JAVA && lang != 9 && lang != PYTHON2 && lang != 11
+            && lang != PYTHON3 && lang != JAVA7 && lang != JAVA8) {
             execute_cmd("mkdir -p bin usr lib lib64 etc/alternatives proc tmp dev");
             execute_cmd("chown judge *");
             execute_cmd("mount -o bind /bin bin");
@@ -1003,6 +1061,8 @@ int compile(int lang, char *work_dir) {
             sleep(1);
         while (setresuid(1536, 1536, 1536) != 0)
             sleep(1);
+        int ret = 0;
+        cout << "Lang:" << lang << endl;
         switch (lang) {
             case C11:
                 execvp(CP_C[0], (char *const *) CP_C);
@@ -1023,6 +1083,16 @@ int compile(int lang, char *work_dir) {
                 execvp(CP_J[0], (char *const *) CP_J);
                 if (DEBUG)
                     cout << CP_J[0] << endl;
+                break;
+            case JAVA7:
+                execvp(CP_J7[0], (char *const *) CP_J7);
+                if (DEBUG)
+                    cout << CP_J7[0] << endl;
+                break;
+            case JAVA8:
+                execvp(CP_J8[0], (char *const *) CP_J8);
+                if (DEBUG)
+                    cout << CP_J8[0] << endl;
                 break;
             case RUBY:
                 execvp(CP_R[0], (char *const *) CP_R);
@@ -1591,7 +1661,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     if (use_ptrace)
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     // run me
-    if (lang != JAVA)
+    if (lang != JAVA && lang != JAVA7 && lang != JAVA8)
         chroot(work_dir);
 
     while (setgid(1536) != 0)
@@ -1604,7 +1674,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     //      char java_p1[BUFFER_SIZE], java_p2[BUFFER_SIZE];
     // child
     // set the limit
-    struct rlimit LIM; // time limit, file limit& memory limit
+    struct rlimit LIM{}; // time limit, file limit& memory limit
     // time limit
     if (OI_MODE)
         LIM.rlim_cur = static_cast<rlim_t>(time_lmt + 1);
@@ -1615,7 +1685,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     setrlimit(RLIMIT_CPU, &LIM);
     alarm(0);
     // alarm(time_lmt * 10);
-    alarm(static_cast<unsigned int>(time_lmt * 2));
+    alarm(static_cast<unsigned int>(time_lmt * 10));
 
     // file limit
     LIM.rlim_max = (STD_F_LIM + STD_MB);
@@ -1631,6 +1701,8 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
         case CSHARP: //C#
         case SCHEMA:
         case JAVASCRIPT:
+        case JAVA7:
+        case JAVA8:
             LIM.rlim_cur = LIM.rlim_max = 80;
             break;
         case BASH: //bash
@@ -1671,6 +1743,22 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
             //sprintf(java_xmx, "-XX:MaxPermSize=%dM", mem_lmt);
             sprintf(java_xmx, "-XX:MaxMetaspaceSize=%dM", mem_lmt);
             execl("/usr/bin/java", "/usr/bin/java", java_xms, java_xmx,
+                  "-Djava.security.manager",
+                  "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
+            break;
+        case JAVA7:
+            sprintf(java_xms, "-Xmx%dM", mem_lmt);
+            //sprintf(java_xmx, "-XX:MaxPermSize=%dM", mem_lmt);
+            sprintf(java_xmx, "-XX:MaxPermSize=%dM", mem_lmt);
+            execl("/usr/bin/java-7", "/usr/bin/java-7", java_xms, java_xmx,
+                  "-Djava.security.manager",
+                  "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
+            break;
+        case JAVA8:
+            sprintf(java_xms, "-Xmx%dM", mem_lmt);
+            //sprintf(java_xmx, "-XX:MaxPermSize=%dM", mem_lmt);
+            sprintf(java_xmx, "-XX:MaxMetaspaceSize=%dM", mem_lmt);
+            execl("/usr/bin/java-8", "/usr/bin/java-8", java_xms, java_xmx,
                   "-Djava.security.manager",
                   "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
             break;
@@ -1821,11 +1909,16 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
                               infile, outfile, userfile, outfiled.c_str());
         }
         freopen("/dev/tty", "w", stdout);
+        if (DEBUG) {
         ifstream spjout("spjresult.out");
         if (get_file_size("spjresult.out")) {
-            spjout >> ret;
+                string s;
+                while (getline(spjout, s)) {
+                    cout << s << endl;
+                }
         }
-        cout << "Debug return code:" << ret << endl;
+        }
+        //cout << "Debug return code:" << ret << endl;
         if (DEBUG)
             printf("spj1=%d\n", ret);
         if (ret)
@@ -1859,13 +1952,18 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
         num_of_test = static_cast<int>(1.0);
     if (ACflg == OJ_AC
         && usedtime > time_lmt * 1000 * (use_max_time ? 1 : num_of_test)) {
+        cout << "Time Limit Exceeded" << endl;
         ACflg = OJ_TL;
     }
     if (topmemory > mem_lmt * STD_MB)
         ACflg = OJ_ML; //issues79
     // compare
     if (ACflg == OJ_AC) {
+        /*
         cout << "isspj:" << isspj << endl;
+        cout << "infile:" << infile << "outfile:" << outfile << "userfile:" << userfile << "usercode:" << usercode
+             << endl;
+             */
         if (isspj) {
             comp_res = special_judge(oj_home, p_id, infile, outfile, userfile, usercode);
             if (comp_res < 4) {
@@ -1896,7 +1994,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
         ACflg = comp_res;
     }
     //jvm popup messages, if don't consider them will get miss-WrongAnswer
-    if (lang == JAVA) {
+    if (lang == JAVA || lang == JAVA7 || lang == JAVA8) {
         comp_res = fix_java_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
     }
     if (lang == PYTHON2 || lang == PYTHON3) {
@@ -1947,7 +2045,9 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         wait4(pidApp, &status, 0, &ruse);
 
         //jvm gc ask VM before need,so used kernel page fault times and page size
-        if (lang == JAVA || lang == PHP || lang == JAVASCRIPT || lang == CSHARP || lang == GO) {
+        if (lang == JAVA || lang == PHP ||
+            lang == JAVASCRIPT || lang == CSHARP ||
+            lang == GO || lang == JAVA7 || lang == JAVA8) {
             tempmemory = get_page_fault_mem(ruse, pidApp);
         } else {        //other use VmPeak
             tempmemory = get_proc_status(pidApp, "VmPeak:") << 10;
@@ -2271,24 +2371,21 @@ int main(int argc, char **argv) {
 
     chdir(work_dir);
     get_solution_info(solution_id, p_id, user_id, lang);
+    get_problem_info(abs(p_id), time_lmt, mem_lmt, SPECIAL_JUDGE);
     //get the limit
-    if (p_id <= CHILD_PROCESS) {//Is custom input
-        time_lmt = FIVE;
-        mem_lmt = 128;
+    if (p_id <= TEST_RUN_SUBMIT) {//Is custom input
         SPECIAL_JUDGE = NONE_SPECIAL_JUDGE;
-    } else {
-        get_problem_info(p_id, time_lmt, mem_lmt, SPECIAL_JUDGE);
     }
     //copy source file
     get_solution(solution_id, work_dir, lang, usercode);
     //java is lucky
-    if (lang >= JAVA && lang != OBJC && lang != CLANG && lang != CLANGPP &&
-        lang < CPP11) {  // Clang Clang++ not VM or Script
+    if ((lang >= JAVA && lang != OBJC && lang != CLANG && lang != CLANGPP &&
+        lang < CPP11) || lang >= JAVA8) {  // Clang Clang++ not VM or Script
         // the limit for java
         time_lmt = time_lmt * java_time_bonus + java_time_bonus;
         mem_lmt = mem_lmt + java_memory_bonus;
         // copy java.policy
-        if (lang == JAVA) {
+        if (lang == JAVA || lang == JAVA7 || lang == JAVA8) {
             execute_cmd("/bin/cp %s/etc/java0.policy %s/java.policy", oj_home, work_dir);
             execute_cmd("chmod 755 %s/java.policy", work_dir);
             execute_cmd("chown judge %s/java.policy", work_dir);
@@ -2425,10 +2522,8 @@ int main(int argc, char **argv) {
         }
         if (webSocket.isConnected()) {
             string test_run_out;
-            char *end;
-            char reinfo[(1 << 16)], *rend;
+            char reinfo[(1 << 16)];
             FILE *fp = fopen("user.out", "re");
-            rend = reinfo;
             while (fgets(reinfo, 1 << 16, fp)) {
                 string tmp(reinfo);
                 test_run_out += tmp;
@@ -2450,68 +2545,71 @@ int main(int argc, char **argv) {
     webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
                          ZERO_PASSRATE);
     int pass_point = ZERO_PASSPOINT;
-    for (; (OI_MODE || ACflg == OJ_AC || ACflg == OJ_PE) && (dirp = readdir(dp)) != nullptr;) {
+    for (; (OI_MODE || ACflg == OJ_AC || ACflg == OJ_PE) && (dirp = readdir(dp)) != nullptr; ++num_of_test) {
+        if (ACflg <= OJ_PE) {
+            namelen = isInFile(dirp->d_name); // check if the file is *.in or not
+            if (namelen == 0)
+                continue;
+            prepare_files(dirp->d_name, namelen, infile, p_id, work_dir, outfile,
+                          userfile, runner_id);
+            init_syscalls_limits(lang);
 
-        namelen = isInFile(dirp->d_name); // check if the file is *.in or not
-        if (namelen == 0)
-            continue;
-        prepare_files(dirp->d_name, namelen, infile, p_id, work_dir, outfile,
-                      userfile, runner_id);
-        init_syscalls_limits(lang);
+            pid_t pidApp = fork();
 
-        pid_t pidApp = fork();
+            if (pidApp == 0) {
+                printf("Running solution\n");
+                cout << "Time limit OI_MODE:" << (time_lmt + 1) << endl;
+                cout << "Time limit NORMAL:" << ((time_lmt - usedtime / 1000) + 1) << endl;
+                run_solution(lang, work_dir, time_lmt, usedtime, mem_lmt);
+            } else {
 
-        if (pidApp == 0) {
-            printf("Running solution\n");
-            run_solution(lang, work_dir, time_lmt, usedtime, mem_lmt);
-        } else {
-            ++num_of_test;
-            if (DEBUG) {
-                cout << "Run test point:" << num_of_test << endl;
+                if (DEBUG) {
+                    cout << "Run test point:" << num_of_test << endl;
+                }
+                watch_solution(pidApp, infile, ACflg, SPECIAL_JUDGE, userfile, outfile,
+                               solution_id, lang, topmemory, mem_lmt, usedtime, time_lmt,
+                               p_id, PEflg, work_dir);
+                judge_solution(ACflg, usedtime, time_lmt, SPECIAL_JUDGE, p_id, infile,
+                               outfile, userfile, usercode, PEflg, lang, work_dir, topmemory,
+                               mem_lmt, solution_id, num_of_test);
+                if (use_max_time) {
+                    max_case_time = max(usedtime, max_case_time);
+                    usedtime = ZERO_TIME;
+                }
+                //clean_session(pidApp);
             }
-            watch_solution(pidApp, infile, ACflg, SPECIAL_JUDGE, userfile, outfile,
-                           solution_id, lang, topmemory, mem_lmt, usedtime, time_lmt,
-                           p_id, PEflg, work_dir);
 
-            judge_solution(ACflg, usedtime, time_lmt, SPECIAL_JUDGE, p_id, infile,
-                           outfile, userfile, usercode, PEflg, lang, work_dir, topmemory,
-                           mem_lmt, solution_id, num_of_test);
-            if (use_max_time) {
-                max_case_time =
-                        usedtime > max_case_time ? usedtime : max_case_time;
-                usedtime = ZERO_TIME;
+            if (usedtime > time_lmt * 1000) {
+                cout << "Time Limit Exceeded" << endl;
+                ACflg = OJ_TL;
             }
-            //clean_session(pidApp);
-        }
 
-        if (usedtime > time_lmt * 1000) {
-            ACflg = OJ_TL;
-        }
-
-        if (ACflg == OJ_AC) {
-            ++pass_point;
-            //MYSQL_RES* res;
-            //MYSQL_ROW row;
-            // string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
-            //             to_string(solution_id);
-            // mysql_real_query(conn, sql.c_str(), sql.length());
-            //res=mysql_store_result(conn);
-            //string
-        }
-
-        if (OI_MODE) {
             if (ACflg == OJ_AC) {
-                ++pass_rate;
-            }
-            if (finalACflg < ACflg) {
-                finalACflg = ACflg;
+                ++pass_point;
+                //MYSQL_RES* res;
+                //MYSQL_ROW row;
+                // string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
+                //             to_string(solution_id);
+                // mysql_real_query(conn, sql.c_str(), sql.length());
+                //res=mysql_store_result(conn);
+                //string
             }
 
-            ACflg = OJ_AC;
+            if (OI_MODE) {
+                if (ACflg == OJ_AC) {
+                    ++pass_rate;
+                }
+                if (finalACflg < ACflg) {
+                    finalACflg = ACflg;
+                }
+
+                ACflg = OJ_AC;
+            }
+
+            webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, min(usedtime, time_lmt * 1000),
+                                 min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
+                                 pass_rate / num_of_test);
         }
-
-        webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, max(usedtime, time_lmt * 1000),
-                             max(topmemory, mem_lmt * STD_MB), pass_point, pass_rate / num_of_test);
     }
     if (ACflg == OJ_AC && PEflg == OJ_PE)
         ACflg = OJ_PE;
