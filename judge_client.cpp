@@ -100,27 +100,30 @@ enum space_size {
 
 enum language {
     C11 = 0,
-    CPP17,
-    PASCAL,
-    JAVA,
-    RUBY,
-    BASH,
-    PYTHON2,
-    PHP,
-    PERL,
-    CSHARP,
-    OBJC,
-    FREEBASIC,
-    SCHEMA,
-    CLANG,
-    CLANGPP,
-    LUA,
-    JAVASCRIPT,
-    GO,
-    PYTHON3,
-    CPP11,
-    CPP98,
-    C99,
+    CPP17 = 1,
+    PASCAL = 2,
+    JAVA = 3,
+    RUBY = 4,
+    BASH = 5,
+    PYTHON2 = 6,
+    PHP = 7,
+    PERL = 8,
+    CSHARP = 9,
+    OBJC = 10,
+    FREEBASIC = 11,
+    SCHEMA = 12,
+    CLANG = 13,
+    CLANGPP = 14,
+    LUA = 15,
+    JAVASCRIPT = 16,
+    GO = 17,
+    PYTHON3 = 18,
+    CPP11 = 19,
+    CPP98 = 20,
+    C99 = 21,
+    KOTLIN = 22,
+    JAVA8 = 23,
+    JAVA7 = 24,
     OTHER
 };
 enum status {
@@ -221,9 +224,9 @@ MYSQL *conn;
 
 websocket webSocket;
 string global_work_dir;
-static char lang_ext[22][8] = {"c", "cc", "pas", "java", "rb", "sh", "py",
+static char lang_ext[25][8] = {"c", "cc", "pas", "java", "rb", "sh", "py",
                                "php", "pl", "cs", "m", "bas", "scm", "c", "cc", "lua", "js", "go", "py", "cc", "cc",
-                               "c"};
+                               "c", "kt", "java", "java"};
 
 
 long get_file_size(const char *filename) {
@@ -356,7 +359,7 @@ void init_syscalls_limits(int lang) {
     } else if (lang == PASCAL) { // Pascal
         for (i = 0; i == 0 || LANG_PV[i]; i++)
             call_counter[LANG_PV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == JAVA) { // Java
+    } else if (lang == JAVA || lang == JAVA7 || lang == JAVA8) { // Java
         for (i = 0; i == 0 || LANG_JV[i]; i++)
             call_counter[LANG_JV[i]] = HOJ_MAX_LIMIT;
     } else if (lang == RUBY) { // Ruby
@@ -973,11 +976,18 @@ int compile(int lang, char *work_dir) {
     const char *CP_GO[] = {"go", "build", "-o", "Main", "Main.go", nullptr};
 
     char javac_buf[7][32];
+    char javac7_buf[7][32];
+    char javac8_buf[7][32];
     char *CP_J[7];
-
-    for (int i = 0; i < 7; i++)
+    char *CP_J7[7];
+    char *CP_J8[7];
+    for (int i = 0; i < 7; i++) {
         CP_J[i] = javac_buf[i];
-
+        CP_J7[i] = javac7_buf[i];
+        CP_J8[i] = javac8_buf[i];
+    }
+    sprintf(CP_J7[0], "javac-7");
+    sprintf(CP_J8[0], "javac-8");
     sprintf(CP_J[0], "javac");
     sprintf(CP_J[1], "-J%s", java_xms);
     sprintf(CP_J[2], "-J%s", java_xmx);
@@ -985,23 +995,35 @@ int compile(int lang, char *work_dir) {
     sprintf(CP_J[4], "UTF-8");
     sprintf(CP_J[5], "Main.java");
     CP_J[6] = (char *) nullptr;
+    sprintf(CP_J7[1], "-J%s", java_xms);
+    sprintf(CP_J7[2], "-J%s", java_xmx);
+    sprintf(CP_J7[3], "-encoding");
+    sprintf(CP_J7[4], "UTF-8");
+    sprintf(CP_J7[5], "Main.java");
+    CP_J7[6] = (char *) nullptr;
+    sprintf(CP_J8[1], "-J%s", java_xms);
+    sprintf(CP_J8[2], "-J%s", java_xmx);
+    sprintf(CP_J8[3], "-encoding");
+    sprintf(CP_J8[4], "UTF-8");
+    sprintf(CP_J8[5], "Main.java");
+    CP_J8[6] = (char *) nullptr;
 
     pid = fork();
-    if (pid == 0) {
+    if (pid == CHILD_PROCESS) {
         struct rlimit LIM{};
         LIM.rlim_max = 60;
         LIM.rlim_cur = 60;
         setrlimit(RLIMIT_CPU, &LIM);
         int cpu_alarm_limit = 10;
-        if (lang == JAVA) {
+        if (lang == JAVA || lang == JAVA7 || lang == JAVA8) {
             cpu_alarm_limit = 30;
         }
-        alarm(cpu_alarm_limit);
+        alarm(static_cast<unsigned int>(cpu_alarm_limit));
         LIM.rlim_max = static_cast<rlim_t>(10 * COMPILE_STD_MB);
         LIM.rlim_cur = static_cast<rlim_t>(10 * COMPILE_STD_MB);
         setrlimit(RLIMIT_FSIZE, &LIM);
 
-        if (lang == 3 || lang == 17) {
+        if (lang == JAVA || lang == GO || lang == JAVA8 || lang == JAVA7) {
             LIM.rlim_max = static_cast<rlim_t>(COMPILE_STD_MB << 11);
             LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB << 11);
         } else {
@@ -1009,13 +1031,14 @@ int compile(int lang, char *work_dir) {
             LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB * 256);
         }
         setrlimit(RLIMIT_AS, &LIM);
-        if (lang != 2 && lang != 11) {
+        if (lang != PASCAL && lang != 11) {
             freopen("ce.txt", "w", stderr);
             //freopen("/dev/null", "w", stdout);
         } else {
             freopen("ce.txt", "w", stdout);
         }
-        if (lang != 1 && lang != 3 && lang != 9 && lang != 6 && lang != 11 && lang != 18) {
+        if (lang != CPP17 && lang != JAVA && lang != 9 && lang != PYTHON2 && lang != 11
+            && lang != PYTHON3 && lang != JAVA7 && lang != JAVA8) {
             execute_cmd("mkdir -p bin usr lib lib64 etc/alternatives proc tmp dev");
             execute_cmd("chown judge *");
             execute_cmd("mount -o bind /bin bin");
@@ -1038,6 +1061,8 @@ int compile(int lang, char *work_dir) {
             sleep(1);
         while (setresuid(1536, 1536, 1536) != 0)
             sleep(1);
+        int ret = 0;
+        cout << "Lang:" << lang << endl;
         switch (lang) {
             case C11:
                 execvp(CP_C[0], (char *const *) CP_C);
@@ -1058,6 +1083,16 @@ int compile(int lang, char *work_dir) {
                 execvp(CP_J[0], (char *const *) CP_J);
                 if (DEBUG)
                     cout << CP_J[0] << endl;
+                break;
+            case JAVA7:
+                execvp(CP_J7[0], (char *const *) CP_J7);
+                if (DEBUG)
+                    cout << CP_J7[0] << endl;
+                break;
+            case JAVA8:
+                execvp(CP_J8[0], (char *const *) CP_J8);
+                if (DEBUG)
+                    cout << CP_J8[0] << endl;
                 break;
             case RUBY:
                 execvp(CP_R[0], (char *const *) CP_R);
@@ -1626,7 +1661,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     if (use_ptrace)
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     // run me
-    if (lang != JAVA)
+    if (lang != JAVA && lang != JAVA7 && lang != JAVA8)
         chroot(work_dir);
 
     while (setgid(1536) != 0)
@@ -1666,6 +1701,8 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
         case CSHARP: //C#
         case SCHEMA:
         case JAVASCRIPT:
+        case JAVA7:
+        case JAVA8:
             LIM.rlim_cur = LIM.rlim_max = 80;
             break;
         case BASH: //bash
@@ -1706,6 +1743,22 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
             //sprintf(java_xmx, "-XX:MaxPermSize=%dM", mem_lmt);
             sprintf(java_xmx, "-XX:MaxMetaspaceSize=%dM", mem_lmt);
             execl("/usr/bin/java", "/usr/bin/java", java_xms, java_xmx,
+                  "-Djava.security.manager",
+                  "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
+            break;
+        case JAVA7:
+            sprintf(java_xms, "-Xmx%dM", mem_lmt);
+            //sprintf(java_xmx, "-XX:MaxPermSize=%dM", mem_lmt);
+            sprintf(java_xmx, "-XX:MaxPermSize=%dM", mem_lmt);
+            execl("/usr/bin/java-7", "/usr/bin/java-7", java_xms, java_xmx,
+                  "-Djava.security.manager",
+                  "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
+            break;
+        case JAVA8:
+            sprintf(java_xms, "-Xmx%dM", mem_lmt);
+            //sprintf(java_xmx, "-XX:MaxPermSize=%dM", mem_lmt);
+            sprintf(java_xmx, "-XX:MaxMetaspaceSize=%dM", mem_lmt);
+            execl("/usr/bin/java-8", "/usr/bin/java-8", java_xms, java_xmx,
                   "-Djava.security.manager",
                   "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
             break;
@@ -1856,11 +1909,16 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
                               infile, outfile, userfile, outfiled.c_str());
         }
         freopen("/dev/tty", "w", stdout);
+        if (DEBUG) {
         ifstream spjout("spjresult.out");
         if (get_file_size("spjresult.out")) {
-            spjout >> ret;
+                string s;
+                while (getline(spjout, s)) {
+                    cout << s << endl;
+                }
         }
-        cout << "Debug return code:" << ret << endl;
+        }
+        //cout << "Debug return code:" << ret << endl;
         if (DEBUG)
             printf("spj1=%d\n", ret);
         if (ret)
@@ -1901,7 +1959,11 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
         ACflg = OJ_ML; //issues79
     // compare
     if (ACflg == OJ_AC) {
+        /*
         cout << "isspj:" << isspj << endl;
+        cout << "infile:" << infile << "outfile:" << outfile << "userfile:" << userfile << "usercode:" << usercode
+             << endl;
+             */
         if (isspj) {
             comp_res = special_judge(oj_home, p_id, infile, outfile, userfile, usercode);
             if (comp_res < 4) {
@@ -1932,7 +1994,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
         ACflg = comp_res;
     }
     //jvm popup messages, if don't consider them will get miss-WrongAnswer
-    if (lang == JAVA) {
+    if (lang == JAVA || lang == JAVA7 || lang == JAVA8) {
         comp_res = fix_java_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
     }
     if (lang == PYTHON2 || lang == PYTHON3) {
@@ -1983,7 +2045,9 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         wait4(pidApp, &status, 0, &ruse);
 
         //jvm gc ask VM before need,so used kernel page fault times and page size
-        if (lang == JAVA || lang == PHP || lang == JAVASCRIPT || lang == CSHARP || lang == GO) {
+        if (lang == JAVA || lang == PHP ||
+            lang == JAVASCRIPT || lang == CSHARP ||
+            lang == GO || lang == JAVA7 || lang == JAVA8) {
             tempmemory = get_page_fault_mem(ruse, pidApp);
         } else {        //other use VmPeak
             tempmemory = get_proc_status(pidApp, "VmPeak:") << 10;
@@ -2315,13 +2379,13 @@ int main(int argc, char **argv) {
     //copy source file
     get_solution(solution_id, work_dir, lang, usercode);
     //java is lucky
-    if (lang >= JAVA && lang != OBJC && lang != CLANG && lang != CLANGPP &&
-        lang < CPP11) {  // Clang Clang++ not VM or Script
+    if ((lang >= JAVA && lang != OBJC && lang != CLANG && lang != CLANGPP &&
+        lang < CPP11) || lang >= JAVA8) {  // Clang Clang++ not VM or Script
         // the limit for java
         time_lmt = time_lmt * java_time_bonus + java_time_bonus;
         mem_lmt = mem_lmt + java_memory_bonus;
         // copy java.policy
-        if (lang == JAVA) {
+        if (lang == JAVA || lang == JAVA7 || lang == JAVA8) {
             execute_cmd("/bin/cp %s/etc/java0.policy %s/java.policy", oj_home, work_dir);
             execute_cmd("chmod 755 %s/java.policy", work_dir);
             execute_cmd("chown judge %s/java.policy", work_dir);
