@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.9)
 project(judge_client)
 set(CMAKE_CXX_STANDARD 11)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(CMAKE_CXX_FLAGS "-Wall")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 # set(CMAKE_C_COMPILER /usr/local/bin/gcc)
 # set(CMAKE_CXX_COMPILER /usr/local/bin/g++)
 # - Try to find MySQL.
@@ -29,19 +35,7 @@ set(CMAKE_CXX_STANDARD 11)
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-if( WIN32 )
-    find_path( MYSQL_INCLUDE_DIR
-            NAMES "mysql.h"
-            PATHS "$ENV{PROGRAMFILES}/MySQL/*/include"
-            "$ENV{PROGRAMFILES(x86)}/MySQL/*/include"
-            "$ENV{SYSTEMDRIVE}/MySQL/*/include" )
 
-    find_library( MYSQL_LIBRARY
-            NAMES "mysqlclient" "mysqlclient_r"
-            PATHS "$ENV{PROGRAMFILES}/MySQL/*/lib"
-            "$ENV{PROGRAMFILES(x86)}/MySQL/*/lib"
-            "$ENV{SYSTEMDRIVE}/MySQL/*/lib" )
-else()
     find_path( MYSQL_INCLUDE_DIR
             NAMES "mysql.h"
             PATHS "/usr/include/mysql"
@@ -58,8 +52,6 @@ else()
             "/usr/local/lib64/mysql"
             "/usr/mysql/lib/mysql"
             "/usr/mysql/lib64/mysql" )
-endif()
-
 
 
 if( MYSQL_INCLUDE_DIR AND EXISTS "${MYSQL_INCLUDE_DIRS}/mysql_version.h" )
