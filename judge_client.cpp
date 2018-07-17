@@ -276,23 +276,22 @@ int execute_cmd(const char *fmt, ...) {
     return ret;
 }
 
-bool utf8_check_is_valid(const string& string)
-{
-    int c,i,ix,n,j;
-    for (i=0, ix= static_cast<int>(string.length()); i < ix; i++)
-    {
+bool utf8_check_is_valid(const string &string) {
+    int c, i, ix, n, j;
+    for (i = 0, ix = static_cast<int>(string.length()); i < ix; i++) {
         c = (unsigned char) string[i];
         //if (c==0x09 || c==0x0a || c==0x0d || (0x20 <= c && c <= 0x7e) ) n = 0; // is_printable_ascii
-        if (0x00 <= c && c <= 0x7f) n=0; // 0bbbbbbb
-        else if ((c & 0xE0) == 0xC0) n=1; // 110bbbbb
-        else if ( c==0xed && i<(ix-1) && ((unsigned char)string[i+1] & 0xa0)==0xa0) return false; //U+d800 to U+dfff
-        else if ((c & 0xF0) == 0xE0) n=2; // 1110bbbb
-        else if ((c & 0xF8) == 0xF0) n=3; // 11110bbb
+        if (0x00 <= c && c <= 0x7f) n = 0; // 0bbbbbbb
+        else if ((c & 0xE0) == 0xC0) n = 1; // 110bbbbb
+        else if (c == 0xed && i < (ix - 1) && ((unsigned char) string[i + 1] & 0xa0) == 0xa0)
+            return false; //U+d800 to U+dfff
+        else if ((c & 0xF0) == 0xE0) n = 2; // 1110bbbb
+        else if ((c & 0xF8) == 0xF0) n = 3; // 11110bbb
             //else if (($c & 0xFC) == 0xF8) n=4; // 111110bb //byte 5, unnecessary in 4 byte UTF-8
             //else if (($c & 0xFE) == 0xFC) n=5; // 1111110b //byte 6, unnecessary in 4 byte UTF-8
         else return false;
-        for (j=0; j<n && i<ix; j++) { // n bytes matching 10bbbbbb follow ?
-            if ((++i == ix) || (( (unsigned char)string[i] & 0xC0) != 0x80))
+        for (j = 0; j < n && i < ix; j++) { // n bytes matching 10bbbbbb follow ?
+            if ((++i == ix) || (((unsigned char) string[i] & 0xC0) != 0x80))
                 return false;
         }
     }
@@ -316,15 +315,14 @@ string ws_send(const int &solution_id, const int &state, const int &finished, co
     send_msg["value"]["sim"] = sim;
     send_msg["value"]["sim_s_id"] = sim_s_id;
     if (test_run_result.length()) {
-        if(utf8_check_is_valid(test_run_result)) {
+        if (utf8_check_is_valid(test_run_result)) {
             send_msg["value"]["test_run_result"] = ntest_run_result;
-        }
-        else {
+        } else {
             send_msg["value"]["test_run_result"] = string("检测到非法UTF-8输出");
         }
     }
     if (compile_info.length()) {
-        if(utf8_check_is_valid(compile_info)) {
+        if (utf8_check_is_valid(compile_info)) {
             send_msg["value"]["compile_info"] = compile_info;
         }
         send_msg["value"]["compile_info"] = string("检测到非法UTF-8输出");
@@ -1030,8 +1028,10 @@ int compile(int lang, char *work_dir) {
             LIM.rlim_max = static_cast<rlim_t>(COMPILE_STD_MB * 256);
             LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB * 256);
         }
-        setrlimit(RLIMIT_AS, &LIM);
-        if (lang != PASCAL && lang != 11) {
+        if (lang != JAVA && lang != JAVA8 && lang != JAVA7) {
+            setrlimit(RLIMIT_AS, &LIM);
+        }
+        if (lang != PASCAL && lang != FREEBASIC) {
             freopen("ce.txt", "w", stderr);
             //freopen("/dev/null", "w", stdout);
         } else {
@@ -1715,14 +1715,15 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     setrlimit(RLIMIT_NPROC, &LIM);
 
     // set the stack
-    LIM.rlim_cur = (STD_MB << 7);
-    LIM.rlim_max = (STD_MB << 7);
+    LIM.rlim_cur = static_cast<rlim_t>(STD_MB << 7);
+    LIM.rlim_max = static_cast<rlim_t>(STD_MB << 7);
     setrlimit(RLIMIT_STACK, &LIM);
     // set the memory
     LIM.rlim_cur = static_cast<rlim_t>(STD_MB * mem_lmt / 2 * 3);
     LIM.rlim_max = static_cast<rlim_t>(STD_MB * mem_lmt * 2);
-    if (lang < JAVA)
+    if (lang < JAVA || (lang >= CLANG && lang <= CLANGPP) || (lang >= CPP11 && lang <= C99)) {
         setrlimit(RLIMIT_AS, &LIM);
+    }
 
     switch (lang) {
         case C11:
@@ -1910,13 +1911,13 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         }
         freopen("/dev/tty", "w", stdout);
         if (DEBUG) {
-        ifstream spjout("spjresult.out");
-        if (get_file_size("spjresult.out")) {
+            ifstream spjout("spjresult.out");
+            if (get_file_size("spjresult.out")) {
                 string s;
                 while (getline(spjout, s)) {
                     cout << s << endl;
                 }
-        }
+            }
         }
         //cout << "Debug return code:" << ret << endl;
         if (DEBUG)
@@ -2380,7 +2381,7 @@ int main(int argc, char **argv) {
     get_solution(solution_id, work_dir, lang, usercode);
     //java is lucky
     if ((lang >= JAVA && lang != OBJC && lang != CLANG && lang != CLANGPP &&
-        lang < CPP11) || lang >= JAVA8) {  // Clang Clang++ not VM or Script
+         lang < CPP11) || lang >= JAVA8) {  // Clang Clang++ not VM or Script
         // the limit for java
         time_lmt = time_lmt * java_time_bonus + java_time_bonus;
         mem_lmt = mem_lmt + java_memory_bonus;
