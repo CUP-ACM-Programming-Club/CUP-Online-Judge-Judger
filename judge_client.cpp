@@ -139,8 +139,6 @@ void write_log(const char *_fmt, ...) {
     fclose(fp);
 }
 
-
-
 const int call_array_size = 512;
 int call_counter[call_array_size];
 static char LANG_NAME[BUFFER_SIZE];
@@ -1743,8 +1741,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         } else {        //other use VmPeak
             tempmemory = get_proc_status(pidApp, "VmPeak:") << 10;
         }
-        if (tempmemory > topmemory)
-            topmemory = tempmemory;
+        topmemory = max(tempmemory, topmemory);
         if (topmemory > mem_lmt * STD_MB) {
             if (DEBUG)
                 printf("out of memory %d\n", topmemory);
@@ -2203,11 +2200,20 @@ int main(int argc, char **argv) {
         }
         if (ACflg == OJ_TL) {
             usedtime = time_lmt * 1000;
+            ofstream uout("user.out");
+            uout << "Time Limit Exceeded.Kill Process." << endl;
+            uout.close();
+            addcustomout(solution_id);
         }
         if (ACflg == OJ_RE) {
             if (DEBUG)
                 printf("add RE info of %d..... \n", solution_id);
             addreinfo(solution_id);
+        } else if (ACflg == OJ_ML) {
+            ofstream uout("user.out");
+            uout << "Memory Limit Exceeded.Kill Process." << endl;
+            uout.close();
+            addcustomout(solution_id);
         } else {
             addcustomout(solution_id);
         }
