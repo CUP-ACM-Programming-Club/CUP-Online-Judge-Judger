@@ -42,7 +42,6 @@
 #include <sys/user.h>
 #include <sys/resource.h>
 //#include <sys/types.h>
-#include <sys/stat.h>
 #include <mysql/mysql.h>
 #include "okcalls.h"
 #include <iostream>
@@ -50,6 +49,8 @@
 #include <fstream>
 #include <sstream>
 #include "websocket.h"
+#include "static_var.h"
+#include "judge_lib.h"
 
 using namespace std;
 using json = nlohmann::json;
@@ -73,120 +74,7 @@ using json = nlohmann::json;
 #endif
 
 
-enum count {
-    ONE = 1,
-    TWO = 2,
-    THREE = 3,
-    FOUR = 4,
-    FIVE = 5,
-    SIX = 6,
-    SEVEN = 7,
-    EIGHT = 8,
-    NINE = 9
-};
 
-enum time {
-    SECOND = 1,
-    MINUTE = 60,
-    HOUR = 3600,
-    DAY = HOUR * 24
-};
-
-enum space_size {
-    ONE_KILOBYTE = 1 << 10,
-    ONE_MEGABYTE = 1 << 20,
-    ONE_GIGABYTE = 1 << 30
-};
-
-enum language {
-    C11 = 0,
-    CPP17 = 1,
-    PASCAL = 2,
-    JAVA = 3,
-    RUBY = 4,
-    BASH = 5,
-    PYTHON2 = 6,
-    PHP = 7,
-    PERL = 8,
-    CSHARP = 9,
-    OBJC = 10,
-    FREEBASIC = 11,
-    SCHEMA = 12,
-    CLANG = 13,
-    CLANGPP = 14,
-    LUA = 15,
-    JAVASCRIPT = 16,
-    GO = 17,
-    PYTHON3 = 18,
-    CPP11 = 19,
-    CPP98 = 20,
-    C99 = 21,
-    KOTLIN = 22,
-    JAVA8 = 23,
-    JAVA7 = 24,
-    OTHER
-};
-enum status {
-    OJ_WT0 = 0,
-    OJ_WT1,
-    OJ_CI,
-    OJ_RI,
-    OJ_AC,
-    OJ_PE,
-    OJ_WA,
-    OJ_TL,
-    OJ_ML,
-    OJ_OL,
-    OJ_RE,
-    OJ_CE,
-    OJ_CO,
-    OJ_TR
-};
-
-enum judge_status {
-    ZERO_TIME = 0,
-    ZERO_MEMORY = 0,
-    ZERO_SIM = 0,
-    NOT_FINISHED = 0,
-    FINISHED = 1,
-    ZERO_PASSPOINT = 0,
-    ZERO_PASSRATE = 0,
-    CHILD_PROCESS = 0,
-    TEST_RUN_SUBMIT = 0,
-    TEST_RUN_PROBLEM = 0,
-    NONE_SPECIAL_JUDGE = 0,
-};
-
-enum judge_procedure {
-    WAITING = 0,
-    WAITING_REJUDGE,
-    COMPILING,
-    RUNNING_JUDGING,
-    ACCEPT,
-    PRESENTATION_ERROR,
-    WRONG_ANSWER,
-    TIME_LIMIT_EXCEEDED,
-    MEMORY_LIMIT_EXCEEDED,
-    OUTPUT_LIMIT_EXCEEDED,
-    RUNTIME_ERROR,
-    COMPILE_ERROR,
-    COMPILE_OK,
-    TEST_RUN,
-    SUBMITTED,
-    SYSTEM_REJECTED
-};
-
-
-const int CODESIZE = 64 * ONE_KILOBYTE;
-const int BUFFER_SIZE = 5 * ONE_KILOBYTE;
-const int STD_MB = ONE_MEGABYTE;
-const int COMPILE_STD_MB = (int) (STD_MB * 1.5);
-//#define STD_T_LIM 2
-const int STD_F_LIM = STD_MB * 32;
-//#define STD_M_LIM (STD_MB<<7)
-const int DEFAULT_SOLUTION_ID = 1000;
-
-static int DEBUG = 0;
 static char host_name[BUFFER_SIZE];
 static char user_name[BUFFER_SIZE];
 static char password[BUFFER_SIZE];
@@ -224,26 +112,14 @@ MYSQL *conn;
 
 websocket webSocket;
 string global_work_dir;
-static char lang_ext[25][8] = {"c", "cc", "pas", "java", "rb", "sh", "py",
-                               "php", "pl", "cs", "m", "bas", "scm", "c", "cc", "lua", "js", "go", "py", "cc", "cc",
-                               "c", "kt", "java", "java"};
 
 
-long get_file_size(const char *filename) {
-    struct stat f_stat{};
-
-    if (stat(filename, &f_stat) == -1) {
-        return 0;
-    }
-
-    return (long) f_stat.st_size;
-}
 
 void write_log(const char *_fmt, ...) {
     va_list ap;
-    char fmt[4096];
-    strncpy(fmt, _fmt, 4096);
-    char buffer[4096];
+    char fmt[FOUR * ONE_KILOBYTE];
+    strncpy(fmt, _fmt, FOUR * ONE_KILOBYTE);
+    char buffer[FOUR * ONE_KILOBYTE];
     //      time_t          t = time(NULL);
     //int l;
     sprintf(buffer, "%s/log/client.log", oj_home);
@@ -256,84 +132,11 @@ void write_log(const char *_fmt, ...) {
     //l =
     vsprintf(buffer, fmt, ap);
     fprintf(fp, "%s\n", buffer);
-    if (DEBUG)
+    if (DEBUG) {
         printf("%s\n", buffer);
+    }
     va_end(ap);
     fclose(fp);
-
-}
-
-int execute_cmd(const char *fmt, ...) {
-    char cmd[BUFFER_SIZE];
-
-    int ret = 0;
-    va_list ap;
-
-    va_start(ap, fmt);
-    vsprintf(cmd, fmt, ap);
-    ret = system(cmd);
-    va_end(ap);
-    return ret;
-}
-
-bool utf8_check_is_valid(const string &string) {
-    int c, i, ix, n, j;
-    for (i = 0, ix = static_cast<int>(string.length()); i < ix; i++) {
-        c = (unsigned char) string[i];
-        //if (c==0x09 || c==0x0a || c==0x0d || (0x20 <= c && c <= 0x7e) ) n = 0; // is_printable_ascii
-        if (0x00 <= c && c <= 0x7f) n = 0; // 0bbbbbbb
-        else if ((c & 0xE0) == 0xC0) n = 1; // 110bbbbb
-        else if (c == 0xed && i < (ix - 1) && ((unsigned char) string[i + 1] & 0xa0) == 0xa0)
-            return false; //U+d800 to U+dfff
-        else if ((c & 0xF0) == 0xE0) n = 2; // 1110bbbb
-        else if ((c & 0xF8) == 0xF0) n = 3; // 11110bbb
-            //else if (($c & 0xFC) == 0xF8) n=4; // 111110bb //byte 5, unnecessary in 4 byte UTF-8
-            //else if (($c & 0xFE) == 0xFC) n=5; // 1111110b //byte 6, unnecessary in 4 byte UTF-8
-        else return false;
-        for (j = 0; j < n && i < ix; j++) { // n bytes matching 10bbbbbb follow ?
-            if ((++i == ix) || (((unsigned char) string[i] & 0xC0) != 0x80))
-                return false;
-        }
-    }
-    return true;
-}
-
-string ws_send(const int &solution_id, const int &state, const int &finished, const double &time,
-               const int &memory, const int &pass_point, const double &pass_rate, const string &test_run_result = "",
-               const string &compile_info = "", const int sim = 0, const int sim_s_id = 0) {
-    json send_msg;
-    string ntest_run_result(test_run_result.begin(), test_run_result.end());
-    send_msg["type"] = "judger";
-    send_msg["value"]["judger"] = judger_number;
-    send_msg["value"]["solution_id"] = solution_id;
-    send_msg["value"]["state"] = state;
-    send_msg["value"]["finish"] = finished;
-    send_msg["value"]["time"] = time;
-    send_msg["value"]["memory"] = memory;
-    send_msg["value"]["pass_rate"] = pass_rate;
-    send_msg["value"]["pass_point"] = pass_point;
-    send_msg["value"]["sim"] = sim;
-    send_msg["value"]["sim_s_id"] = sim_s_id;
-    if (test_run_result.length()) {
-        if (utf8_check_is_valid(test_run_result)) {
-            send_msg["value"]["test_run_result"] = ntest_run_result;
-        } else {
-            send_msg["value"]["test_run_result"] = string("检测到非法UTF-8输出");
-        }
-    }
-    if (compile_info.length()) {
-        if (utf8_check_is_valid(compile_info)) {
-            send_msg["value"]["compile_info"] = compile_info;
-        }
-        send_msg["value"]["compile_info"] = string("检测到非法UTF-8输出");
-    }
-    return send_msg.dump();
-    /*
-    string s="{\"solution_id\":"+to_string(solution_id)+",\"state\":"+to_string(state)+",\"finish\":"+to_string(finished);
-    s+=",\"time\":"+to_string(time)+",\"memory\":"+to_string(memory)+",\"pass_point\":"+to_string(pass_point)+"";
-    s+="}";
-    return s;
-     */
 }
 
 const int call_array_size = 512;
@@ -399,44 +202,7 @@ void init_syscalls_limits(int lang) {
     }
 }
 
-int after_equal(const char *c) {
-    int i = 0;
-    for (; c[i] && c[i] != '='; i++);
-    return ++i;
-}
 
-void trim(char *c) {
-    char buf[BUFFER_SIZE];
-    char *start, *end;
-    strcpy(buf, c);
-    start = buf;
-    while (isspace(*start))
-        ++start;
-    end = start;
-    while (!isspace(*end))
-        ++end;
-    *end = '\0';
-    strcpy(c, start);
-}
-
-bool read_buf(char *buf, const char *key, char *value) {
-    if (strncmp(buf, key, strlen(key)) == 0) {
-        strcpy(value, buf + after_equal(buf));
-        trim(value);
-        if (DEBUG)
-            printf("%s\n", value);
-        return true;
-    }
-    return false;
-}
-
-void read_int(char *buf, const char *key, int &value) {
-    char buf2[BUFFER_SIZE];
-    if (read_buf(buf, key, buf2))
-        value = atoi(buf2);
-//      sscanf(buf2, "%d", value);
-
-}
 
 // read the configue file
 void init_mysql_conf() {
@@ -544,35 +310,7 @@ void find_next_nonspace(int &c1, int &c2, FILE *&f1, FILE *&f2, int &ret) {
 
  }
  */
-const char *getFileNameFromPath(const char *path) {
-    for (auto i = static_cast<int>(strlen(path)); i >= 0; i--) {
-        if (path[i] == '/')
-            return &path[i + 1];
-    }
-    return path;
-}
 
-void make_diff_out_full(FILE *f1, FILE *f2, int c1, int c2, const char *path) {
-
-    execute_cmd("echo '========[%s]========='>>diff.out", getFileNameFromPath(path));
-    execute_cmd("echo '------test in top 100 lines------'>>diff.out");
-    execute_cmd("head -100 data.in>>diff.out");
-    execute_cmd("echo '------test out top 100 lines-----'>>diff.out");
-    execute_cmd("head -100 '%s'>>diff.out", path);
-    execute_cmd("echo '------user out top 100 lines-----'>>diff.out");
-    execute_cmd("head -100 user.out>>diff.out");
-    execute_cmd("echo '------diff out 200 lines-----'>>diff.out");
-    execute_cmd("diff '%s' user.out -y|head -200>>diff.out", path);
-    execute_cmd("echo '=============================='>>diff.out");
-
-}
-
-void make_diff_out_simple(FILE *f1, FILE *f2, int c1, int c2, const char *path) {
-    execute_cmd("echo '========[%s]========='>>diff.out", getFileNameFromPath(path));
-    execute_cmd("echo '=======diff out 100 lines====='>>diff.out");
-    execute_cmd("diff '%s' user.out -y|head -100>>diff.out", path);
-    execute_cmd("echo '=============================='>>diff.out");
-}
 
 /*
  * translated from ZOJ judger r367
@@ -660,12 +398,6 @@ int compare_zoj(const char *file1, const char *file2) {
     return ret;
 }
 
-void delnextline(char s[]) {
-    int L;
-    L = static_cast<int>(strlen(s));
-    while (L > 0 && (s[L - 1] == '\n' || s[L - 1] == '\r'))
-        s[--L] = 0;
-}
 
 int compare(const char *file1, const char *file2) {
 #ifdef ZOJ_COM
@@ -715,21 +447,6 @@ int compare(const char *file1, const char *file2) {
 #endif
 }
 
-FILE *read_cmd_output(const char *fmt, ...) {
-    char cmd[BUFFER_SIZE];
-
-    FILE *ret = nullptr;
-    va_list ap;
-
-    va_start(ap, fmt);
-    vsprintf(cmd, fmt, ap);
-    va_end(ap);
-    if (DEBUG)
-        printf("%s\n", cmd);
-    ret = popen(cmd, "r");
-
-    return ret;
-}
 
 /* write result back to database */
 void _update_solution_mysql(int solution_id, int result, double time, int memory,
@@ -763,7 +480,7 @@ void _update_solution_mysql(int solution_id, int result, double time, int memory
 
 void update_solution(int solution_id, int result, double time, int memory, int sim,
                      int sim_s_id, double pass_rate) {
-    if (result == OJ_TL && memory == 0)
+    if (result == OJ_TL && memory == ZERO_MEMORY)
         result = OJ_ML;
     _update_solution_mysql(solution_id, result, time, memory, sim, sim_s_id,
                            pass_rate);
@@ -801,36 +518,7 @@ void _addceinfo_mysql(int solution_id) {
         printf("%s\n", mysql_error(conn));
     fclose(fp);
 }
-// urlencoded function copied from http://www.geekhideout.com/urlcode.shtml
-/* Converts a hex character to its integer value */
-char from_hex(char ch) {
-    return static_cast<char>(isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10);
-}
 
-/* Converts an integer value to its hex character*/
-char to_hex(char code) {
-    static char hex[] = "0123456789abcdef";
-    return hex[code & 15];
-}
-
-/* Returns a url-encoded version of str */
-/* IMPORTANT: be sure to free() the returned string after use */
-char *url_encode(char *str) {
-    char *pstr = str, *buf = (char *) malloc(strlen(str) * 3 + 1), *pbuf = buf;
-    while (*pstr) {
-        if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' || *pstr == '.'
-            || *pstr == '~')
-            *pbuf++ = *pstr;
-        else if (*pstr == ' ')
-            *pbuf++ = '+';
-        else
-            *pbuf++ = '%', *pbuf++ = to_hex(*pstr >> 4), *pbuf++ = to_hex(
-                    static_cast<char>(*pstr & 15));
-        pstr++;
-    }
-    *pbuf = '\0';
-    return buf;
-}
 
 void addceinfo(int solution_id) {
     _addceinfo_mysql(solution_id);
@@ -1028,8 +716,10 @@ int compile(int lang, char *work_dir) {
             LIM.rlim_max = static_cast<rlim_t>(COMPILE_STD_MB * 256);
             LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB * 256);
         }
-        setrlimit(RLIMIT_AS, &LIM);
-        if (lang != PASCAL && lang != 11) {
+        if (lang != JAVA && lang != JAVA8 && lang != JAVA7) {
+            setrlimit(RLIMIT_AS, &LIM);
+        }
+        if (lang != PASCAL && lang != FREEBASIC) {
             freopen("ce.txt", "w", stderr);
             //freopen("/dev/null", "w", stdout);
         } else {
@@ -1713,14 +1403,15 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     setrlimit(RLIMIT_NPROC, &LIM);
 
     // set the stack
-    LIM.rlim_cur = (STD_MB << 7);
-    LIM.rlim_max = (STD_MB << 7);
+    LIM.rlim_cur = static_cast<rlim_t>(STD_MB << 7);
+    LIM.rlim_max = static_cast<rlim_t>(STD_MB << 7);
     setrlimit(RLIMIT_STACK, &LIM);
     // set the memory
     LIM.rlim_cur = static_cast<rlim_t>(STD_MB * mem_lmt / 2 * 3);
     LIM.rlim_max = static_cast<rlim_t>(STD_MB * mem_lmt * 2);
-    if (lang < JAVA)
+    if (lang < JAVA || (lang >= CLANG && lang <= CLANGPP) || (lang >= CPP11 && lang <= C99)) {
         setrlimit(RLIMIT_AS, &LIM);
+    }
 
     switch (lang) {
         case C11:
@@ -2394,14 +2085,14 @@ int main(int argc, char **argv) {
         time_lmt = 300 * SECOND;
     if (mem_lmt > ONE_KILOBYTE || mem_lmt < ONE)
         mem_lmt = ONE_KILOBYTE;//ONE_KILOBYTE MB
-    if (DEBUG)
+    if (DEBUG) {
         printf("time: %f mem: %d\n", time_lmt, mem_lmt);
+    }
     // compile
     //      printf("%s\n",cmd);
     // set the result to compiling
-    int Compile_OK;
-    Compile_OK = compile(lang, work_dir);
-    if (Compile_OK != 0) {
+    int Compile_OK = compile(lang, work_dir);
+    if (Compile_OK != COMPILED) {
         addceinfo(solution_id);
         string _compile_info, tmp;
         fstream ceinformation("ce.txt");
@@ -2528,17 +2219,17 @@ int main(int argc, char **argv) {
         }
         if (webSocket.isConnected()) {
             string test_run_out;
-            char reinfo[(1 << 16)];
+            char reinfo[(1u << 16)];
             FILE *fp = fopen("user.out", "re");
-            while (fgets(reinfo, 1 << 16, fp)) {
+            while (fgets(reinfo, 1u << 16, fp)) {
                 string tmp(reinfo);
                 test_run_out += tmp;
                 if (test_run_out.length() > 4096)
                     break;
             }
             fclose(fp);
-            if (test_run_out.length() > 4096)
-                test_run_out = test_run_out.substr(0, 4096);
+            if (test_run_out.length() > FOUR * ONE_KILOBYTE)
+                test_run_out = test_run_out.substr(0, FOUR * ONE_KILOBYTE);
             webSocket << ws_send(solution_id, OJ_TR, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
                                  ZERO_PASSRATE,
                                  test_run_out);
@@ -2562,10 +2253,12 @@ int main(int argc, char **argv) {
 
             pid_t pidApp = fork();
 
-            if (pidApp == 0) {
-                printf("Running solution\n");
-                cout << "Time limit OI_MODE:" << (time_lmt + 1) << endl;
-                cout << "Time limit NORMAL:" << ((time_lmt - usedtime / 1000) + 1) << endl;
+            if (pidApp == CHILD_PROCESS) {
+                if(DEBUG) {
+                    printf("Running solution\n");
+                    cout << "Time limit OI_MODE:" << (time_lmt + 1) << endl;
+                    cout << "Time limit NORMAL:" << ((time_lmt - usedtime / 1000) + 1) << endl;
+                }
                 run_solution(lang, work_dir, time_lmt, usedtime, mem_lmt);
             } else {
 
