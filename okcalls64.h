@@ -61,6 +61,7 @@ int LANG_YV[256] = {0,39,99,302,99,32,72,131,1,2,3,4,5,6,8,9,10,11,12,13,14,16,2
 		SYS_munmap, SYS_open, SYS_read, SYS_readlink, SYS_rt_sigaction,
 		SYS_rt_sigprocmask, SYS_set_robust_list, SYS_set_tid_address, SYS_stat,
 		SYS_write, 0 };
+int LANG_PY3V[256] = {0,1,2,3,4,5,6,8,9,10,11,12,13,14,16,21,32,59,72,78,79,89,97,102,104,107,108,131,158,218,231,257,273,318,0};
 //php
 int LANG_PHV[256] = { 0,1,2,3,4,5,6,8,9,10,11,12,13,14,16,21,59,79,97,158,202,218,231,257,273,
 		257, 20, 146, 78, 158, 117, 60, 39, 102, 191, SYS_access,
@@ -119,6 +120,8 @@ int LANG_SV[256] = { 1, 23, 100, 61, 22, 6, 33, 8, 13, 16, 111, 110, 39, 79,
 		SYS_fstat, SYS_getuid, SYS_getgid, SYS_geteuid, SYS_getegid,
 		SYS_set_thread_area, SYS_set_tid_address, SYS_set_robust_list,
 		SYS_exit_group, 158, 0 };
+int LANG_PYPYV[256] = {0,1,2,3,4,5,6,8,9,10,11,12,13,14,16,21,59,63,72,78,79,89,97,102,104,107,108,137,158,218,231,257,273,0};
+int LANG_PYPY3V[256] = {0,1,2,3,4,5,6,8,9,10,11,12,13,14,16,21,59,63,72,78,79,89,97,102,104,107,108,137,158,218,231,257,273,0};
 //lua
 int LANG_LUAV[256]={0,1,2,3,4,5,9,10,11,12,13,21,59,158,231,292,0};
 //nodejs javascript

@@ -74,7 +74,6 @@ using json = nlohmann::json;
 #endif
 
 
-
 static char host_name[BUFFER_SIZE];
 static char user_name[BUFFER_SIZE];
 static char password[BUFFER_SIZE];
@@ -112,7 +111,6 @@ MYSQL *conn;
 
 websocket webSocket;
 string global_work_dir;
-
 
 
 void write_log(const char *_fmt, ...) {
@@ -169,9 +167,12 @@ void init_syscalls_limits(int lang) {
     } else if (lang == BASH) { // Bash
         for (i = 0; i == 0 || LANG_BV[i]; i++)
             call_counter[LANG_BV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == PYTHON2 || lang == PYTHON3) { // Python
+    } else if (lang == PYTHON2) { // Python
         for (i = 0; i == 0 || LANG_YV[i]; i++)
             call_counter[LANG_YV[i]] = HOJ_MAX_LIMIT;
+    } else if (lang == PYTHON3) {
+        for (i = 0; i == 0 || LANG_PY3V[i]; i++)
+            call_counter[LANG_PY3V[i]] = HOJ_MAX_LIMIT;
     } else if (lang == PHP) { // php
         for (i = 0; i == 0 || LANG_PHV[i]; i++)
             call_counter[LANG_PHV[i]] = HOJ_MAX_LIMIT;
@@ -199,9 +200,16 @@ void init_syscalls_limits(int lang) {
     } else if (lang == GO) { //go
         for (i = 0; i == 0 || LANG_GOV[i]; i++)
             call_counter[LANG_GOV[i]] = HOJ_MAX_LIMIT;
+    } else if (lang == PyPy) {
+        for(i = 0; i == 0 || LANG_PYPYV[i]; ++i) {
+            call_counter[LANG_PYPYV[i]] = HOJ_MAX_LIMIT;
+        }
+    } else if (lang == PyPy3) {
+        for(i = 0; i == 0 || LANG_PYPY3V[i]; ++i) {
+            call_counter[LANG_PYPY3V[i]] = HOJ_MAX_LIMIT;
+        }
     }
 }
-
 
 
 // read the configue file
@@ -725,8 +733,8 @@ int compile(int lang, char *work_dir) {
         } else {
             freopen("ce.txt", "w", stdout);
         }
-        if (lang != CPP17 && lang != JAVA && lang != 9 && lang != PYTHON2 && lang != 11
-            && lang != PYTHON3 && lang != JAVA7 && lang != JAVA8) {
+        if (lang != CPP17 && lang != JAVA && lang != 9 && lang != PYTHON2 && lang != FREEBASIC
+            && lang != PYTHON3 && lang != JAVA7 && lang != JAVA8 && lang != PyPy && lang != PyPy3) {
             execute_cmd("mkdir -p bin usr lib lib64 etc/alternatives proc tmp dev");
             execute_cmd("chown judge *");
             execute_cmd("mount -o bind /bin bin");
@@ -794,6 +802,9 @@ int compile(int lang, char *work_dir) {
                 break;
             case PYTHON2:
                 //execvp(CP_Y[0], (char * const *) CP_Y);
+                break;
+            case PyPy:
+            case PyPy3:
                 break;
             case PHP:
                 execvp(CP_PH[0], (char *const *) CP_PH);
@@ -1210,8 +1221,69 @@ void copy_python_runtime(char *work_dir) {
     execute_cmd("/bin/mkdir -p %s/etc", work_dir);
     execute_cmd("/bin/grep judge /etc/passwd>%s/etc/passwd", work_dir);
     execute_cmd("/bin/mount -o bind /dev %s/dev", work_dir);
+}
 
 
+void copy_pypy_runtime(char *work_dir) {
+    copy_shell_runtime(work_dir);
+    execute_cmd("mkdir -p %s/usr/include", work_dir);
+    execute_cmd("mkdir -p %s/dev", work_dir);
+    execute_cmd("mkdir -p %s/usr/lib", work_dir);
+    execute_cmd("mkdir -p %s/usr/lib64", work_dir);
+    execute_cmd("mkdir -p %s/usr/local/lib", work_dir);
+    execute_cmd("cp -a /usr/local/pypy %s/", work_dir);
+    // execute_cmd("cp -a /usr/include/pypy* %s/usr/include/", work_dir);
+    // execute_cmd("cp -a /usr/lib/libpython* %s/usr/lib/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libpthread.so.0 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libc.so.6 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libutil.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libdl.so.2 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libbz2.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libz.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libm.so.6 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/librt.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libcrypt.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libgcc_s.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libfreebl3.so %s/usr/lib64/", work_dir);
+    execute_cmd("/bin/mkdir -p %s/home/judge", work_dir);
+    execute_cmd("/bin/chown judge %s", work_dir);
+    execute_cmd("/bin/mkdir -p %s/etc", work_dir);
+    execute_cmd("/bin/grep judge /etc/passwd>%s/etc/passwd", work_dir);
+    execute_cmd("/bin/mount -o bind /dev %s/dev", work_dir);
+}
+
+
+void copy_pypy3_runtime(char *work_dir) {
+    copy_shell_runtime(work_dir);
+    execute_cmd("mkdir -p %s/usr/include", work_dir);
+    execute_cmd("mkdir -p %s/dev", work_dir);
+    execute_cmd("mkdir -p %s/usr/lib", work_dir);
+    execute_cmd("mkdir -p %s/usr/lib64", work_dir);
+    execute_cmd("mkdir -p %s/usr/local/lib", work_dir);
+    execute_cmd("cp -a /usr/local/pypy %s/pypy3", work_dir);
+    execute_cmd("cp -a /usr/lib64/linux-vdso.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libpthread.so.0 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libc.so.6 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libutil.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libdl.so.2 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libbz2.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libexpat.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libm.so.6 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libz.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/librt.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libcrypt.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libffi.so.6 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libncursesw.so.6 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libtinfow.so.6 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libgcc_s.so.1 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64//lib64/ld-linux-x86-64.so.2 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libfreebl3.so %s/usr/lib64/", work_dir);
+
+    execute_cmd("/bin/mkdir -p %s/home/judge", work_dir);
+    execute_cmd("/bin/chown -R judge %s", work_dir);
+    execute_cmd("/bin/mkdir -p %s/etc", work_dir);
+    execute_cmd("/bin/grep judge /etc/passwd>%s/etc/passwd", work_dir);
+    execute_cmd("/bin/mount -o bind /dev %s/dev", work_dir);
 }
 
 void copy_php_runtime(char *work_dir) {
@@ -1483,6 +1555,12 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
             //system("./python3 Main.py<data.in>>user.out");
             execl("/python3", "/python3", "Main.py", (char *) nullptr);
             break;
+        case PyPy:
+            execl("/pypy/bin/pypy", "/pypy/bin/pypy", "Main.py", (char *) nullptr);
+            break;
+        case PyPy3:
+            execl("/pypy3/bin/pypy", "/pypy3/bin/pypy", "Main.py", (char *) nullptr);
+            break;
         default:
             break;
     }
@@ -1686,7 +1764,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
     if (lang == JAVA || lang == JAVA7 || lang == JAVA8) {
         comp_res = fix_java_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
     }
-    if (lang == PYTHON2 || lang == PYTHON3) {
+    if (lang == PYTHON2 || lang == PYTHON3 || lang == PyPy || lang == PyPy3) {
         comp_res = fix_python_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
     }
 }
@@ -2150,6 +2228,12 @@ int main(int argc, char **argv) {
         case PYTHON3:
             copy_python_runtime(work_dir);
             break;
+        case PyPy:
+            copy_pypy_runtime(work_dir);
+            break;
+        case PyPy3:
+            copy_pypy3_runtime(work_dir);
+            break;
         case PHP:
             copy_php_runtime(work_dir);
             break;
@@ -2242,11 +2326,12 @@ int main(int argc, char **argv) {
     webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
                          ZERO_PASSRATE);
     int pass_point = ZERO_PASSPOINT;
-    for (; (OI_MODE || ACflg == OJ_AC || ACflg == OJ_PE) && (dirp = readdir(dp)) != nullptr; ++num_of_test) {
+    for (; (OI_MODE || ACflg == OJ_AC || ACflg == OJ_PE) && (dirp = readdir(dp)) != nullptr;) {
+        namelen = isInFile(dirp->d_name); // check if the file is *.in or not
+        if (namelen == 0)
+            continue;
         if (ACflg <= OJ_PE) {
-            namelen = isInFile(dirp->d_name); // check if the file is *.in or not
-            if (namelen == 0)
-                continue;
+            ++num_of_test;
             prepare_files(dirp->d_name, namelen, infile, p_id, work_dir, outfile,
                           userfile, runner_id);
             init_syscalls_limits(lang);
@@ -2254,7 +2339,7 @@ int main(int argc, char **argv) {
             pid_t pidApp = fork();
 
             if (pidApp == CHILD_PROCESS) {
-                if(DEBUG) {
+                if (DEBUG) {
                     printf("Running solution\n");
                     cout << "Time limit OI_MODE:" << (time_lmt + 1) << endl;
                     cout << "Time limit NORMAL:" << ((time_lmt - usedtime / 1000) + 1) << endl;
@@ -2305,6 +2390,11 @@ int main(int argc, char **argv) {
                 ACflg = OJ_AC;
             }
 
+            webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, min(usedtime, time_lmt * 1000),
+                                 min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
+                                 pass_rate / num_of_test);
+        }
+        else {
             webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, min(usedtime, time_lmt * 1000),
                                  min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
                                  pass_rate / num_of_test);
