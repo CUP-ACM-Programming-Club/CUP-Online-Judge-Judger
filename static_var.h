@@ -60,6 +60,7 @@ enum language {
     JAVA7 = 24,
     PyPy = 25,
     PyPy3 = 26,
+    JAVA6 = 27,
     OTHER
 };
 
@@ -114,9 +115,9 @@ enum judge_procedure {
     SYSTEM_REJECTED = 15
 };
 
-static char lang_ext[27][8] = {"c", "cc", "pas", "java", "rb", "sh", "py",
+static char lang_ext[28][8] = {"c", "cc", "pas", "java", "rb", "sh", "py",
                                "php", "pl", "cs", "m", "bas", "scm", "c", "cc", "lua", "js", "go", "py", "cc", "cc",
-                               "c", "kt", "java", "java", "py", "py"};
+                               "c", "kt", "java", "java", "py", "py","java"};
 
 const int CODESIZE = 64 * ONE_KILOBYTE;
 const int BUFFER_SIZE = 5 * ONE_KILOBYTE;
