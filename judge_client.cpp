@@ -1832,7 +1832,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         //jvm gc ask VM before need,so used kernel page fault times and page size
         if (lang == JAVA || lang == PHP ||
             lang == JAVASCRIPT || lang == CSHARP ||
-            lang == GO || lang == JAVA7 || lang == JAVA8 || lang == JAVA6) {
+            lang == GO || lang == JAVA7 || lang == JAVA8 || lang == JAVA6 || lang == CLANG || lang == CLANGPP) {
             tempmemory = get_page_fault_mem(ruse, pidApp);
         } else {        //other use VmPeak
             tempmemory = get_proc_status(pidApp, "VmPeak:") << 10;
@@ -1846,7 +1846,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
             break;
         }
-        //sig = status >> 8;/*status >> 8 Ã¥Â·Â®Ã¤Â¸ÂÃ¥Â¤Å¡Ã¦ËÂ¯EXITCODE*/
+        //sig = status >> 8;/*status >> 8 EXITCODE*/
 
         if (WIFEXITED(status))
             break;
