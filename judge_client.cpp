@@ -1658,12 +1658,12 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
     int ret = 0;
     if (pid == 0) {
 
-        while (setgid(1536) != 0)
-            sleep(1);
-        while (setuid(1536) != 0)
-            sleep(1);
-        while (setresuid(1536, 1536, 1536) != 0)
-            sleep(1);
+        //while (setgid(1536) != 0)
+        //    sleep(1);
+        //while (setuid(1536) != 0)
+        //    sleep(1);
+        //while (setresuid(1536, 1536, 1536) != 0)
+        //    sleep(1);
         freopen("spjresult.out", "w", stdout);
 
         struct rlimit LIM{}; // time limit, file limit& memory limit
