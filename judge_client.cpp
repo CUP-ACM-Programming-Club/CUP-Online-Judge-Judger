@@ -666,7 +666,7 @@ int compile(int lang, char *work_dir) {
     const char *CP_CLANG_CPP[] = {"clang++", "Main.cc", "-o", "Main", "-ferror-limit=10", "-fno-asm", "-Wall",
                                   "-lm", "--static", "-std=c++11", "-DONLINE_JUDGE", nullptr};
     const char *CP_LUA[] = {"luac", "-o", "Main", "Main.lua", nullptr};
-    //const char * CP_JS[] = { "js24","-c", "Main.js", NULL };
+    //const char * CP_JS[] = { "node", "Main.js", NULL };
     const char *CP_GO[] = {"go", "build", "-o", "Main", "Main.go", nullptr};
 
     char javac_buf[7][32];
@@ -844,9 +844,9 @@ int compile(int lang, char *work_dir) {
             case LUA:
                 execvp(CP_LUA[0], (char *const *) CP_LUA);
                 break;
-                //case JAVASCRIPT:
-                //  execvp(CP_JS[0], (char * const *) CP_JS);
-                //  break;
+            //case JAVASCRIPT:
+              //  execvp(CP_JS[0], (char *const *) CP_JS);
+                //break;
             case GO:
                 execvp(CP_GO[0], (char *const *) CP_GO);
                 break;
@@ -1383,40 +1383,49 @@ void copy_lua_runtime(char *work_dir) {
 }
 
 void copy_js_runtime(char *work_dir) {
+    execute_cmd("mkdir -p %s/dev", work_dir);
+    execute_cmd("/bin/mount -o bind /dev %s/dev", work_dir);
+    execute_cmd("/bin/mkdir -p %s/usr/lib64 %s/lib64/ %s/lib64/", work_dir, work_dir, work_dir);
+    execute_cmd("/bin/cp /lib64/libz.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /usr/lib64libuv.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /usr/lib64/libicui18n.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /usr/lib64/libicuuc.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /usr/lib64/libicudata.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libtinfo.so.*  %s/lib64/", work_dir);
 
-    //  copy_shell_runtime(work_dir);
-    execute_cmd("/bin/mkdir -p %s/usr/lib /lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/i386-linux-gnu/libz.so.*  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /usr/lib/i386-linux-gnu/libcares.so.*  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /usr/lib/libv8.so.*  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/i386-linux-gnu/libssl.so.*  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/i386-linux-gnu/libcrypto.so.*  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/i386-linux-gnu/libdl.so.*  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/i386-linux-gnu/librt.so.*  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /usr/lib/i386-linux-gnu/libstdc++.so.*  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/i386-linux-gnu/libpthread.so.*  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/i386-linux-gnu/libc.so.6  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/i386-linux-gnu/libm.so.6  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/i386-linux-gnu/libgcc_s.so.1  %s/lib/i386-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/ld-linux.so.*  %s/lib/i386-linux-gnu/", work_dir);
+    execute_cmd("/bin/cp /usr/lib64/libcares.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /usr/lib64/libv8.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib/libssl.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libcrypto.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libdl.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/librt.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libstdc++.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libpthread.so.*  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libc.so.6  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libm.so.6  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libgcc_s.so.1  %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/ld-linux.so.*  %s/lib64/", work_dir);
 
-    execute_cmd("/bin/mkdir -p %s/usr/lib /lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/x86_64-linux-gnu/libz.so.*  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /usr/lib/x86_64-linux-gnu/libcares.so.*  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /usr/lib/libv8.so.*  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/x86_64-linux-gnu/libssl.so.*  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/x86_64-linux-gnu/libcrypto.so.*  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/x86_64-linux-gnu/libdl.so.*  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/x86_64-linux-gnu/librt.so.*  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /usr/lib/x86_64-linux-gnu/libstdc++.so.*  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/x86_64-linux-gnu/libpthread.so.*  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/x86_64-linux-gnu/libc.so.6  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/x86_64-linux-gnu/libm.so.6  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib/x86_64-linux-gnu/libgcc_s.so.1  %s/lib/x86_64-linux-gnu/", work_dir);
-    execute_cmd("/bin/cp /lib64/ld-linux-x86-64.so.2  %s/lib/x86_64-linux-gnu/", work_dir);
+    execute_cmd("/bin/mkdir -p %s/usr/lib %s/lib64/", work_dir, work_dir);
 
-    execute_cmd("/bin/cp /usr/bin/node %s/", work_dir);
+    execute_cmd("/bin/cp /lib64/libz.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /usr/lib64/libuv.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/librt.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libpthread.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libdl.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libssl.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libcrypto.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /usr/lib64/libicui18n.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /usr/lib64/libicuuc.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /usr/lib64/libstdc++.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libm.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libgcc_s.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/libc.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /lib64/ld-linux-x86-64.so.* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /usr/lib64/libicudata.so.* %s/lib64/", work_dir);
 
+
+    execute_cmd("/bin/cp /usr/local/bin/node %s/", work_dir);
 }
 
 void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
