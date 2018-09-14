@@ -1673,7 +1673,7 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         //    sleep(1);
         //while (setresuid(1536, 1536, 1536) != 0)
         //    sleep(1);
-        freopen("spjresult.out", "w", stdout);
+        freopen("diff.out", "w", stdout);
 
         struct rlimit LIM{}; // time limit, file limit& memory limit
 
@@ -1704,8 +1704,8 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         }
         freopen("/dev/tty", "w", stdout);
         if (DEBUG) {
-            ifstream spjout("spjresult.out");
-            if (get_file_size("spjresult.out")) {
+            if (get_file_size("diff.out")) {
+                ifstream spjout("diff.out");
                 string s;
                 while (getline(spjout, s)) {
                     cout << s << endl;
@@ -1980,20 +1980,14 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         } else { //do not limit JVM syscall for using different JVM
             ACflg = RUNTIME_ERROR;
             char error[BUFFER_SIZE];
-            sprintf(error,
-                    "[ERROR] A Not allowed system call: runid:%d CALLID:%ld\n"
-                    " TO FIX THIS , ask admin to add the CALLID into corresponding LANG_XXV[] located at okcalls32/64.h ,\n"
-                    "and recompile judge_client. \n"
-                    "if you are admin and you don't know what to do ,\n"
-                    " tech support can be found on http://hustoj.taobao.com\n",
-                    solution_id, (long) reg.REG_SYSCALL);
+            string _error;
+            _error = string("Current Program use not allowed system call.\nSolution ID:") + to_string(solution_id) + "\n";
+            _error += string("Syscall ID:") + to_string(reg.REG_SYSCALL) + "\n";
 
-            write_log(error);
-            print_runtimeerror(error);
+            write_log(_error.c_str());
+            print_runtimeerror(_error.c_str());
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
         }
-
-
         ptrace(PTRACE_SYSCALL, pidApp, NULL, NULL);
     }
 
@@ -2390,6 +2384,7 @@ int main(int argc, char **argv) {
             if (usedtime > time_lmt * 1000) {
                 cout << "Time Limit Exceeded" << endl;
                 ACflg = TIME_LIMIT_EXCEEDED;
+                usedtime = time_lmt * 1000;
             }
 
             if (ACflg == ACCEPT) {
