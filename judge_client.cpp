@@ -1471,8 +1471,8 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     alarm(static_cast<unsigned int>(time_lmt * 10));
 
     // file limit
-    LIM.rlim_max = (STD_F_LIM + STD_MB);
-    LIM.rlim_cur = (STD_F_LIM);
+    LIM.rlim_max = ((STD_F_LIM << 2) + STD_MB);
+    LIM.rlim_cur = (STD_F_LIM << 2);
     setrlimit(RLIMIT_FSIZE, &LIM);
     // proc limit
     switch (lang) {
@@ -1956,7 +1956,6 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
                     case SIGXFSZ:
                         ACflg = OUTPUT_LIMIT_EXCEEDED;
                         break;
-
                     default:
                         ACflg = RUNTIME_ERROR;
                 }
