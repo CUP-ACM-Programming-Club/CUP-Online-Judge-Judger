@@ -263,6 +263,14 @@ int isInFile(const char fname[]) {
         return l - 3;
 }
 
+void move_to_next_nonspace_character(int &c, FILE *&f, int &ret) {
+    while (isspace(c) || iscntrl(c)) {
+        do {
+            c = fgetc(f);
+        } while (isspace(c) || iscntrl(c));
+    }
+}
+
 void find_next_nonspace(int &c1, int &c2, FILE *&f1, FILE *&f2, int &ret) {
     // Find the next non-space character or \n.
     while ((isspace(c1)) || (isspace(c2))) {
@@ -292,8 +300,8 @@ void find_next_nonspace(int &c1, int &c2, FILE *&f1, FILE *&f2, int &ret) {
 #endif
             } else {
                 if (DEBUG)
-                    printf("%d=%c\t%d=%c", c1, c1, c2, c2);;
-                ret = OJ_PE;
+                    printf("%d=%c\t%d=%c", c1, c1, c2, c2);
+                ret = PRESENTATION_ERROR;
             }
         }
         if (isspace(c1)) {
@@ -319,6 +327,9 @@ void find_next_nonspace(int &c1, int &c2, FILE *&f1, FILE *&f2, int &ret) {
  }
  */
 
+bool is_not_character(int c) {
+    return (iscntrl(c) || isspace(c));
+}
 
 /*
  * translated from ZOJ judger r367
@@ -346,13 +357,13 @@ int compare_zoj(const char *file1, const char *file2) {
                 cerr << tmp << endl;
         }
     }
-    int ret = OJ_AC;
+    int ret = ACCEPT;
     int c1, c2;
     FILE *f1, *f2;
     f1 = fopen(file1, "re");
     f2 = fopen(file2, "re");
     if (!f1 || !f2) {
-        ret = OJ_RE;
+        ret = RUNTIME_ERROR;
     } else
         for (;;) {
             // Find the first non-space character at the beginning of line.
@@ -371,19 +382,30 @@ int compare_zoj(const char *file1, const char *file2) {
                         break;
                     }
                     if (c1 != c2) {
+                        if(DEBUG) {
+                            cerr << "c1:" << (char)c1 << " c2:" << (char)c2 << endl;
+                        }
                         // Consecutive non-space characters should be all exactly the same
-                        ret = OJ_WA;
+                        ret = WRONG_ANSWER;
                         goto end;
                     }
                     c1 = fgetc(f1);
+                    if (is_not_character(c1)) {
+                        ret = PRESENTATION_ERROR;
+                        move_to_next_nonspace_character(c1, f1, ret);
+                    }
                     c2 = fgetc(f2);
+                    if (is_not_character(c2)) {
+                        ret = PRESENTATION_ERROR;
+                        move_to_next_nonspace_character(c2, f2, ret);
+                    }
                 }
                 find_next_nonspace(c1, c2, f1, f2, ret);
                 if (c1 == EOF && c2 == EOF) {
                     goto end;
                 }
                 if (c1 == EOF || c2 == EOF) {
-                    ret = OJ_WA;
+                    ret = WRONG_ANSWER;
                     goto end;
                 }
 
@@ -393,7 +415,7 @@ int compare_zoj(const char *file1, const char *file2) {
             }
         }
     end:
-    if (ret == OJ_WA || ret == OJ_PE) {
+    if (ret == WRONG_ANSWER || ret == PRESENTATION_ERROR) {
         if (full_diff)
             make_diff_out_full(f1, f2, c1, c2, file1);
         else
@@ -844,8 +866,8 @@ int compile(int lang, char *work_dir) {
             case LUA:
                 execvp(CP_LUA[0], (char *const *) CP_LUA);
                 break;
-            //case JAVASCRIPT:
-              //  execvp(CP_JS[0], (char *const *) CP_JS);
+                //case JAVASCRIPT:
+                //  execvp(CP_JS[0], (char *const *) CP_JS);
                 //break;
             case GO:
                 execvp(CP_GO[0], (char *const *) CP_GO);
@@ -1980,7 +2002,8 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
             ACflg = RUNTIME_ERROR;
             char error[BUFFER_SIZE];
             string _error;
-            _error = string("Current Program use not allowed system call.\nSolution ID:") + to_string(solution_id) + "\n";
+            _error = string("Current Program use not allowed system call.\nSolution ID:") + to_string(solution_id) +
+                     "\n";
             _error += string("Syscall ID:") + to_string(reg.REG_SYSCALL) + "\n";
 
             write_log(_error.c_str());
