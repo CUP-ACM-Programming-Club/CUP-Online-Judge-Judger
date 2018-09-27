@@ -336,26 +336,51 @@ bool is_not_character(int c) {
  * http://code.google.com/p/zoj/source/browse/trunk/judge_client/client/text_checker.cc#25
  *
  */
+int choose = 1;
+
+bool is_number(const string &s) {
+    for (auto c:s) {
+        if (!isdigit(c))return false;
+    }
+    return true;
+}
+
+bool check_valid_presentation_error(const char *ansfile, const char *userfile) {
+    fstream user(userfile), ans(ansfile);
+    string u, a;
+    while (user >> u) {
+        ans >> a;
+        if (is_number(a)) {
+            if (a != u) {
+                return false;
+            }
+        } else {
+            break;
+        }
+    }
+    return true;
+}
+
 int compare_zoj(const char *file1, const char *file2) {
-    if (DEBUG && false) {
-        fstream user_out(file1), error_file(file2);
-        string tmp;
-        cout << "Display user file?(0/1)" << endl;
-        int choose = 0;
-        cin >> choose;
-        if (choose) {
-            cout << "user running file" << endl;
-            while (getline(user_out, tmp))
-                cout << tmp << endl;
-        }
-        choose = 0;
-        cout << "Display error file?(0/1)" << endl;
-        cin >> choose;
-        if (choose) {
-            cout << "error msg" << endl;
-            while (getline(error_file, tmp))
-                cerr << tmp << endl;
-        }
+    if (DEBUG && choose) {
+        do {
+            fstream user_out(file1), error_file(file2);
+            string tmp;
+            cout << "Display user file?(0/1)" << endl;
+            cin >> choose;
+            if (choose) {
+                cout << "user running file" << endl;
+                while (getline(user_out, tmp))
+                    cout << tmp << endl;
+            } else break;
+            cout << "Display error file?(0/1)" << endl;
+            cin >> choose;
+            if (choose) {
+                cout << "error msg" << endl;
+                while (getline(error_file, tmp))
+                    cerr << tmp << endl;
+            } else break;
+        } while (0);
     }
     int ret = ACCEPT;
     int c1, c2;
@@ -382,22 +407,29 @@ int compare_zoj(const char *file1, const char *file2) {
                         break;
                     }
                     if (c1 != c2) {
-                        if(DEBUG) {
-                            cerr << "c1:" << (char)c1 << " c2:" << (char)c2 << endl;
+                        if (DEBUG) {
+                            cerr << "c1:" << (char) c1 << " c2:" << (char) c2 << endl;
                         }
                         // Consecutive non-space characters should be all exactly the same
                         ret = WRONG_ANSWER;
                         goto end;
                     }
                     c1 = fgetc(f1);
-                    if (is_not_character(c1)) {
-                        ret = PRESENTATION_ERROR;
-                        move_to_next_nonspace_character(c1, f1, ret);
-                    }
                     c2 = fgetc(f2);
-                    if (is_not_character(c2)) {
-                        ret = PRESENTATION_ERROR;
-                        move_to_next_nonspace_character(c2, f2, ret);
+                    while (c1 == '\r')c1 = fgetc(f1);
+                    //while(c2 == '\r')c2 = fgetc(f2);
+                    if (c1 != c2) {
+                        cerr << "c1:" << c1 << " c2:" << c2 << endl;
+                        if (is_not_character(c1) && c1 != EOF) {
+                            if (c2 != EOF)
+                                ret = PRESENTATION_ERROR;
+                            move_to_next_nonspace_character(c1, f1, ret);
+                        }
+                        if (is_not_character(c2) && c2 != EOF) {
+                            if (c1 != EOF)
+                                ret = PRESENTATION_ERROR;
+                            move_to_next_nonspace_character(c2, f2, ret);
+                        }
                     }
                 }
                 find_next_nonspace(c1, c2, f1, f2, ret);
@@ -415,6 +447,11 @@ int compare_zoj(const char *file1, const char *file2) {
             }
         }
     end:
+    if (ret == PRESENTATION_ERROR) {
+        if (!check_valid_presentation_error(file1, file2)) {
+            ret = WRONG_ANSWER;
+        }
+    }
     if (ret == WRONG_ANSWER || ret == PRESENTATION_ERROR) {
         if (full_diff)
             make_diff_out_full(f1, f2, c1, c2, file1);
@@ -655,9 +692,11 @@ void umount(char *work_dir) {
 int compile(int lang, char *work_dir) {
     int pid;
     webSocket << ws_send(solution_id, 2, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE);
-    const char *CP_C[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main", "-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
+    const char *CP_C[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main", "-fmax-errors=10", "-fno-asm", "-Wall",
+                          "-O2",
                           "-lm", "--static", "-std=c11", "-DONLINE_JUDGE", nullptr};
-    const char *CP_CC[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main", "-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
+    const char *CP_CC[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main", "-fmax-errors=10", "-fno-asm", "-Wall",
+                           "-O2",
                            "-lm", "--static", "-std=c99", "-DONLINE_JUDGE", nullptr};
     const char *CP_X[] = {"/usr/local/bin/g++", "-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
                           "-lm", "--static", "-std=c++17", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", nullptr};
@@ -766,7 +805,8 @@ int compile(int lang, char *work_dir) {
             freopen("ce.txt", "w", stdout);
         }
         if (lang != CPP17 && lang != JAVA && lang != 9 && lang != PYTHON2 && lang != FREEBASIC
-            && lang != PYTHON3 && lang != JAVA7 && lang != JAVA8 && lang != JAVA6 && lang != PyPy && lang != PyPy3) {
+            && lang != PYTHON3 && lang != JAVA7 && lang != JAVA8 && lang != JAVA6 && lang != PyPy &&
+            lang != PyPy3) {
             execute_cmd("mkdir -p bin usr lib lib64 etc/alternatives proc tmp dev");
             execute_cmd("chown judge *");
             execute_cmd("mount -o bind /bin bin");
@@ -777,7 +817,8 @@ int compile(int lang, char *work_dir) {
 #endif
             execute_cmd("mount -o bind /etc/alternatives etc/alternatives");
             execute_cmd("mount -o bind /proc proc");
-            if (lang > PASCAL && lang != OBJC && lang != CLANG && lang != CLANGPP && lang != CPP11 && lang != CPP98 &&
+            if (lang > PASCAL && lang != OBJC && lang != CLANG && lang != CLANGPP && lang != CPP11 &&
+                lang != CPP98 &&
                 lang != C99)
                 execute_cmd("mount -o bind /dev dev");
             chroot(work_dir);
@@ -1714,7 +1755,7 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         if (~access((dir + "spj").c_str(), 0)) {
             ret = execute_cmd((dir + "spj %s %s %s %s").c_str(),
                               infile, outfile, userfile, outfiled.c_str());
-            //cout<<(dir + "spj %s %s %s %s")<<ret<<endl;    
+            //cout<<(dir + "spj %s %s %s %s")<<ret<<endl;
             //cout<<infile<<" "<<outfile<<" "<<userfile<<" "<<outfiled<<endl;
             //cout<<"Hrere"<<endl;
         } else if (~access((dir + "spj.js").c_str(), 0)) {
@@ -2322,18 +2363,18 @@ int main(int argc, char **argv) {
                            p_id, PEflg, work_dir);
 
         }
-        if (ACflg == OJ_TL) {
+        if (ACflg == TIME_LIMIT_EXCEEDED) {
             usedtime = time_lmt * 1000;
             ofstream uout("user.out");
             uout << "Time Limit Exceeded.Kill Process." << endl;
             uout.close();
             addcustomout(solution_id);
         }
-        if (ACflg == OJ_RE) {
+        if (ACflg == RUNTIME_ERROR) {
             if (DEBUG)
                 printf("add RE info of %d..... \n", solution_id);
             addreinfo(solution_id);
-        } else if (ACflg == OJ_ML) {
+        } else if (ACflg == MEMORY_LIMIT_EXCEEDED) {
             ofstream uout("user.out");
             uout << "Memory Limit Exceeded.Kill Process." << endl;
             uout.close();
@@ -2354,11 +2395,11 @@ int main(int argc, char **argv) {
             fclose(fp);
             if (test_run_out.length() > FOUR * ONE_KILOBYTE)
                 test_run_out = test_run_out.substr(0, FOUR * ONE_KILOBYTE);
-            webSocket << ws_send(solution_id, OJ_TR, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
+            webSocket << ws_send(solution_id, TEST_RUN, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
                                  ZERO_PASSRATE,
                                  test_run_out);
         }
-        update_solution(solution_id, OJ_TR, usedtime, topmemory / ONE_KILOBYTE, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
+        update_solution(solution_id, TEST_RUN, usedtime, topmemory / ONE_KILOBYTE, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         clean_workdir(work_dir);
         exit(0);
     }
@@ -2370,7 +2411,7 @@ int main(int argc, char **argv) {
         namelen = isInFile(dirp->d_name); // check if the file is *.in or not
         if (namelen == 0)
             continue;
-        if (ACflg <= OJ_PE) {
+        if (ACflg <= PRESENTATION_ERROR) {
             ++num_of_test;
             prepare_files(dirp->d_name, namelen, infile, p_id, work_dir, outfile,
                           userfile, runner_id);
@@ -2459,19 +2500,22 @@ int main(int argc, char **argv) {
         usedtime = time_lmt * 1000;
     }
 
-    webSocket << ws_send(solution_id, ALL_TEST_MODE ? finalACflg : ACflg, FINISHED, usedtime, topmemory / ONE_KILOBYTE,
+    webSocket << ws_send(solution_id, ALL_TEST_MODE ? finalACflg : ACflg, FINISHED, usedtime,
+                         topmemory / ONE_KILOBYTE,
                          pass_point,
                          pass_rate / num_of_test, "", "", sim, sim_s_id);
     if (ALL_TEST_MODE) {
-        if (num_of_test > 0)
+        if (num_of_test > 0) {
             pass_rate /= num_of_test;
+        }
         update_solution(solution_id, finalACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
                         sim_s_id, pass_rate);
     } else {
         update_solution(solution_id, ACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
                         sim_s_id, ZERO_PASSRATE);
     }
-    if ((ALL_TEST_MODE && finalACflg == WRONG_ANSWER) || ACflg == WRONG_ANSWER) {
+    if ((ALL_TEST_MODE && (finalACflg == WRONG_ANSWER || finalACflg == PRESENTATION_ERROR)) ||
+        (ACflg == WRONG_ANSWER || ACflg == PRESENTATION_ERROR)) {
         if (DEBUG)
             printf("add diff info of %d..... \n", solution_id);
         if (!SPECIAL_JUDGE)
