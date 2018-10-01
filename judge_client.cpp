@@ -831,7 +831,8 @@ int compile(int lang, char *work_dir) {
         while (setresuid(1536, 1536, 1536) != 0)
             sleep(1);
         int ret = 0;
-        cout << "Lang:" << lang << endl;
+        if (DEBUG)
+            cout << "Lang:" << lang << endl;
         switch (lang) {
             case C11:
                 execvp(CP_C[0], (char *const *) CP_C);
@@ -878,8 +879,6 @@ int compile(int lang, char *work_dir) {
                     cout << CP_B[0] << endl;
                 break;
             case PYTHON2:
-                //execvp(CP_Y[0], (char * const *) CP_Y);
-                break;
             case PyPy:
             case PyPy3:
                 break;
@@ -907,14 +906,10 @@ int compile(int lang, char *work_dir) {
             case LUA:
                 execvp(CP_LUA[0], (char *const *) CP_LUA);
                 break;
-                //case JAVASCRIPT:
-                //  execvp(CP_JS[0], (char *const *) CP_JS);
-                //break;
             case GO:
                 execvp(CP_GO[0], (char *const *) CP_GO);
                 break;
             case PYTHON3:
-                //execvp(CP_Y3[0], (char * const *) CP_Y3);
                 break;
             case CPP11:
                 execvp(CP_XX[0], (char *const *) CP_XX);
@@ -1140,7 +1135,8 @@ void copy_shell_runtime(char *work_dir) {
     execute_cmd("/bin/cp /bin/busybox %s/bin/", work_dir);
     execute_cmd("/bin/ln -s /bin/busybox %s/bin/sh", work_dir);
     execute_cmd("/bin/cp /bin/bash %s/bin/bash", work_dir);
-
+    execute_cmd("/bin/cp /bin/ldd %s/bin", work_dir);
+    execute_cmd("/bin/cp /bin/ls %s/bin", work_dir);
 }
 
 void copy_objc_runtime(char *work_dir) {
@@ -1337,12 +1333,19 @@ void copy_pypy3_runtime(char *work_dir) {
     execute_cmd("mkdir -p %s/usr/lib", work_dir);
     execute_cmd("mkdir -p %s/usr/lib64", work_dir);
     execute_cmd("mkdir -p %s/usr/local/lib", work_dir);
-    execute_cmd("cp -a /usr/local/pypy %s/pypy3", work_dir);
+    execute_cmd("mkdir -p %s/proc",work_dir);
+    execute_cmd("cp -a /proc/cpuinfo %s/proc/",work_dir);
+    execute_cmd("cp -a /usr/local/pypy3 %s/pypy3", work_dir);
+    execute_cmd("cp -a /usr/local/pypy3/bin/libpypy3-c.so %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/local/pypy3/lib %s/usr/lib64",work_dir);
+    execute_cmd("cp -a /usr/local/pypy3/lib %s/usr/lib",work_dir);
     execute_cmd("cp -a /usr/lib64/linux-vdso.so.1 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libpthread.so.0 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libc.so.6 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libutil.so.1 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libdl.so.2 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libbz2.so.1.0 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libbz2.so.1.0.6 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libbz2.so.1 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libexpat.so.1 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libm.so.6 %s/usr/lib64/", work_dir);
@@ -1350,10 +1353,10 @@ void copy_pypy3_runtime(char *work_dir) {
     execute_cmd("cp -a /usr/lib64/librt.so.1 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libcrypt.so.1 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libffi.so.6 %s/usr/lib64/", work_dir);
-    execute_cmd("cp -a /usr/lib64/libncursesw.so.6 %s/usr/lib64/", work_dir);
+    //execute_cmd("cp -a /usr/lib64/libncursesw.so.6 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libtinfow.so.6 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libgcc_s.so.1 %s/usr/lib64/", work_dir);
-    execute_cmd("cp -a /usr/lib64//lib64/ld-linux-x86-64.so.2 %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/ld-linux-x86-64.so.2 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libfreebl3.so %s/usr/lib64/", work_dir);
 
     execute_cmd("/bin/mkdir -p %s/home/judge", work_dir);
@@ -1502,6 +1505,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     //{
     freopen("user.out", "w", stdout);
     freopen("error.out", "a+", stderr);
+
     //}
     // trace me
     if (use_ptrace)
@@ -1650,7 +1654,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
             execl("/pypy/bin/pypy", "/pypy/bin/pypy", "Main.py", (char *) nullptr);
             break;
         case PyPy3:
-            execl("/pypy3/bin/pypy", "/pypy3/bin/pypy", "Main.py", (char *) nullptr);
+            execl("/pypy3/bin/pypy3", "/pypy3/bin/pypy3", "Main.py", (char *) nullptr);
             break;
         default:
             break;

@@ -8,6 +8,7 @@
 #include <cctype>
 #include <iostream>
 #include "static_var.h"
+#include "json.hpp"
 using namespace std;
 using json = nlohmann::json;
 // urlencoded function copied from http://www.geekhideout.com/urlcode.shtml
@@ -180,7 +181,7 @@ void make_diff_out_full(FILE *f1, FILE *f2, int c1, int c2, const char *path) {
     execute_cmd("head -100 '%s'>>diff.out", path);
     execute_cmd("echo '------user out top 100 lines-----'>>diff.out");
     execute_cmd("head -100 user.out>>diff.out");
-    execute_cmd("echo '------diff out 200 lines-----'>>diff.out");
+    execute_cmd("echo '\n------diff out 200 lines-----'>>diff.out");
     execute_cmd("diff '%s' user.out -y|head -200>>diff.out", path);
     execute_cmd("echo '=============================='>>diff.out");
 
