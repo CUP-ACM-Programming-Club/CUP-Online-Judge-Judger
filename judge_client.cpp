@@ -387,6 +387,22 @@ int compare_zoj(const char *file1, const char *file2) {
     FILE *f1, *f2;
     f1 = fopen(file1, "re");
     f2 = fopen(file2, "re");
+    auto judge_file_end_or_detect_presentation_error = [&](int c1, int c2, FILE *&f1, FILE *&f2, int &ret) -> void {
+        if (is_not_character(c1) && c1 != EOF) {
+            auto temp_ret = ret;
+            if (c2 != EOF)
+                ret = PRESENTATION_ERROR;
+            move_to_next_nonspace_character(c1, f1, ret);
+            if (c1 == EOF) {
+                if (is_not_character(c2)) {
+                    move_to_next_nonspace_character(c2, f2, ret);
+                }
+                if (c2 == EOF) {
+                    ret = temp_ret;
+                }
+            }
+        }
+    };
     if (!f1 || !f2) {
         ret = RUNTIME_ERROR;
     } else
@@ -420,16 +436,8 @@ int compare_zoj(const char *file1, const char *file2) {
                     //while(c2 == '\r')c2 = fgetc(f2);
                     if (c1 != c2) {
                         cerr << "c1:" << c1 << " c2:" << c2 << endl;
-                        if (is_not_character(c1) && c1 != EOF) {
-                            if (c2 != EOF)
-                                ret = PRESENTATION_ERROR;
-                            move_to_next_nonspace_character(c1, f1, ret);
-                        }
-                        if (is_not_character(c2) && c2 != EOF) {
-                            if (c1 != EOF)
-                                ret = PRESENTATION_ERROR;
-                            move_to_next_nonspace_character(c2, f2, ret);
-                        }
+                        judge_file_end_or_detect_presentation_error(c1, c2, f1, f2, ret);
+                        judge_file_end_or_detect_presentation_error(c2, c1, f2, f1, ret);
                     }
                 }
                 find_next_nonspace(c1, c2, f1, f2, ret);
@@ -1333,12 +1341,12 @@ void copy_pypy3_runtime(char *work_dir) {
     execute_cmd("mkdir -p %s/usr/lib", work_dir);
     execute_cmd("mkdir -p %s/usr/lib64", work_dir);
     execute_cmd("mkdir -p %s/usr/local/lib", work_dir);
-    execute_cmd("mkdir -p %s/proc",work_dir);
-    execute_cmd("cp -a /proc/cpuinfo %s/proc/",work_dir);
+    execute_cmd("mkdir -p %s/proc", work_dir);
+    execute_cmd("cp -a /proc/cpuinfo %s/proc/", work_dir);
     execute_cmd("cp -a /usr/local/pypy3 %s/pypy3", work_dir);
     execute_cmd("cp -a /usr/local/pypy3/bin/libpypy3-c.so %s/usr/lib64/", work_dir);
-    execute_cmd("cp -a /usr/local/pypy3/lib %s/usr/lib64",work_dir);
-    execute_cmd("cp -a /usr/local/pypy3/lib %s/usr/lib",work_dir);
+    execute_cmd("cp -a /usr/local/pypy3/lib %s/usr/lib64", work_dir);
+    execute_cmd("cp -a /usr/local/pypy3/lib %s/usr/lib", work_dir);
     execute_cmd("cp -a /usr/lib64/linux-vdso.so.1 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libpthread.so.0 %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/lib64/libc.so.6 %s/usr/lib64/", work_dir);
