@@ -4,11 +4,13 @@
 
 #ifndef JUDGE_CLIENT_JUDGE_LIB_H
 #define JUDGE_CLIENT_JUDGE_LIB_H
+
 #include <sys/stat.h>
 #include <cctype>
 #include <iostream>
 #include "static_var.h"
 #include "json.hpp"
+
 using namespace std;
 using json = nlohmann::json;
 // urlencoded function copied from http://www.geekhideout.com/urlcode.shtml
@@ -100,8 +102,7 @@ string ws_send(const int &solution_id, const int &state, const int &finished, co
     if (compile_info.length()) {
         if (utf8_check_is_valid(compile_info)) {
             send_msg["value"]["compile_info"] = compile_info;
-        }
-        else {
+        } else {
             send_msg["value"]["compile_info"] = string("检测到非法UTF-8输出");
         }
     }
@@ -169,6 +170,18 @@ const char *getFileNameFromPath(const char *path) {
             return &path[i + 1];
     }
     return path;
+}
+
+bool isJava(int lang) {
+    switch (lang) {
+        case JAVA:
+        case JAVA6:
+        case JAVA7:
+        case JAVA8:
+            return true;
+        default:
+            return false;
+    }
 }
 
 
