@@ -51,6 +51,7 @@
 #include "websocket.h"
 #include "static_var.h"
 #include "judge_lib.h"
+#include "CompilerArgsReader.h"
 
 using namespace std;
 using json = nlohmann::json;
@@ -700,87 +701,9 @@ void umount(char *work_dir) {
 int compile(int lang, char *work_dir) {
     int pid;
     webSocket << ws_send(solution_id, 2, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE);
-    const char *CP_C[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main", "-fmax-errors=10", "-fno-asm", "-Wall",
-                          "-O2",
-                          "-lm", "--static", "-std=c11", "-DONLINE_JUDGE", nullptr};
-    const char *CP_CC[] = {"/usr/local/bin/gcc", "Main.c", "-o", "Main", "-fmax-errors=10", "-fno-asm", "-Wall",
-                           "-O2",
-                           "-lm", "--static", "-std=c99", "-DONLINE_JUDGE", nullptr};
-    const char *CP_X[] = {"/usr/local/bin/g++", "-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
-                          "-lm", "--static", "-std=c++17", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", nullptr};
-    const char *CP_XX[] = {"/usr/local/bin/g++", "-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
-                           "-lm", "--static", "-std=c++11", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", nullptr};
-    const char *CP_XXX[] = {"/usr/local/bin/g++", "-fmax-errors=10", "-fno-asm", "-Wall", "-O2",
-                            "-lm", "--static", "-std=c++98", "-DONLINE_JUDGE", "-o", "Main", "Main.cc", nullptr};
-    const char *CP_P[] =
-            {"fpc", "Main.pas", "-Cs32000000", "-Sh", "-O2", "-Co", "-Ct", "-Ci", nullptr};
-    //      const char * CP_J[] = { "javac", "-J-Xms32m", "-J-Xmx256m","-encoding","UTF-8", "Main.java",NULL };
-
-    const char *CP_R[] = {"ruby", "-c", "Main.rb", nullptr};
-    const char *CP_B[] = {"chmod", "+rx", "Main.sh", nullptr};
-    //const char * CP_Y[] = { "python", "-c",
-    //                        "import py_compile; py_compile.compile(r'Main.py')", NULL };
-    //const char * CP_Y3[] = { "python3", "-c",
-    //                         "import py_compile; py_compile.compile(r'Main.py')", NULL };
-    const char *CP_PH[] = {"php", "-l", "Main.php", nullptr};
-    const char *CP_PL[] = {"perl", "-c", "Main.pl", nullptr};
-    const char *CP_CS[] = {"gmcs", "-warn:0", "Main.cs", nullptr};
-    const char *CP_OC[] = {"gcc", "-o", "Main", "Main.m",
-                           "-fconstant-string-class=NSConstantString", "-I",
-                           "/usr/include/GNUstep/", "-L", "/usr/lib/GNUstep/Libraries/",
-                           "-lobjc", "-lgnustep-base", nullptr};
-    const char *CP_BS[] = {"fbc", "-lang", "qb", "Main.bas", nullptr};
-    const char *CP_CLANG[] = {"clang", "Main.c", "-o", "Main", "-ferror-limit=10", "-fno-asm", "-Wall",
-                              "-lm", "--static", "-std=c99", "-DONLINE_JUDGE", nullptr};
-    const char *CP_CLANG_CPP[] = {"clang++", "Main.cc", "-o", "Main", "-ferror-limit=10", "-fno-asm", "-Wall",
-                                  "-lm", "--static", "-std=c++11", "-DONLINE_JUDGE", nullptr};
-    const char *CP_LUA[] = {"luac", "-o", "Main", "Main.lua", nullptr};
-    //const char * CP_JS[] = { "node", "Main.js", NULL };
-    const char *CP_GO[] = {"go", "build", "-o", "Main", "Main.go", nullptr};
-
-    char javac_buf[7][32];
-    char javac7_buf[7][32];
-    char javac8_buf[7][32];
-    char javac6_buf[7][32];
-    char *CP_J[7];
-    char *CP_J7[7];
-    char *CP_J8[7];
-    char *CP_J6[7];
-    for (int i = 0; i < 7; i++) {
-        CP_J[i] = javac_buf[i];
-        CP_J7[i] = javac7_buf[i];
-        CP_J8[i] = javac8_buf[i];
-        CP_J6[i] = javac6_buf[i];
-    }
-    sprintf(CP_J7[0], "javac-7");
-    sprintf(CP_J8[0], "javac-8");
-    sprintf(CP_J6[0], "javac-6");
-    sprintf(CP_J[0], "javac");
-    sprintf(CP_J[1], "-J%s", java_xms);
-    sprintf(CP_J[2], "-J%s", java_xmx);
-    sprintf(CP_J[3], "-encoding");
-    sprintf(CP_J[4], "UTF-8");
-    sprintf(CP_J[5], "Main.java");
-    CP_J[6] = (char *) nullptr;
-    sprintf(CP_J7[1], "-J%s", java_xms);
-    sprintf(CP_J7[2], "-J%s", java_xmx);
-    sprintf(CP_J7[3], "-encoding");
-    sprintf(CP_J7[4], "UTF-8");
-    sprintf(CP_J7[5], "Main.java");
-    CP_J7[6] = (char *) nullptr;
-    sprintf(CP_J8[1], "-J%s", java_xms);
-    sprintf(CP_J8[2], "-J%s", java_xmx);
-    sprintf(CP_J8[3], "-encoding");
-    sprintf(CP_J8[4], "UTF-8");
-    sprintf(CP_J8[5], "Main.java");
-    CP_J8[6] = (char *) nullptr;
-    sprintf(CP_J6[1], "-J%s", java_xms);
-    sprintf(CP_J6[2], "-J%s", java_xmx);
-    sprintf(CP_J6[3], "-encoding");
-    sprintf(CP_J6[4], "UTF-8");
-    sprintf(CP_J6[5], "Main.java");
-    CP_J6[6] = (char *) nullptr;
-
+    string configJSONDir = oj_home;
+    configJSONDir += "/etc/compile.json";
+    CompilerArgsReader compilerArgsReader(configJSONDir);
     pid = fork();
     if (pid == CHILD_PROCESS) {
         struct rlimit LIM{};
@@ -841,100 +764,37 @@ int compile(int lang, char *work_dir) {
         int ret = 0;
         if (DEBUG)
             cout << "Lang:" << lang << endl;
-        switch (lang) {
-            case C11:
-                execvp(CP_C[0], (char *const *) CP_C);
-                if (DEBUG)
-                    cout << CP_C[0] << endl;
-                break;
-            case CPP17:
-                execvp(CP_X[0], (char *const *) CP_X);
-                if (DEBUG)
-                    cout << CP_X[0] << endl;
-                break;
-            case PASCAL:
-                execvp(CP_P[0], (char *const *) CP_P);
-                if (DEBUG)
-                    cout << CP_P[0] << endl;
-                break;
-            case JAVA:
-                execvp(CP_J[0], (char *const *) CP_J);
-                if (DEBUG)
-                    cout << CP_J[0] << endl;
-                break;
-            case JAVA7:
-                execvp(CP_J7[0], (char *const *) CP_J7);
-                if (DEBUG)
-                    cout << CP_J7[0] << endl;
-                break;
-            case JAVA8:
-                execvp(CP_J8[0], (char *const *) CP_J8);
-                if (DEBUG)
-                    cout << CP_J8[0] << endl;
-                break;
-            case JAVA6:
-                execvp(CP_J6[0], (char *const *) CP_J6);
-                if (DEBUG)
-                    cout << CP_J6[0] << endl;
-            case RUBY:
-                execvp(CP_R[0], (char *const *) CP_R);
-                if (DEBUG)
-                    cout << CP_R[0] << endl;
-                break;
-            case BASH:
-                execvp(CP_B[0], (char *const *) CP_B);
-                if (DEBUG)
-                    cout << CP_B[0] << endl;
-                break;
-            case PYTHON2:
-            case PyPy:
-            case PyPy3:
-                break;
-            case PHP:
-                execvp(CP_PH[0], (char *const *) CP_PH);
-                break;
-            case PERL:
-                execvp(CP_PL[0], (char *const *) CP_PL);
-                break;
-            case CSHARP:
-                execvp(CP_CS[0], (char *const *) CP_CS);
-                break;
-            case OBJC:
-                execvp(CP_OC[0], (char *const *) CP_OC);
-                break;
-            case FREEBASIC:
-                execvp(CP_BS[0], (char *const *) CP_BS);
-                break;
-            case CLANG:
-                execvp(CP_CLANG[0], (char *const *) CP_CLANG);
-                break;
-            case CLANGPP:
-                execvp(CP_CLANG_CPP[0], (char *const *) CP_CLANG_CPP);
-                break;
-            case LUA:
-                execvp(CP_LUA[0], (char *const *) CP_LUA);
-                break;
-            case GO:
-                execvp(CP_GO[0], (char *const *) CP_GO);
-                break;
-            case PYTHON3:
-                break;
-            case CPP11:
-                execvp(CP_XX[0], (char *const *) CP_XX);
-                if (DEBUG)
-                    cout << CP_XX[0] << endl;
-                break;
-            case CPP98:
-                execvp(CP_XXX[0], (char *const *) CP_XXX);
-                if (DEBUG)
-                    cout << CP_XXX[0] << endl;
-                break;
-            case C99:
-                execvp(CP_CC[0], (char *const *) CP_CC);
-                if (DEBUG)
-                    cout << CP_CC[0] << endl;
-            default:
-                printf("nothing to do!\n");
+        if(isJava(lang)) {
+            auto _args = compilerArgsReader.Get(to_string(lang));
+            int len = _args.size();
+            char *java_arg[len + 5];
+            char java_buffer[len + 5][30];
+            for(int i = 0;i<len;++i) {
+                memset(java_buffer[i],0,sizeof(java_buffer[i]));
+                memcpy(java_buffer[i],_args[i].c_str(),_args[i].length());
+                java_arg[i] = java_buffer[i];
+            }
+            java_arg[len] = nullptr;
+            sprintf(java_buffer[1],"-J%s",java_xms);
+            sprintf(java_buffer[2],"-J%s",java_xmx);
+            execvp(java_arg[0],(char*const*)java_arg);
+        }
+        else {
+            vector<string>_args = compilerArgsReader.Get(to_string(lang));
+            if(_args.empty()) {
+                cout << "Noting to do" << endl;
+                exit(0);
+            }
+            int len = static_cast<int>(_args.size());
+            const char *args[len + 5];
+            for(int i = 0;i<len;++i) {
+                args[i] = _args[i].c_str();
+            }
+            args[len] = nullptr;
+            if(DEBUG) {
+                cout << args[0] << endl;
+            }
+            execvp(args[0],(char*const*)args);
         }
         if (DEBUG)
             printf("compile end!\n");
