@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <cctype>
 #include <iostream>
+#include <fstream>
 #include "static_var.h"
 #include "json.hpp"
 
@@ -182,6 +183,29 @@ bool isJava(int lang) {
         default:
             return false;
     }
+}
+
+bool is_number(const string &s) {
+    for (auto c:s) {
+        if (!isdigit(c))return false;
+    }
+    return true;
+}
+
+bool check_valid_presentation_error(const char *ansfile, const char *userfile) {
+    fstream user(userfile), ans(ansfile);
+    string u, a;
+    while (user >> u) {
+        ans >> a;
+        if (is_number(a)) {
+            if (a != u) {
+                return false;
+            }
+        } else {
+            break;
+        }
+    }
+    return true;
 }
 
 
