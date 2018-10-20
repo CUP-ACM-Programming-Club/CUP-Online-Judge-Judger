@@ -22,7 +22,12 @@
     "-fmax-errors=10",
     "-fno-asm",
     "-Wall",
-    "-O2"
+    "-O2",
+    "-lm",
+    "-lgmp",
+    "--static",
+    "-std=c99",
+    "-DONLINE_JUDGE"
   ],
   "1": [
     "/usr/local/bin/g++",

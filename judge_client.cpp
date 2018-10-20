@@ -339,28 +339,6 @@ bool is_not_character(int c) {
  */
 int choose = 1;
 
-bool is_number(const string &s) {
-    for (auto c:s) {
-        if (!isdigit(c))return false;
-    }
-    return true;
-}
-
-bool check_valid_presentation_error(const char *ansfile, const char *userfile) {
-    fstream user(userfile), ans(ansfile);
-    string u, a;
-    while (user >> u) {
-        ans >> a;
-        if (is_number(a)) {
-            if (a != u) {
-                return false;
-            }
-        } else {
-            break;
-        }
-    }
-    return true;
-}
 
 int compare_zoj(const char *file1, const char *file2) {
     if (DEBUG && choose) {
@@ -764,37 +742,36 @@ int compile(int lang, char *work_dir) {
         int ret = 0;
         if (DEBUG)
             cout << "Lang:" << lang << endl;
-        if(isJava(lang)) {
+        if (isJava(lang)) {
             auto _args = compilerArgsReader.Get(to_string(lang));
             int len = _args.size();
             char *java_arg[len + 5];
             char java_buffer[len + 5][30];
-            for(int i = 0;i<len;++i) {
-                memset(java_buffer[i],0,sizeof(java_buffer[i]));
-                memcpy(java_buffer[i],_args[i].c_str(),_args[i].length());
+            for (int i = 0; i < len; ++i) {
+                memset(java_buffer[i], 0, sizeof(java_buffer[i]));
+                memcpy(java_buffer[i], _args[i].c_str(), _args[i].length());
                 java_arg[i] = java_buffer[i];
             }
             java_arg[len] = nullptr;
-            sprintf(java_buffer[1],"-J%s",java_xms);
-            sprintf(java_buffer[2],"-J%s",java_xmx);
-            execvp(java_arg[0],(char*const*)java_arg);
-        }
-        else {
-            vector<string>_args = compilerArgsReader.Get(to_string(lang));
-            if(_args.empty()) {
+            sprintf(java_buffer[1], "-J%s", java_xms);
+            sprintf(java_buffer[2], "-J%s", java_xmx);
+            execvp(java_arg[0], (char *const *) java_arg);
+        } else {
+            vector<string> _args = compilerArgsReader.Get(to_string(lang));
+            if (_args.empty()) {
                 cout << "Noting to do" << endl;
                 exit(0);
             }
             int len = static_cast<int>(_args.size());
             const char *args[len + 5];
-            for(int i = 0;i<len;++i) {
+            for (int i = 0; i < len; ++i) {
                 args[i] = _args[i].c_str();
             }
             args[len] = nullptr;
-            if(DEBUG) {
+            if (DEBUG) {
                 cout << args[0] << endl;
             }
-            execvp(args[0],(char*const*)args);
+            execvp(args[0], (char *const *) args);
         }
         if (DEBUG)
             printf("compile end!\n");
@@ -1989,12 +1966,12 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
         //c cpp will
         if (lang == C11 || lang == C99)
             execute_cmd("/bin/ln ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
-                        solution_id, lang_ext[lang], pid, solution_id,
-                        lang_ext[lang + 1]);
+                        solution_id, lang_ext[0], pid, solution_id,
+                        lang_ext[1]);
         if (lang == CPP17 || lang == CPP11 || lang == CPP98)
             execute_cmd("/bin/ln ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
-                        solution_id, lang_ext[lang], pid, solution_id,
-                        lang_ext[lang - 1]);
+                        solution_id, lang_ext[1], pid, solution_id,
+                        lang_ext[0]);
 
     } else {
 
@@ -2010,7 +1987,9 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     MYSQL_RES *res;
     MYSQL_ROW row;
     string sql = "SELECT user_id FROM solution WHERE solution_id=" + to_string(solution_id);
-    cout << sql << endl;
+    if (DEBUG) {
+        cout << sql << endl;
+    }
     mysql_real_query(conn, sql.c_str(), sql.length());
     res = mysql_store_result(conn);
     string uid;
@@ -2018,14 +1997,18 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     if (row)
         uid = row[0];
     sql = "SELECT user_id FROM solution WHERE solution_id=" + to_string(sim_s_id);
-    cout << uid << endl;
+    if (DEBUG) {
+        cout << uid << endl;
+    }
     mysql_real_query(conn, sql.c_str(), sql.length());
     res = mysql_store_result(conn);
     string cpid;
     row = mysql_fetch_row(res);
     if (row)
         cpid = row[0];
-    cout << cpid << endl;
+    if (DEBUG) {
+        cout << cpid << endl;
+    }
     if (uid == cpid)
         sim = 0;
     if (solution_id <= sim_s_id)
@@ -2044,7 +2027,6 @@ void mk_shm_workdir(char *work_dir) {
     //sim need a soft link in shm_dir to work correctly
     sprintf(shm_path, "/dev/shm/hustoj/%s/", oj_home);
     execute_cmd("/bin/ln -s %s/data %s", oj_home, shm_path);
-
 }
 
 
@@ -2166,7 +2148,7 @@ int main(int argc, char **argv) {
     }
 
     int ACflg, PEflg;
-    ACflg = PEflg = OJ_AC;
+    ACflg = PEflg = ACCEPT;
     int namelen;
     int topmemory = ZERO_MEMORY;
     double usedtime = ZERO_TIME;
