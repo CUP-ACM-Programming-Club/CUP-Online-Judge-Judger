@@ -1516,7 +1516,7 @@ int fix_python_mis_judge(char *work_dir, int &ACflg, int &topmemory,
 
     if (!comp_res) {
         printf("Python need more Memory!");
-        ACflg = OJ_ML;
+        ACflg = MEMORY_LIMIT_EXCEEDED;
         topmemory = mem_lmt * STD_MB;
     }
 
@@ -1665,11 +1665,6 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
         ACflg = MEMORY_LIMIT_EXCEEDED; //issues79
     // compare
     if (ACflg == ACCEPT) {
-        /*
-        cout << "isspj:" << isspj << endl;
-        cout << "infile:" << infile << "outfile:" << outfile << "userfile:" << userfile << "usercode:" << usercode
-             << endl;
-             */
         if (isspj) {
             comp_res = special_judge(oj_home, p_id, infile, outfile, userfile, usercode);
             if (comp_res < 4) {
@@ -1682,12 +1677,6 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
                     comp_res = WRONG_ANSWER;
                 }
             }
-            /*
-        else {
-            if (DEBUG)
-                printf("fail test %s\n", infile);
-            comp_res = OJ_WA;
-        }*/
         } else {
             comp_res = compare(outfile, userfile);
         }
@@ -2247,8 +2236,12 @@ int main(int argc, char **argv) {
                     break;
             }
             fclose(fp);
-            if (test_run_out.length() > FOUR * ONE_KILOBYTE)
+            if (test_run_out.length() > FOUR * ONE_KILOBYTE) {
+                auto omit = to_string(test_run_out.length() - FOUR * ONE_KILOBYTE);
                 test_run_out = test_run_out.substr(0, FOUR * ONE_KILOBYTE);
+                test_run_out += "\n......Omit " + omit + " characters.";
+            }
+
             webSocket << ws_send(solution_id, TEST_RUN, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
                                  ZERO_PASSRATE,
                                  test_run_out);
@@ -2298,7 +2291,7 @@ int main(int argc, char **argv) {
                 //clean_session(pidApp);
             }
 
-            if (usedtime > time_lmt * 1000) {
+            if (usedtime > time_lmt * 1000 || ACflg == TIME_LIMIT_EXCEEDED) {
                 cout << "Time Limit Exceeded" << endl;
                 ACflg = TIME_LIMIT_EXCEEDED;
                 usedtime = time_lmt * 1000;
