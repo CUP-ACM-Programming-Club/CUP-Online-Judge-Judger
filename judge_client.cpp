@@ -1659,6 +1659,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
     if (ACflg == ACCEPT
         && usedtime > time_lmt * 1000 * (use_max_time ? 1 : num_of_test)) {
         cout << "Time Limit Exceeded" << endl;
+        usedtime = time_lmt * 1000;
         ACflg = TIME_LIMIT_EXCEEDED;
     }
     if (topmemory > mem_lmt * STD_MB)
@@ -2343,7 +2344,7 @@ int main(int argc, char **argv) {
     string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
                  to_string(solution_id);
     mysql_real_query(conn, sql.c_str(), sql.length());
-    if (ACflg == TIME_LIMIT_EXCEEDED) {
+    if (ACflg == TIME_LIMIT_EXCEEDED || (ALL_TEST_MODE && finalACflg == TIME_LIMIT_EXCEEDED)) {
         usedtime = time_lmt * 1000;
     }
 
@@ -2354,6 +2355,9 @@ int main(int argc, char **argv) {
     if (ALL_TEST_MODE) {
         if (num_of_test > 0) {
             pass_rate /= num_of_test;
+        }
+        if(DEBUG) {
+            cout << "Write Usedtime: " << usedtime << endl;
         }
         update_solution(solution_id, finalACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
                         sim_s_id, pass_rate);
