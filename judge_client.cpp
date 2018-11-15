@@ -1577,7 +1577,7 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         cout << tmp << endl;
     pid = fork();
     int ret = 0;
-    if (pid == 0) {
+    if (pid == CHILD_PROCESS) {
 
         //while (setgid(1536) != 0)
         //    sleep(1);
@@ -2356,7 +2356,7 @@ int main(int argc, char **argv) {
         if (num_of_test > 0) {
             pass_rate /= num_of_test;
         }
-        if(DEBUG) {
+        if (DEBUG) {
             cout << "Write Usedtime: " << usedtime << endl;
         }
         update_solution(solution_id, finalACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
@@ -2365,12 +2365,12 @@ int main(int argc, char **argv) {
         update_solution(solution_id, ACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
                         sim_s_id, ZERO_PASSRATE);
     }
-    if ((ALL_TEST_MODE && (finalACflg == WRONG_ANSWER || finalACflg == PRESENTATION_ERROR)) ||
+    if ((ALL_TEST_MODE && (SPECIAL_JUDGE || finalACflg == WRONG_ANSWER || finalACflg == PRESENTATION_ERROR)) ||
         (ACflg == WRONG_ANSWER || ACflg == PRESENTATION_ERROR)) {
         if (DEBUG)
             printf("add diff info of %d..... \n", solution_id);
-        if (!SPECIAL_JUDGE)
-            adddiffinfo(solution_id);
+        // if (!SPECIAL_JUDGE)
+        adddiffinfo(solution_id);
     }
     update_user(user_id);
     update_problem(p_id);
