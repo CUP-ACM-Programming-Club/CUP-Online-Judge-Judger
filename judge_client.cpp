@@ -517,6 +517,9 @@ void _update_solution_mysql(int solution_id, int result, double time, int memory
 
 void update_solution(int solution_id, int result, double time, int memory, int sim,
                      int sim_s_id, double pass_rate) {
+    if(NO_RECORD) {
+        return;
+    }
     if (result == OJ_TL && memory == ZERO_MEMORY)
         result = OJ_ML;
     _update_solution_mysql(solution_id, result, time, memory, sim, sim_s_id,
@@ -1114,6 +1117,7 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
 
     pid_t pid;
     printf("pid=%d\n", problem_id);
+    /*
     string fullpath = oj_home;
     fullpath += string("/data/") + to_string(problem_id);
     auto dp = opendir(fullpath.c_str());
@@ -1129,6 +1133,7 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
             }
         }
     }
+     */
     printf("%s\n", usercode);
     string outfiled(global_work_dir);
     outfiled += "usercode.code";
@@ -1142,7 +1147,8 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
     pid = fork();
     int ret = 0;
     if (pid == CHILD_PROCESS) {
-        if (!isWindowsSpecialJudge) {
+        /*
+        if (false && !isWindowsSpecialJudge) {
             while (setgid(1536) != 0)
                 sleep(1);
             while (setuid(1536) != 0)
@@ -1150,7 +1156,8 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
             while (setresuid(1536, 1536, 1536) != 0)
                 sleep(1);
         }
-        freopen("diff.out", "w", stdout);
+         */
+        freopen("diff.out", "a", stdout);
 
         struct rlimit LIM{}; // time limit, file limit& memory limit
 
@@ -1164,18 +1171,24 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         LIM.rlim_max = static_cast<rlim_t>(STD_F_LIM + STD_MB);
         LIM.rlim_cur = static_cast<rlim_t>(STD_F_LIM);
         setrlimit(RLIMIT_FSIZE, &LIM);
+        LIM.rlim_cur = LIM.rlim_max = 50 * STD_MB;
+        setrlimit(RLIMIT_FSIZE, &LIM);
+        LIM.rlim_cur = LIM.rlim_max = 256 * STD_MB;
+        setrlimit(RLIMIT_AS, &LIM);
         string dir = oj_home;
         dir += "/data/" + to_string(problem_id) + "/";
         if (~access((dir + "spj").c_str(), 0)) {
+            LIM.rlim_max = LIM.rlim_cur = 1;
+            setrlimit(RLIMIT_NPROC, &LIM);
             ret = execute_cmd((dir + "spj %s %s %s %s").c_str(),
                               infile, outfile, userfile, outfiled.c_str());
-            //cout<<(dir + "spj %s %s %s %s")<<ret<<endl;
-            //cout<<infile<<" "<<outfile<<" "<<userfile<<" "<<outfiled<<endl;
-            //cout<<"Hrere"<<endl;
         } else if (~access((dir + "spj.js").c_str(), 0)) {
+            LIM.rlim_cur = LIM.rlim_max = 80;
+            setrlimit(RLIMIT_NPROC, &LIM);
             ret = execute_cmd(("node " + dir + "spj.js %s %s %s %s").c_str(),
                               infile, outfile, userfile, outfiled.c_str());
         } else if (~access((dir + "spj.py").c_str(), 0)) {
+            LIM.rlim_max = LIM.rlim_cur = 1;
             ret = execute_cmd(("python3 " + dir + "spj.py %s %s %s %s").c_str(),
                               infile, outfile, userfile, outfiled.c_str());
         }
@@ -1190,6 +1203,11 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
             }
         }
         //cout << "Debug return code:" << ret << endl;
+        if (WIFEXITED(ret)) {
+            cout << "WIFEXITED:" << WIFEXITED(ret) << endl;
+        } else {
+            cout << "ERROR WIFEXITED:" << WIFEXITED(ret) << endl;
+        }
         if (DEBUG)
             printf("spj1=%d\n", ret);
         if (ret)
@@ -1485,19 +1503,6 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
     //clean_session(pidApp);
 }
 
-void clean_workdir(char *work_dir) {
-    umount(work_dir);
-    if (DEBUG) {
-        execute_cmd("/bin/rm -rf %s/log/*", work_dir);
-        execute_cmd("mkdir %s/log/", work_dir);
-        execute_cmd("/bin/mv %s/* %s/log/", work_dir, work_dir);
-    } else {
-        execute_cmd("mkdir %s/log/", work_dir);
-        execute_cmd("/bin/mv %s/* %s/log/", work_dir, work_dir);
-        execute_cmd("/bin/rm -rf %s/log/*", work_dir);
-    }
-
-}
 
 void init_parameters(int argc, char **argv, int &solution_id,
                      int &runner_id) {
@@ -1511,7 +1516,12 @@ void init_parameters(int argc, char **argv, int &solution_id,
         exit(1);
     }
     DEBUG = (argc > 4);
-    record_call = (argc > 5);
+    if(argc > 5 && !strcmp(argv[5],"DEBUG")) {
+        NO_RECORD = 1;
+    }
+    else {
+        record_call = (argc > 5);
+    }
     if (argc > 5) {
         strcpy(LANG_NAME, argv[5]);
     }
@@ -1820,8 +1830,7 @@ int main(int argc, char **argv) {
                     break;
             }
             fclose(fp);
-        }
-        else {
+        } else {
             test_run_out = error_message;
         }
 
@@ -1840,7 +1849,6 @@ int main(int argc, char **argv) {
                                  test_run_out);
         }
         add_reinfo_mysql_by_string(solution_id, test_run_out);
-
 
 
         update_solution(solution_id, TEST_RUN, usedtime, topmemory / ONE_KILOBYTE, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
