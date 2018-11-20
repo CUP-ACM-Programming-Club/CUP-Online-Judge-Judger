@@ -1820,7 +1820,8 @@ int main(int argc, char **argv) {
                     break;
             }
             fclose(fp);
-        } else {
+        }
+        else {
             test_run_out = error_message;
         }
 
@@ -1829,18 +1830,19 @@ int main(int argc, char **argv) {
             test_run_out = test_run_out.substr(0, FOUR * ONE_KILOBYTE);
             test_run_out += "\n......Omit " + omit + " characters.";
         }
-
-        cout << "test_run_out" << endl;
-        cout << test_run_out << endl;
-
-        add_reinfo_mysql_by_string(solution_id, test_run_out);
-
-
+        if (DEBUG) {
+            cout << "test_run_out" << endl;
+            cout << test_run_out << endl;
+        }
         if (webSocket.isConnected()) {
             webSocket << ws_send(solution_id, TEST_RUN, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
                                  ZERO_PASSRATE,
                                  test_run_out);
         }
+        add_reinfo_mysql_by_string(solution_id, test_run_out);
+
+
+
         update_solution(solution_id, TEST_RUN, usedtime, topmemory / ONE_KILOBYTE, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         clean_workdir(work_dir);
         exit(0);
