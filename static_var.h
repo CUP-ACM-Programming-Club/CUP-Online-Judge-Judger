@@ -128,5 +128,6 @@ const int STD_F_LIM = STD_MB * 32;
 //#define STD_M_LIM (STD_MB<<7)
 const int DEFAULT_SOLUTION_ID = 1000;
 static int DEBUG = 0;
+static int NO_RECORD = 0;
 
 #endif //JUDGE_CLIENT_STATIC_VAR_H
