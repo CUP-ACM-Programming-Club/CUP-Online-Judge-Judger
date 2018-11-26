@@ -29,7 +29,10 @@
  * You should have received a copy of the GNU General Public License
  * along with HUSTOJ. if not, see <http://www.gnu.org/licenses/>.
  */
-
+#include <iostream>
+#include <algorithm>
+#include <fstream>
+#include <sstream>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -42,12 +45,15 @@
 #include <sys/user.h>
 #include <sys/resource.h>
 //#include <sys/types.h>
+#ifdef __APPLE_CC__
+
+#include <mysql.h>
+
+#else
 #include <mysql/mysql.h>
+#endif
+
 #include "okcalls.h"
-#include <iostream>
-#include <algorithm>
-#include <fstream>
-#include <sstream>
 #include "websocket.h"
 #include "static_var.h"
 #include "judge_lib.h"
@@ -517,7 +523,7 @@ void _update_solution_mysql(int solution_id, int result, double time, int memory
 
 void update_solution(int solution_id, int result, double time, int memory, int sim,
                      int sim_s_id, double pass_rate) {
-    if(NO_RECORD) {
+    if (NO_RECORD) {
         return;
     }
     if (result == OJ_TL && memory == ZERO_MEMORY)
@@ -825,11 +831,19 @@ int init_mysql_conn() {
     if (!mysql_real_connect(conn, host_name, user_name, password, db_name,
                             static_cast<unsigned int>(port_number), 0, 0)) {
         write_log("%s", mysql_error(conn));
+        if (DEBUG) {
+            cerr << "MYSQL daemon service is down." << endl;
+            cerr << "MYSQL error log: " << mysql_error(conn) << endl;
+        }
         return 0;
     }
     const char *utf8sql = "set names utf8";
     if (mysql_real_query(conn, utf8sql, strlen(utf8sql))) {
         write_log("%s", mysql_error(conn));
+        if (DEBUG) {
+            cerr << "MYSQL daemon service is down." << endl;
+            cerr << "MYSQL error log: " << mysql_error(conn) << endl;
+        }
         return 0;
     }
     return 1;
@@ -1516,10 +1530,9 @@ void init_parameters(int argc, char **argv, int &solution_id,
         exit(1);
     }
     DEBUG = (argc > 4);
-    if(argc > 5 && !strcmp(argv[5],"DEBUG")) {
+    if (argc > 5 && !strcmp(argv[5], "DEBUG")) {
         NO_RECORD = 1;
-    }
-    else {
+    } else {
         record_call = (argc > 5);
     }
     if (argc > 5) {
@@ -1541,21 +1554,26 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     char src_pth[BUFFER_SIZE];
     //char cmd[BUFFER_SIZE];
     sprintf(src_pth, "Main.%s", lang_ext[lang]);
-
+    if (DEBUG) {
+        cout << "get sim: " << src_pth << endl;
+    }
     int sim = execute_cmd("/usr/bin/sim.sh %s %d", src_pth, pid);
 
     if (!sim) {
+        if (DEBUG) {
+            cout << "SIM is not detected!" << endl;
+        }
         execute_cmd("/bin/mkdir ../data/%d/ac/", pid);
 
         execute_cmd("/bin/cp %s ../data/%d/ac/%d.%s", src_pth, pid, solution_id,
                     lang_ext[lang]);
         //c cpp will
         if (lang == C11 || lang == C99)
-            execute_cmd("/bin/ln ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
+            execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
                         solution_id, lang_ext[0], pid, solution_id,
                         lang_ext[1]);
         if (lang == CPP17 || lang == CPP11 || lang == CPP98)
-            execute_cmd("/bin/ln ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
+            execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
                         solution_id, lang_ext[1], pid, solution_id,
                         lang_ext[0]);
 
@@ -1567,7 +1585,9 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
             fscanf(pf, "%d%d", &sim, &sim_s_id);
             fclose(pf);
         }
-
+        if (DEBUG) {
+            cout << "FIND SIM! sim:" << sim << " sim_s_id:" << sim_s_id << endl;
+        }
     }
 
     MYSQL_RES *res;
@@ -1809,15 +1829,14 @@ int main(int argc, char **argv) {
         if (ACflg == TIME_LIMIT_EXCEEDED) {
             usedtime = time_lmt * 1000;
             error_message = "Time Limit Exceeded.Kill Process.\n";
-            add_reinfo_mysql_by_string(solution_id, error_message);
+            //add_reinfo_mysql_by_string(solution_id, error_message);
         } else if (ACflg == RUNTIME_ERROR) {
             if (DEBUG)
                 printf("add RE info of %d..... \n", solution_id);
             addreinfo(solution_id);
         } else if (ACflg == MEMORY_LIMIT_EXCEEDED) {
             error_message = "Memory Limit Exceeded.Kill Process.\n";
-            add_reinfo_mysql_by_string(solution_id, error_message);
-
+            //add_reinfo_mysql_by_string(solution_id, error_message);
         }
         string test_run_out;
         if (ACflg == ACCEPT) {
@@ -1843,16 +1862,26 @@ int main(int argc, char **argv) {
             cout << "test_run_out" << endl;
             cout << test_run_out << endl;
         }
-        if (webSocket.isConnected()) {
-            webSocket << ws_send(solution_id, TEST_RUN, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
-                                 ZERO_PASSRATE,
-                                 test_run_out);
-        }
-        add_reinfo_mysql_by_string(solution_id, test_run_out);
+        webSocket << ws_send(solution_id, TEST_RUN, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
+                             ZERO_PASSRATE,
+                             test_run_out);
 
+        auto fpid = fork();
+        if (fpid == CHILD_PROCESS) {
+            if (!init_mysql_conn()) {
+                if (DEBUG) {
+                    cout << "Init mysql connection ERROR in custom input database insert" << endl;
+                }
+            } else {
+                add_reinfo_mysql_by_string(solution_id, test_run_out);
+                mysql_close(conn);
+            }
+            exit(0);
+        }
 
         update_solution(solution_id, TEST_RUN, usedtime, topmemory / ONE_KILOBYTE, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         clean_workdir(work_dir);
+        mysql_close(conn);
         exit(0);
     }
 
@@ -1939,15 +1968,19 @@ int main(int argc, char **argv) {
     if ((ALL_TEST_MODE && finalACflg == RUNTIME_ERROR) || ACflg == RUNTIME_ERROR) {
         if (DEBUG)
             printf("add RE info of %d..... \n", solution_id);
-        addreinfo(solution_id);
+        auto pid = fork();
+        if (pid == CHILD_PROCESS) {
+            init_mysql_conn();
+            addreinfo(solution_id);
+            mysql_close(conn);
+            exit(0);
+        }
     }
     if (use_max_time) {
         usedtime = max_case_time;
     }
 
-    string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
-                 to_string(solution_id);
-    mysql_real_query(conn, sql.c_str(), sql.length());
+
     if (ACflg == TIME_LIMIT_EXCEEDED || (ALL_TEST_MODE && finalACflg == TIME_LIMIT_EXCEEDED)) {
         usedtime = time_lmt * 1000;
     }
@@ -1956,6 +1989,11 @@ int main(int argc, char **argv) {
                          topmemory / ONE_KILOBYTE,
                          pass_point,
                          pass_rate / num_of_test, "", "", sim, sim_s_id);
+
+    string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
+                 to_string(solution_id);
+    mysql_real_query(conn, sql.c_str(), sql.length());
+
     if (ALL_TEST_MODE) {
         if (num_of_test > 0) {
             pass_rate /= num_of_test;
