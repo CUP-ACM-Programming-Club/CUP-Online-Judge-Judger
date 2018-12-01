@@ -72,3 +72,13 @@ bool websocket::close() {
     delete wsconnect;
     return !connected;
 }
+
+bool websocket::setAddress(const std::string &addr) {
+    address_ = addr;
+    return true;
+}
+
+bool websocket::setPort(const int port) {
+    port_= port;
+    return true;
+}
