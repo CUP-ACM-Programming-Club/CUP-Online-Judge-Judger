@@ -214,9 +214,9 @@ void make_diff_out_full(FILE *f1, FILE *f2, int c1, int c2, const char *path) {
     execute_cmd("echo '========[%s]========='>>diff.out", getFileNameFromPath(path));
     execute_cmd("echo '------测试输入前100行------'>>diff.out");
     execute_cmd("head -100 data.in>>diff.out");
-    execute_cmd("echo '------测试输出前100行-----'>>diff.out");
+    execute_cmd("echo '\n------测试输出前100行-----'>>diff.out");
     execute_cmd("head -100 '%s'>>diff.out", path);
-    execute_cmd("echo '------用户输出前100行-----'>>diff.out");
+    execute_cmd("echo '\n------用户输出前100行-----'>>diff.out");
     execute_cmd("head -100 user.out>>diff.out");
     execute_cmd("echo '\n------测试输出(左)与用户输出(右)前200行的区别-----'>>diff.out");
     execute_cmd("diff '%s' user.out -y|head -200>>diff.out", path);
