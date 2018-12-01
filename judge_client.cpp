@@ -86,8 +86,8 @@ static char user_name[BUFFER_SIZE];
 static char password[BUFFER_SIZE];
 static char db_name[BUFFER_SIZE];
 static char oj_home[BUFFER_SIZE];
-static char data_list[BUFFER_SIZE][BUFFER_SIZE];
-static int data_list_len = 0;
+//static char data_list[BUFFER_SIZE][BUFFER_SIZE];
+//static int data_list_len = 0;
 
 static int port_number;
 static int max_running;
@@ -737,7 +737,6 @@ int compile(int lang, char *work_dir) {
             sleep(1);
         while (setresuid(1536, 1536, 1536) != 0)
             sleep(1);
-        int ret = 0;
         if (DEBUG)
             cout << "Lang:" << lang << endl;
         if (isJava(lang)) {
@@ -1318,7 +1317,8 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
 
 int get_page_fault_mem(struct rusage &ruse, pid_t &pidApp) {
     //java use pagefault
-    int m_vmpeak, m_vmdata, m_minflt;
+    //int m_vmpeak, m_vmdata;
+    int m_minflt;
     m_minflt = static_cast<int>(ruse.ru_minflt * getpagesize());
     /*
     if (0 && DEBUG) {
@@ -1498,7 +1498,6 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
 
         } else { //do not limit JVM syscall for using different JVM
             ACflg = RUNTIME_ERROR;
-            char error[BUFFER_SIZE];
             string _error;
             _error = string("Current Program use not allowed system call.\nSolution ID:") + to_string(solution_id) +
                      "\n";

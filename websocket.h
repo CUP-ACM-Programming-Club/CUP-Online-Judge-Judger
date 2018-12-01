@@ -20,6 +20,12 @@ public:
 
 	bool connect(const std::string &url);
 
+	bool setAddress(const std::string &addr);
+
+	bool setPort(const int port);
+
+	bool setAddressAndPort(const std::string &addr);
+
 	bool close();
 
 	bool isConnected();
@@ -41,6 +47,8 @@ public:
 private:
 	easywsclient::WebSocket::pointer wsconnect;
 	bool connected;
+	std::string address_;
+	int port_;
 };
 
 
