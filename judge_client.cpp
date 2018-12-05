@@ -157,7 +157,7 @@ void init_syscalls_limits(int lang) {
         for (i = 0; i < call_array_size; i++) {
             call_counter[i] = 0;
         }
-    } else if (lang == C11 || lang == CPP17 || lang == CLANG || lang == CLANGPP || lang == C99 || lang == CPP11 ||
+    } else if (lang == C11 || lang == CPP17 || lang == CLANG || lang == CLANGPP || lang == CLANG11 || lang == CLANGPP17 || lang == C99 || lang == CPP11 ||
                lang == CPP98) { // C & C++
         for (i = 0; i == 0 || LANG_CV[i]; i++) {
             call_counter[LANG_CV[i]] = HOJ_MAX_LIMIT;
@@ -724,7 +724,7 @@ int compile(int lang, char *work_dir) {
 #endif
             execute_cmd("mount -o bind /etc/alternatives etc/alternatives");
             execute_cmd("mount -o bind /proc proc");
-            if (lang > PASCAL && lang != OBJC && lang != CLANG && lang != CLANGPP && lang != CPP11 &&
+            if (lang > PASCAL && lang != OBJC && lang != CLANG && lang != CLANGPP && lang != CLANG11 && lang != CLANGPP17 && lang != CPP11 &&
                 lang != CPP98 &&
                 lang != C99)
                 execute_cmd("mount -o bind /dev dev");
@@ -767,6 +767,10 @@ int compile(int lang, char *work_dir) {
             args[len] = nullptr;
             if (DEBUG) {
                 cout << args[0] << endl;
+                for (int i = 1; i < len; ++i) {
+                    cout << args[i] << " ";
+                }
+                cout << endl;
             }
             execvp(args[0], (char *const *) args);
         }
@@ -1032,7 +1036,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     // set the memory
     LIM.rlim_cur = static_cast<rlim_t>(STD_MB * mem_lmt / 2 * 3);
     LIM.rlim_max = static_cast<rlim_t>(STD_MB * mem_lmt * 2);
-    if (lang < JAVA || (lang >= CLANG && lang <= CLANGPP) || (lang >= CPP11 && lang <= C99)) {
+    if (lang < JAVA || (lang >= CLANG && lang <= CLANGPP) || (lang >= CPP11 && lang <= C99) || lang == CLANG11 || lang == CLANGPP17) {
         setrlimit(RLIMIT_AS, &LIM);
     }
 
@@ -1044,6 +1048,8 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
         case FREEBASIC:
         case CLANG:
         case CLANGPP:
+        case CLANG11:
+        case CLANGPP17:
         case GO:
         case CPP11:
         case CPP98:
@@ -1361,7 +1367,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         //jvm gc ask VM before need,so used kernel page fault times and page size
         if (lang == JAVA || lang == PHP ||
             lang == JAVASCRIPT || lang == CSHARP ||
-            lang == GO || lang == JAVA7 || lang == JAVA8 || lang == JAVA6 || lang == CLANG || lang == CLANGPP) {
+            lang == GO || lang == JAVA7 || lang == JAVA8 || lang == JAVA6 || lang == CLANG || lang == CLANGPP || lang == CLANG11 || lang == CLANGPP17) {
             tempmemory = get_page_fault_mem(ruse, pidApp);
         } else {        //other use VmPeak
             tempmemory = get_proc_status(pidApp, "VmPeak:") << 10;
@@ -1689,7 +1695,7 @@ int main(int argc, char **argv) {
     //copy source file
     get_solution(solution_id, work_dir, lang, usercode);
     //java is lucky
-    if ((lang >= JAVA && lang != OBJC && lang != CLANG && lang != CLANGPP &&
+    if ((lang >= JAVA && lang != OBJC && lang != CLANG && lang != CLANGPP && lang != CLANG11 && lang != CLANGPP17 &&
          lang < CPP11) || lang >= JAVA8) {  // Clang Clang++ not VM or Script
         // the limit for java
         time_lmt = time_lmt * java_time_bonus + java_time_bonus;

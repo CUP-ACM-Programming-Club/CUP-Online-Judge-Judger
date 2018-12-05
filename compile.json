@@ -134,7 +134,7 @@
     "Main.bas"
   ],
   "13": [
-    "clang",
+    "/usr/local/bin/clang",
     "Main.c",
     "-pipe",
     "-o",
@@ -148,8 +148,23 @@
     "-std=c99",
     "-DONLINE_JUDGE"
   ],
+  "28": [
+    "/usr/local/bin/clang",
+    "Main.c",
+    "-pipe",
+    "-o",
+    "Main",
+    "-ferror-limit=10",
+    "-fno-asm",
+    "-Wall",
+    "-lm",
+    "-lgmp",
+    "--static",
+    "-std=c11",
+    "-DONLINE_JUDGE"
+  ],
   "14": [
-    "clang++",
+    "/usr/local/bin/clang++",
     "Main.cc",
     "-pipe",
     "-o",
@@ -161,6 +176,21 @@
     "-lgmp",
     "--static",
     "-std=c++11",
+    "-DONLINE_JUDGE"
+  ],
+  "29": [
+    "/usr/local/bin/clang++",
+    "Main.cc",
+    "-pipe",
+    "-o",
+    "Main",
+    "-ferror-limit=10",
+    "-fno-asm",
+    "-Wall",
+    "-lm",
+    "-lgmp",
+    "--static",
+    "-std=c++17",
     "-DONLINE_JUDGE"
   ],
   "15": [
