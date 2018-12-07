@@ -117,6 +117,18 @@ enum judge_procedure {
     SYSTEM_REJECTED = 15
 };
 
+enum ArgsType {
+    _ERROR = 0x99,
+    _DEBUG = 0,
+    _LANG_NAME = 1,
+    _NO_RECORD = 2,
+    _DIR = 3,
+    _RECORD_CALL = 4,
+    _SOLUTION_ID = 5,
+    _RUNNER_ID = 6,
+    _ADMIN = 7
+};
+
 static char lang_ext[30][8] = {"c", "cc", "pas", "java", "rb", "sh", "py",
                                "php", "pl", "cs", "m", "bas", "scm", "c", "cc", "lua", "js", "go", "py", "cc", "cc",
                                "c", "kt", "java", "java", "py", "py","java","c","cc"};

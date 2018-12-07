@@ -747,5 +747,39 @@ void clean_workdir(char *work_dir) {
 
 }
 
+int detectArgType(const char* argument) {
+    if (argument[0] == '-') {
+        if (!strcmp(argument + 1,"language")) {
+            return _LANG_NAME;
+        }
+        else if(!strcmp(argument + 1,"no_record")) {
+            return _NO_RECORD;
+        }
+        else if(!strcmp(argument + 1, "dir")) {
+            return _DIR;
+        }
+        else if(!strcmp(argument + 1,"record")) {
+            return _RECORD_CALL;
+        }
+        else if(!strcmp(argument + 1,"solution_id")) {
+            return _SOLUTION_ID;
+        }
+        else if(!strcmp(argument + 1,"runner_id")) {
+            return _RUNNER_ID;
+        }
+        else if(!strcmp(argument + 1,"admin")) {
+            return _ADMIN;
+        }
+    }
+    else {
+        if (!strcmp(argument,"DEBUG")) {
+            return _DEBUG;
+        }
+        else {
+            return _ERROR;
+        }
+    }
+}
+
 
 #endif //JUDGE_CLIENT_JUDGE_LIB_H

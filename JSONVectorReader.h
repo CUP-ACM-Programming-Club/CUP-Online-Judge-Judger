@@ -15,19 +15,24 @@ using std::string;
 using std::vector;
 using rapidjson::Document;
 
-class CompilerArgsReader {
+class JSONVectorReader {
 public:
-    CompilerArgsReader(const string &filePath);
+    JSONVectorReader(const string &filePath);
 
-    CompilerArgsReader() : isLoad(false) {}
+    JSONVectorReader() : isLoad(false) {}
 
-    ~CompilerArgsReader() = default;
+    ~JSONVectorReader() = default;
 
     bool loadFile(const string &filePath);
 
     bool loadJSON(string jsonPlainText);
 
-    vector<string> Get(string key);
+    vector<string> GetArray(string key);
+
+    string GetString(string key);
+
+
+    void documentIsLoaded();
 
 private:
     bool isLoad;
