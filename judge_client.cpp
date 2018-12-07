@@ -45,6 +45,7 @@
 #include <sys/user.h>
 #include <sys/resource.h>
 //#include <sys/types.h>
+#ifndef _NO_MYSQL
 #ifdef __APPLE_CC__
 
 #include <mysql.h>
@@ -52,15 +53,18 @@
 #else
 #include <mysql/mysql.h>
 #endif
+#endif
 
 #include "okcalls.h"
 #include "websocket.h"
 #include "static_var.h"
 #include "judge_lib.h"
-#include "CompilerArgsReader.h"
+#include "JSONVectorReader.h"
 
 using namespace std;
 using json = nlohmann::json;
+using CompilerArgsReader = JSONVectorReader;
+using ConfigReader = JSONVectorReader;
 //
 
 
@@ -111,6 +115,7 @@ static int SHARE_MEMORY_RUN = 0;
 static char record_call = 0;
 static int use_ptrace = 1;
 static int judger_number = 0;
+static bool admin = false;
 int solution_id;
 //static int sleep_tmp;
 #define ZOJ_COM
@@ -157,7 +162,8 @@ void init_syscalls_limits(int lang) {
         for (i = 0; i < call_array_size; i++) {
             call_counter[i] = 0;
         }
-    } else if (lang == C11 || lang == CPP17 || lang == CLANG || lang == CLANGPP || lang == CLANG11 || lang == CLANGPP17 || lang == C99 || lang == CPP11 ||
+    } else if (lang == C11 || lang == CPP17 || lang == CLANG || lang == CLANGPP || lang == CLANG11 ||
+               lang == CLANGPP17 || lang == C99 || lang == CPP11 ||
                lang == CPP98) { // C & C++
         for (i = 0; i == 0 || LANG_CV[i]; i++) {
             call_counter[LANG_CV[i]] = HOJ_MAX_LIMIT;
@@ -221,6 +227,10 @@ void init_syscalls_limits(int lang) {
 
 // read the configue file
 void init_mysql_conf() {
+    string configDIR = oj_home;
+    configDIR += "/etc/config.json";
+    ConfigReader configReader(configDIR);
+
     FILE *fp = nullptr;
     char buf[BUFFER_SIZE];
     host_name[0] = 0;
@@ -390,6 +400,7 @@ int compare_zoj(const char *file1, const char *file2) {
                     if (c1 == EOF || c2 == EOF) {
                         break;
                     }
+
                     if (c1 != c2) {
                         if (DEBUG) {
                             cerr << "c1:" << (char) c1 << " c2:" << (char) c2 << endl;
@@ -724,7 +735,8 @@ int compile(int lang, char *work_dir) {
 #endif
             execute_cmd("mount -o bind /etc/alternatives etc/alternatives");
             execute_cmd("mount -o bind /proc proc");
-            if (lang > PASCAL && lang != OBJC && lang != CLANG && lang != CLANGPP && lang != CLANG11 && lang != CLANGPP17 && lang != CPP11 &&
+            if (lang > PASCAL && lang != OBJC && lang != CLANG && lang != CLANGPP && lang != CLANG11 &&
+                lang != CLANGPP17 && lang != CPP11 &&
                 lang != CPP98 &&
                 lang != C99)
                 execute_cmd("mount -o bind /dev dev");
@@ -740,7 +752,7 @@ int compile(int lang, char *work_dir) {
         if (DEBUG)
             cout << "Lang:" << lang << endl;
         if (isJava(lang)) {
-            auto _args = compilerArgsReader.Get(to_string(lang));
+            auto _args = compilerArgsReader.GetArray(to_string(lang));
             int len = _args.size();
             char *java_arg[len + 5];
             char java_buffer[len + 5][30];
@@ -754,7 +766,7 @@ int compile(int lang, char *work_dir) {
             sprintf(java_buffer[2], "-J%s", java_xmx);
             execvp(java_arg[0], (char *const *) java_arg);
         } else {
-            vector<string> _args = compilerArgsReader.Get(to_string(lang));
+            vector<string> _args = compilerArgsReader.GetArray(to_string(lang));
             if (_args.empty()) {
                 cout << "Noting to do" << endl;
                 exit(0);
@@ -1036,7 +1048,8 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     // set the memory
     LIM.rlim_cur = static_cast<rlim_t>(STD_MB * mem_lmt / 2 * 3);
     LIM.rlim_max = static_cast<rlim_t>(STD_MB * mem_lmt * 2);
-    if (lang < JAVA || (lang >= CLANG && lang <= CLANGPP) || (lang >= CPP11 && lang <= C99) || lang == CLANG11 || lang == CLANGPP17) {
+    if (lang < JAVA || (lang >= CLANG && lang <= CLANGPP) || (lang >= CPP11 && lang <= C99) || lang == CLANG11 ||
+        lang == CLANGPP17) {
         setrlimit(RLIMIT_AS, &LIM);
     }
 
@@ -1367,7 +1380,8 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         //jvm gc ask VM before need,so used kernel page fault times and page size
         if (lang == JAVA || lang == PHP ||
             lang == JAVASCRIPT || lang == CSHARP ||
-            lang == GO || lang == JAVA7 || lang == JAVA8 || lang == JAVA6 || lang == CLANG || lang == CLANGPP || lang == CLANG11 || lang == CLANGPP17) {
+            lang == GO || lang == JAVA7 || lang == JAVA8 || lang == JAVA6 || lang == CLANG || lang == CLANGPP ||
+            lang == CLANG11 || lang == CLANGPP17) {
             tempmemory = get_page_fault_mem(ruse, pidApp);
         } else {        //other use VmPeak
             tempmemory = get_proc_status(pidApp, "VmPeak:") << 10;
@@ -1534,6 +1548,46 @@ void init_parameters(int argc, char **argv, int &solution_id,
                 argv[0]);
         exit(1);
     }
+    bool error = false;
+    for (int i = 1; i < argc; ++i) {
+        int argType = detectArgType(argv[i]);
+        if (argType == _ERROR) {
+            error = true;
+            break;
+        } else if (argType == _DEBUG) {
+            DEBUG = true;
+        } else if (argType == _NO_RECORD) {
+            NO_RECORD = 1;
+        } else if (argType == _RECORD_CALL) {
+            record_call = 1;
+        } else if (argType == _ADMIN) {
+            admin = true;
+        } else {
+            ++i;
+            if (i >= argc) {
+                error = true;
+                break;
+            }
+            switch (argType) {
+                case _LANG_NAME:
+                    strcpy(LANG_NAME, argv[i]);
+                    break;
+                case _DIR:
+                    strcpy(oj_home, argv[i]);
+                    break;
+                case _SOLUTION_ID:
+                    solution_id = atoi(argv[i]);
+                    break;
+                case _RUNNER_ID:
+                    judger_number = runner_id = atoi(argv[i]);
+                    break;
+            }
+        }
+    }
+    if (!error) {
+        chdir(oj_home);
+        return;
+    }
     DEBUG = (argc > 4);
     if (argc > 5 && !strcmp(argv[5], "DEBUG")) {
         NO_RECORD = 1;
@@ -1562,8 +1616,11 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     if (DEBUG) {
         cout << "get sim: " << src_pth << endl;
     }
-    int sim = execute_cmd("/usr/bin/sim.sh %s %d", src_pth, pid);
-
+    int sim = 0;
+    if (admin) {}
+    else {
+        sim = execute_cmd("/usr/bin/sim.sh %s %d", src_pth, pid);
+    }
     if (!sim) {
         if (DEBUG) {
             cout << "SIM is not detected!" << endl;
@@ -1622,8 +1679,8 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     }
     if (uid == cpid)
         sim = 0;
-    if (solution_id <= sim_s_id)
-        sim = 0;
+    //if (solution_id <= sim_s_id)
+    //  sim = 0;
 
     return sim;
 }
@@ -1678,7 +1735,7 @@ int main(int argc, char **argv) {
         exit(0); //exit if mysql is down
     }
     //set work directory to start running & judging
-    sprintf(work_dir, "%s/run%s/", oj_home, argv[2]);
+    sprintf(work_dir, "%s/run%d/", oj_home, runner_id);
     global_work_dir = string(work_dir);
     clean_workdir(work_dir);
 

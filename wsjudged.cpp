@@ -28,13 +28,13 @@ int main(int argc,char** argv)
 	setrlimit(RLIMIT_AS, &LIM);
 	LIM.rlim_cur = LIM.rlim_max = 200;
 	setrlimit(RLIMIT_NPROC, &LIM);
-
-	if (!DEBUG)
-		execl("/usr/bin/judge_client", "/usr/bin/judge_client", argv[1], argv[2],
-			  argv[3], NULL);
-	else
-		execl("/usr/bin/judge_client", "/usr/bin/judge_client", argv[1], argv[2],
-			  argv[3], "debug", NULL);
+	char *args[argc + 5];
+	args[0] = "/usr/bin/judge_client";
+	for(int i = 1;i < argc;++i) {
+		args[i] = argv[i];
+	}
+	args[argc] = nullptr;
+	execvp(args[0],(char *const *)args);
 	return 0;
 }
 

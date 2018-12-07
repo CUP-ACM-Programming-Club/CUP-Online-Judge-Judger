@@ -480,7 +480,7 @@ template<typename ValueType>
 struct TypeHelper<ValueType, std::basic_string<typename ValueType::Ch> > {
     typedef std::basic_string<typename ValueType::Ch> StringType;
     static bool Is(const ValueType& v) { return v.IsString(); }
-    static StringType Get(const ValueType& v) { return StringType(v.GetString(), v.GetStringLength()); }
+    static StringType GetArray(const ValueType& v) { return StringType(v.GetString(), v.GetStringLength()); }
     static ValueType& Set(ValueType& v, const StringType& data, typename ValueType::AllocatorType& a) { return v.SetString(data, a); }
 };
 #endif
@@ -1065,7 +1065,7 @@ public:
     const GenericValue& operator[](const GenericValue<Encoding, SourceAllocator>& name) const { return const_cast<GenericValue&>(*this)[name]; }
 
 #if RAPIDJSON_HAS_STDSTRING
-    //! Get a value from an object associated with name (string object).
+    //! GetArray a value from an object associated with name (string object).
     GenericValue& operator[](const std::basic_string<Ch>& name) { return (*this)[GenericValue(StringRef(name))]; }
     const GenericValue& operator[](const std::basic_string<Ch>& name) const { return (*this)[GenericValue(StringRef(name))]; }
 #endif

@@ -1722,7 +1722,7 @@ private:
                 RAPIDJSON_PARSE_ERROR_NORETURN(kParseErrorObjectMissName, is.Tell());
                 return IterativeParsingErrorState;
             }
-            // Get member count.
+            // GetArray member count.
             SizeType c = *stack_.template Pop<SizeType>(1);
             // If the object is not empty, count the last member.
             if (src == IterativeParsingMemberValueState)
@@ -1752,7 +1752,7 @@ private:
                 RAPIDJSON_PARSE_ERROR_NORETURN(kParseErrorValueInvalid, is.Tell());
                 return IterativeParsingErrorState;
             }
-            // Get element count.
+            // GetArray element count.
             SizeType c = *stack_.template Pop<SizeType>(1);
             // If the array is not empty, count the last element.
             if (src == IterativeParsingElementState)
