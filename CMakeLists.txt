@@ -75,5 +75,5 @@ set( MYSQL_LIBRARIES ${MYSQL_LIBRARY} )
 
 mark_as_advanced( MYSQL_INCLUDE_DIR MYSQL_LIBRARY )
 include_directories(${MYSQL_INCLUDE_DIR})
-add_executable(judge_client okcalls.h ncalls.h okcalls32.h okcalls64.h json.hpp easywsclient.cpp easywsclient.hpp judge_client.cpp websocket.cpp websocket.h judge_lib.h static_var.h JSONVectorReader.h JSONVectorReader.cpp)
+add_executable(judge_client okcalls.h ncalls.h okcalls32.h okcalls64.h json.hpp easywsclient.cpp easywsclient.hpp judge_client.cpp websocket.cpp websocket.h judge_lib.h static_var.h JSONVectorReader.h JSONVectorReader.cpp Bundle.cpp Bundle.h)
 target_link_libraries(judge_client ${MYSQL_LIBRARIES})
