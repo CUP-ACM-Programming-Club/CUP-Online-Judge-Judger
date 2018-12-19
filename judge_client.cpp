@@ -58,9 +58,11 @@
 #include "okcalls.h"
 #include "websocket.h"
 #include "static_var.h"
-#include "judge_lib.h"
-#include "JSONVectorReader.h"
 
+#include "JSONVectorReader.h"
+#include "Bundle.h"
+
+#include "judge_lib.h"
 using namespace std;
 using json = nlohmann::json;
 using CompilerArgsReader = JSONVectorReader;
@@ -687,7 +689,16 @@ void update_problem(int pid) {
 
 int compile(int lang, char *work_dir) {
     int pid;
-    webSocket << ws_send(solution_id, 2, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE);
+    Bundle bundle;
+    bundle.setSolutionID(solution_id);
+    bundle.setResult(COMPILING);
+    bundle.setFinished(NOT_FINISHED);
+    bundle.setUsedTime(ZERO_TIME);
+    bundle.setMemoryUse(ZERO_MEMORY);
+    bundle.setPassPoint(ZERO_PASSPOINT);
+    bundle.setPassRate(ZERO_PASSRATE);
+    webSocket << bundle.toJSONString();
+    //webSocket << ws_send(solution_id, 2, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE);
     string configJSONDir = oj_home;
     configJSONDir += "/etc/compile.json";
     CompilerArgsReader compilerArgsReader(configJSONDir);
@@ -1783,9 +1794,19 @@ int main(int argc, char **argv) {
         while (getline(ceinformation, tmp)) {
             _compile_info += tmp + "\n";
         }
-        webSocket
-                << ws_send(solution_id, OJ_CE, FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE, "",
-                           _compile_info);
+        Bundle bundle;
+        bundle.setSolutionID(solution_id);
+        bundle.setResult(COMPILE_ERROR);
+        bundle.setFinished(FINISHED);
+        bundle.setUsedTime(ZERO_TIME);
+        bundle.setMemoryUse(ZERO_MEMORY);
+        bundle.setPassPoint(ZERO_PASSPOINT);
+        bundle.setPassRate(ZERO_PASSRATE);
+        bundle.setCompileInfo(_compile_info);
+        webSocket << bundle.toJSONString();
+//        webSocket
+  //              << ws_send(solution_id, OJ_CE, FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE, "",
+  //                         _compile_info);
         update_solution(solution_id, OJ_CE, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         update_user(user_id);
         update_problem(p_id);
@@ -1874,8 +1895,17 @@ int main(int argc, char **argv) {
         printf("running a custom input...\n");
         get_custominput(solution_id, work_dir);
         init_syscalls_limits(lang);
-        webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
-                             ZERO_PASSRATE);
+        Bundle bundle;
+        bundle.setSolutionID(solution_id);
+        bundle.setResult(RUNNING_JUDGING);
+        bundle.setFinished(NOT_FINISHED);
+        bundle.setUsedTime(ZERO_TIME);
+        bundle.setMemoryUse(ZERO_MEMORY);
+        bundle.setPassPoint(ZERO_PASSPOINT);
+        bundle.setPassRate(ZERO_PASSRATE);
+        webSocket << bundle.toJSONString();
+        //        webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
+ //                            ZERO_PASSRATE);
         pid_t pidApp = fork();
 
         if (pidApp == CHILD_PROCESS) {
@@ -1924,9 +1954,20 @@ int main(int argc, char **argv) {
             cout << "test_run_out" << endl;
             cout << test_run_out << endl;
         }
-        webSocket << ws_send(solution_id, TEST_RUN, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
-                             ZERO_PASSRATE,
-                             test_run_out);
+
+        bundle.clear();
+        bundle.setSolutionID(solution_id);
+        bundle.setResult(TEST_RUN);
+        bundle.setFinished(FINISHED);
+        bundle.setUsedTime(usedtime);
+        bundle.setMemoryUse(topmemory / ONE_KILOBYTE);
+        bundle.setPassPoint(ZERO_PASSPOINT);
+        bundle.setPassRate(ZERO_PASSRATE);
+        bundle.setTestRunResult(test_run_out);
+        webSocket << bundle.toJSONString();
+//        webSocket << ws_send(solution_id, TEST_RUN, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
+  //                           ZERO_PASSRATE,
+   //                          test_run_out);
 
         auto fpid = fork();
         if (fpid == CHILD_PROCESS) {
@@ -1946,9 +1987,24 @@ int main(int argc, char **argv) {
         mysql_close(conn);
         exit(0);
     }
-
-    webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
-                         ZERO_PASSRATE);
+    int total_point = 0;
+    while((dirp = readdir(dp))) {
+        namelen = isInFile(dirp->d_name);
+        if(namelen) ++total_point;
+    }
+    dp = opendir(fullpath);
+    Bundle bundle;
+    bundle.setSolutionID(solution_id);
+    bundle.setResult(RUNNING_JUDGING);
+    bundle.setFinished(NOT_FINISHED);
+    bundle.setUsedTime(ZERO_TIME);
+    bundle.setMemoryUse(ZERO_MEMORY);
+    bundle.setPassPoint(ZERO_PASSPOINT);
+    bundle.setPassRate(ZERO_PASSRATE);
+    bundle.setTotalPoint(total_point);
+    webSocket << bundle.toJSONString();
+    //webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
+    //                     ZERO_PASSRATE);
     int pass_point = ZERO_PASSPOINT;
     for (; (ALL_TEST_MODE || ACflg == ACCEPT || ACflg == PRESENTATION_ERROR) && (dirp = readdir(dp)) != nullptr;) {
         namelen = isInFile(dirp->d_name); // check if the file is *.in or not
@@ -2007,15 +2063,19 @@ int main(int argc, char **argv) {
 
                 ACflg = ACCEPT;
             }
-
-            webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, min(usedtime, time_lmt * 1000),
-                                 min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
-                                 pass_rate / num_of_test);
+           // webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, min(usedtime, time_lmt * 1000),
+            //                     min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
+            //                     pass_rate / num_of_test);
         } else {
-            webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, min(usedtime, time_lmt * 1000),
-                                 min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
-                                 pass_rate / num_of_test);
+           // webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, min(usedtime, time_lmt * 1000),
+            //                     min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
+            //                     pass_rate / num_of_test);
         }
+        bundle.setUsedTime( min(usedtime, time_lmt * 1000));
+        bundle.setMemoryUse(min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE));
+        bundle.setPassPoint(pass_point);
+        bundle.setPassRate(pass_rate / num_of_test);
+        webSocket << bundle.toJSONString();
     }
     if (ACflg == ACCEPT && PEflg == PRESENTATION_ERROR)
         ACflg = PRESENTATION_ERROR;
@@ -2046,12 +2106,19 @@ int main(int argc, char **argv) {
     if (ACflg == TIME_LIMIT_EXCEEDED || (ALL_TEST_MODE && finalACflg == TIME_LIMIT_EXCEEDED)) {
         usedtime = time_lmt * 1000;
     }
-
-    webSocket << ws_send(solution_id, ALL_TEST_MODE ? finalACflg : ACflg, FINISHED, usedtime,
-                         topmemory / ONE_KILOBYTE,
-                         pass_point,
-                         pass_rate / num_of_test, "", "", sim, sim_s_id);
-
+    bundle.setResult(ALL_TEST_MODE ? finalACflg : ACflg);
+    bundle.setFinished(FINISHED);
+    bundle.setUsedTime(usedtime);
+    bundle.setMemoryUse(topmemory / ONE_KILOBYTE);
+    bundle.setPassPoint(pass_point);
+    bundle.setPassRate(pass_rate / num_of_test);
+    bundle.setSim(sim);
+    bundle.setSimSource(sim_s_id);
+    //webSocket << ws_send(solution_id, ALL_TEST_MODE ? finalACflg : ACflg, FINISHED, usedtime,
+     //                    topmemory / ONE_KILOBYTE,
+     //                    pass_point,
+     //                    pass_rate / num_of_test, "", "", sim, sim_s_id);
+     webSocket << bundle.toJSONString();
     string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
                  to_string(solution_id);
     mysql_real_query(conn, sql.c_str(), sql.length());
