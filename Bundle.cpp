@@ -124,7 +124,7 @@ void Bundle::init() {
     _map["compile_info"] = Pack("");
     _map["sim"] = Pack();
     _map["sim_s_id"] = Pack();
-    _map["total_point"] = Pack();
+    _map["total_point"] = Pack(0);
 }
 
 Bundle::Bundle() {
