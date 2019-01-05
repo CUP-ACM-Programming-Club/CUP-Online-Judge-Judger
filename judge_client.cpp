@@ -733,9 +733,8 @@ int compile(int lang, char *work_dir) {
         } else {
             freopen("ce.txt", "w", stdout);
         }
-        if (lang != CPP17 && lang != JAVA && lang != 9 && lang != PYTHON2 && lang != FREEBASIC
-            && lang != PYTHON3 && lang != JAVA7 && lang != JAVA8 && lang != JAVA6 && lang != PyPy &&
-            lang != PyPy3) {
+        if (lang != CPP17 && lang != JAVA && lang != 9 && lang != FREEBASIC
+             && lang != JAVA7 && lang != JAVA8 && lang != JAVA6) {
             execute_cmd("mkdir -p bin usr lib lib64 etc/alternatives proc tmp dev");
             execute_cmd("chown judge *");
             execute_cmd("mount -o bind /bin bin");
@@ -1216,7 +1215,7 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         setrlimit(RLIMIT_FSIZE, &LIM);
         LIM.rlim_cur = LIM.rlim_max = 50 * STD_MB;
         setrlimit(RLIMIT_FSIZE, &LIM);
-        LIM.rlim_cur = LIM.rlim_max = 256 * STD_MB;
+        LIM.rlim_cur = LIM.rlim_max = 1024 * STD_MB;
         setrlimit(RLIMIT_AS, &LIM);
         string dir = oj_home;
         dir += "/data/" + to_string(problem_id) + "/";
