@@ -539,8 +539,8 @@ void update_solution(int solution_id, int result, double time, int memory, int s
     if (NO_RECORD) {
         return;
     }
-    if (result == OJ_TL && memory == ZERO_MEMORY)
-        result = OJ_ML;
+    if (result == TIME_LIMIT_EXCEEDED && memory == ZERO_MEMORY)
+        result = MEMORY_LIMIT_EXCEEDED;
     _update_solution_mysql(solution_id, result, time, memory, sim, sim_s_id,
                            pass_rate);
 }
@@ -1806,7 +1806,7 @@ int main(int argc, char **argv) {
 //        webSocket
   //              << ws_send(solution_id, OJ_CE, FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE, "",
   //                         _compile_info);
-        update_solution(solution_id, OJ_CE, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
+        update_solution(solution_id, COMPILE_ERROR, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         update_user(user_id);
         update_problem(p_id);
         mysql_close(conn);
@@ -1814,7 +1814,7 @@ int main(int argc, char **argv) {
         write_log("compile error");
         exit(0);
     } else {
-        update_solution(solution_id, OJ_RI, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
+        update_solution(solution_id, RUNNING_JUDGING, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         umount(work_dir);
     }
     //exit(0);
@@ -2070,11 +2070,14 @@ int main(int argc, char **argv) {
             //                     min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
             //                     pass_rate / num_of_test);
         }
-        bundle.setUsedTime( min(usedtime, time_lmt * 1000));
+        bundle.setUsedTime(min(usedtime, time_lmt * 1000));
         bundle.setMemoryUse(min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE));
         bundle.setPassPoint(pass_point);
         bundle.setPassRate(pass_rate / num_of_test);
         webSocket << bundle.toJSONString();
+        if(ACflg == TIME_LIMIT_EXCEEDED) {
+            break;
+        }
     }
     if (ACflg == ACCEPT && PEflg == PRESENTATION_ERROR)
         ACflg = PRESENTATION_ERROR;
