@@ -9,8 +9,8 @@
 #include <cctype>
 #include <iostream>
 #include <fstream>
-#include "static_var.h"
-#include "json.hpp"
+#include "../header/static_var.h"
+#include "../header/json.hpp"
 #include <cstdarg>
 
 using namespace std;
@@ -120,6 +120,6 @@ extern void clean_workdir(char *work_dir);
 
 extern int detectArgType(const char* argument);
 
-
+extern void write_log(const char* oj_home, const char *_fmt, ...);
 
 #endif //JUDGE_CLIENT_JUDGE_LIB_H

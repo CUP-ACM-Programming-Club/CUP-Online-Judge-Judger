@@ -772,3 +772,28 @@ int detectArgType(const char* argument) {
         }
     }
 }
+
+void write_log(const char* oj_home, const char *_fmt, ...) {
+    va_list ap;
+    char fmt[FOUR * ONE_KILOBYTE];
+    strncpy(fmt, _fmt, FOUR * ONE_KILOBYTE);
+    char buffer[FOUR * ONE_KILOBYTE];
+    //      time_t          t = time(NULL);
+    //int l;
+    sprintf(buffer, "%s/log/client.log", oj_home);
+    FILE *fp = fopen(buffer, "ae+");
+    if (fp == nullptr) {
+        fprintf(stderr, "openfile error!\n");
+        system("pwd");
+    }
+    va_start(ap, _fmt);
+    //l =
+    vsprintf(buffer, fmt, ap);
+    fprintf(fp, "%s\n", buffer);
+    //if (DEBUG) {
+    cerr << buffer << endl;
+    //printf("%s\n", buffer);
+    //}
+    va_end(ap);
+    fclose(fp);
+}

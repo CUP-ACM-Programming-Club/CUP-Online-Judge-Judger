@@ -55,14 +55,15 @@
 #endif
 #endif
 
-#include "okcalls.h"
-#include "websocket.h"
-#include "static_var.h"
+#include "header/okcalls.h"
+#include "model/websocket.h"
+#include "header/static_var.h"
 
-#include "JSONVectorReader.h"
-#include "Bundle.h"
+#include "model/JSONVectorReader.h"
+#include "model/Bundle.h"
 
-#include "judge_lib.h"
+#include "library/judge_lib.h"
+#include "model/MySQLAutoPointer.h"
 using namespace std;
 using json = nlohmann::json;
 using CompilerArgsReader = JSONVectorReader;
@@ -121,35 +122,12 @@ static bool admin = false;
 int solution_id;
 //static int sleep_tmp;
 #define ZOJ_COM
-MYSQL *conn;
+MySQLAutoPointer conn;
 
 websocket webSocket;
-string global_work_dir;
 
 
-void write_log(const char *_fmt, ...) {
-    va_list ap;
-    char fmt[FOUR * ONE_KILOBYTE];
-    strncpy(fmt, _fmt, FOUR * ONE_KILOBYTE);
-    char buffer[FOUR * ONE_KILOBYTE];
-    //      time_t          t = time(NULL);
-    //int l;
-    sprintf(buffer, "%s/log/client.log", oj_home);
-    FILE *fp = fopen(buffer, "ae+");
-    if (fp == nullptr) {
-        fprintf(stderr, "openfile error!\n");
-        system("pwd");
-    }
-    va_start(ap, _fmt);
-    //l =
-    vsprintf(buffer, fmt, ap);
-    fprintf(fp, "%s\n", buffer);
-    if (DEBUG) {
-        printf("%s\n", buffer);
-    }
-    va_end(ap);
-    fclose(fp);
-}
+
 
 const int call_array_size = 512;
 int call_counter[call_array_size];
@@ -159,7 +137,7 @@ void init_syscalls_limits(int lang) {
     int i;
     memset(call_counter, 0, sizeof(call_counter));
     if (DEBUG)
-        write_log("init_call_counter:%d", lang);
+        write_log(oj_home, "init_call_counter:%d", lang);
     if (record_call) { // C & C++
         for (i = 0; i < call_array_size; i++) {
             call_counter[i] = 0;
@@ -271,6 +249,11 @@ void init_mysql_conf() {
         }
         //fclose(fp);
     }
+    conn.setPort(port_number);
+    conn.setDBName(db_name);
+    conn.setUserName(user_name);
+    conn.setPassword(password);
+    conn.setHostName(host_name);
     //  fclose(fp);
 }
 
@@ -655,12 +638,12 @@ void _update_user_mysql(char *user_id) {
             R"(UPDATE `users` SET `solved`=(SELECT count(DISTINCT `problem_id`) FROM `solution` WHERE `user_id`='%s' AND `result`='4') WHERE `user_id`='%s')",
             user_id, user_id);
     if (mysql_real_query(conn, sql, strlen(sql)))
-        write_log(mysql_error(conn));
+        write_log(oj_home, mysql_error(conn));
     sprintf(sql,
             R"(UPDATE `users` SET `submit`=(SELECT count(*) FROM `solution` WHERE `user_id`='%s' and problem_id>0) WHERE `user_id`='%s')",
             user_id, user_id);
     if (mysql_real_query(conn, sql, strlen(sql)))
-        write_log(mysql_error(conn));
+        write_log(oj_home, mysql_error(conn));
 }
 
 
@@ -674,12 +657,12 @@ void _update_problem_mysql(int p_id) {
             R"(UPDATE `problem` SET `accepted`=(SELECT count(*) FROM `solution` WHERE `problem_id`='%d' AND `result`='4') WHERE `problem_id`='%d')",
             p_id, p_id);
     if (mysql_real_query(conn, sql, strlen(sql)))
-        write_log(mysql_error(conn));
+        write_log(oj_home, mysql_error(conn));
     sprintf(sql,
             R"(UPDATE `problem` SET `submit`=(SELECT count(*) FROM `solution` WHERE `problem_id`='%d') WHERE `problem_id`='%d')",
             p_id, p_id);
     if (mysql_real_query(conn, sql, strlen(sql)))
-        write_log(mysql_error(conn));
+        write_log(oj_home, mysql_error(conn));
 }
 
 void update_problem(int pid) {
@@ -844,34 +827,6 @@ int get_proc_status(int pid, const char *mark) {
     if (pf)
         fclose(pf);
     return ret;
-}
-
-int init_mysql_conn() {
-
-    conn = mysql_init(nullptr);
-    //mysql_real_connect(conn,host_name,user_name,password,db_name,port_number,0,0);
-    const char timeout = 30;
-    mysql_options(conn, MYSQL_OPT_CONNECT_TIMEOUT, &timeout);
-
-    if (!mysql_real_connect(conn, host_name, user_name, password, db_name,
-                            static_cast<unsigned int>(port_number), 0, 0)) {
-        write_log("%s", mysql_error(conn));
-        if (DEBUG) {
-            cerr << "MYSQL daemon service is down." << endl;
-            cerr << "MYSQL error log: " << mysql_error(conn) << endl;
-        }
-        return 0;
-    }
-    const char *utf8sql = "set names utf8";
-    if (mysql_real_query(conn, utf8sql, strlen(utf8sql))) {
-        write_log("%s", mysql_error(conn));
-        if (DEBUG) {
-            cerr << "MYSQL daemon service is down." << endl;
-            cerr << "MYSQL error log: " << mysql_error(conn) << endl;
-        }
-        return 0;
-    }
-    return 1;
 }
 
 
@@ -1156,7 +1111,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
 
 
 int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
-                  char *userfile, char *usercode) {
+                  char *userfile, char *usercode, string& global_work_dir) {
 
     pid_t pid;
     printf("pid=%d\n", problem_id);
@@ -1294,7 +1249,7 @@ void fix_python_syntax_error_response(int &ACflg, int lang) {
 void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
                     int p_id, char *infile, char *outfile, char *userfile, char *usercode, int &PEflg,
                     int lang, char *work_dir, int &topmemory, int mem_lmt,
-                    int solution_id, int num_of_test) {
+                    int solution_id, int num_of_test, string& global_work_dir) {
     //usedtime-=1000;
     cout << "Used time" << endl;
     cout << usedtime << endl;
@@ -1314,7 +1269,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
     // compare
     if (ACflg == ACCEPT) {
         if (isspj) {
-            comp_res = special_judge(oj_home, p_id, infile, outfile, userfile, usercode);
+            comp_res = special_judge(oj_home, p_id, infile, outfile, userfile, usercode, global_work_dir);
             if (comp_res < 4) {
                 if (comp_res == 0)
                     comp_res = ACCEPT;
@@ -1424,7 +1379,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
             buffer << file.rdbuf();
             string contents(buffer.str());
             if (contents.find("Killed") != contents.npos) {
-                write_log(contents.c_str());
+                write_log(oj_home, contents.c_str());
                 print_runtimeerror(contents.c_str());
                 //ptrace(PTRACE_KILL, pidApp, NULL, NULL);
                 //print_runtimeerror(contents.c_str());
@@ -1534,7 +1489,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
                      "\n";
             _error += string("Syscall ID:") + to_string(reg.REG_SYSCALL) + "\n";
 
-            write_log(_error.c_str());
+            write_log(oj_home, _error.c_str());
             print_runtimeerror(_error.c_str());
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
         }
@@ -1742,12 +1697,12 @@ int main(int argc, char **argv) {
     double time_lmt;
     init_parameters(argc, argv, solution_id, runner_id);
     init_mysql_conf();
-    if (!init_mysql_conn()) {
+    if (!conn.start()) {
         exit(0); //exit if mysql is down
     }
     //set work directory to start running & judging
     sprintf(work_dir, "%s/run%d/", oj_home, runner_id);
-    global_work_dir = string(work_dir);
+    string global_work_dir = string(work_dir);
     clean_workdir(work_dir);
 
     if (SHARE_MEMORY_RUN)
@@ -1769,7 +1724,7 @@ int main(int argc, char **argv) {
         time_lmt = time_lmt * java_time_bonus + java_time_bonus;
         mem_lmt = mem_lmt + java_memory_bonus;
         // copy java.policy
-        if (lang == JAVA || lang == JAVA7 || lang == JAVA8 || lang == JAVA6) {
+        if (isJava(lang)) {
             execute_cmd("/bin/cp %s/etc/java0.policy %s/java.policy", oj_home, work_dir);
             execute_cmd("chmod 755 %s/java.policy", work_dir);
             execute_cmd("chown judge %s/java.policy", work_dir);
@@ -1786,8 +1741,7 @@ int main(int argc, char **argv) {
     }
 
 
-    int Compile_OK = compile(lang, work_dir);
-    if (Compile_OK != COMPILED) {
+    if (compile(lang, work_dir) != COMPILED) {
         addceinfo(solution_id);
         string _compile_info, tmp;
         fstream ceinformation("ce.txt");
@@ -1804,15 +1758,12 @@ int main(int argc, char **argv) {
         bundle.setPassRate(ZERO_PASSRATE);
         bundle.setCompileInfo(_compile_info);
         webSocket << bundle.toJSONString();
-//        webSocket
-  //              << ws_send(solution_id, OJ_CE, FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE, "",
-  //                         _compile_info);
         update_solution(solution_id, COMPILE_ERROR, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         update_user(user_id);
         update_problem(p_id);
-        mysql_close(conn);
+        //mysql_close(conn);
         clean_workdir(work_dir);
-        write_log("compile error");
+        write_log(oj_home, "compile error");
         exit(0);
     } else {
         update_solution(solution_id, RUNNING_JUDGING, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
@@ -1829,11 +1780,9 @@ int main(int argc, char **argv) {
     // open DIRs
     DIR *dp;
     dirent *dirp;
-    // using http to get remote test data files
     if (p_id > CHILD_PROCESS && (dp = opendir(fullpath)) == nullptr) {
-
-        write_log("No such dir:%s!\n", fullpath);
-        mysql_close(conn);
+        write_log(oj_home, "No such dir:%s!\n", fullpath);
+        //mysql_close(conn);
         exit(-1);
     }
 
@@ -1950,8 +1899,11 @@ int main(int argc, char **argv) {
             test_run_out += "\n......Omit " + omit + " characters.";
         }
         if (DEBUG) {
-            cout << "test_run_out" << endl;
-            cout << test_run_out << endl;
+            cout << "test_run_out:" << endl << test_run_out << endl;
+        }
+
+        if(usedtime == time_lmt * 1000) {
+            test_run_out += "\n测试运行中发生运行超时，程序被强制停止";
         }
 
         bundle.clear();
@@ -1970,20 +1922,20 @@ int main(int argc, char **argv) {
 
         auto fpid = fork();
         if (fpid == CHILD_PROCESS) {
-            if (!init_mysql_conn()) {
+            if (!conn.start()) {
                 if (DEBUG) {
                     cout << "Init mysql connection ERROR in custom input database insert" << endl;
                 }
             } else {
                 add_reinfo_mysql_by_string(solution_id, test_run_out);
-                mysql_close(conn);
+                //mysql_close(conn);
             }
             exit(0);
         }
 
         update_solution(solution_id, TEST_RUN, usedtime, topmemory / ONE_KILOBYTE, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         clean_workdir(work_dir);
-        mysql_close(conn);
+        //mysql_close(conn);
         exit(0);
     }
     int total_point = 0;
@@ -2044,7 +1996,7 @@ int main(int argc, char **argv) {
                                p_id, PEflg, work_dir);
                 judge_solution(ACflg, usedtime, time_lmt, SPECIAL_JUDGE, p_id, infile,
                                outfile, userfile, usercode, PEflg, lang, work_dir, topmemory,
-                               mem_lmt, solution_id, num_of_test);
+                               mem_lmt, solution_id, num_of_test, global_work_dir);
                 if (use_max_time) {
                     max_case_time = max(usedtime, max_case_time);
                     usedtime = ZERO_TIME;
@@ -2072,13 +2024,6 @@ int main(int argc, char **argv) {
 
                 ACflg = ACCEPT;
             }
-           // webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, min(usedtime, time_lmt * 1000),
-            //                     min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
-            //                     pass_rate / num_of_test);
-        } else {
-           // webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, min(usedtime, time_lmt * 1000),
-            //                     min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE), pass_point,
-            //                     pass_rate / num_of_test);
         }
         bundle.setUsedTime(min(usedtime, time_lmt * 1000));
         bundle.setMemoryUse(min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE));
@@ -2101,9 +2046,9 @@ int main(int argc, char **argv) {
             printf("add RE info of %d..... \n", solution_id);
         auto pid = fork();
         if (pid == CHILD_PROCESS) {
-            init_mysql_conn();
+            conn.start();
             addreinfo(solution_id);
-            mysql_close(conn);
+            //mysql_close(conn);
             exit(0);
         }
     }
@@ -2157,8 +2102,8 @@ int main(int argc, char **argv) {
     clean_workdir(work_dir);
 
     if (DEBUG)
-        write_log("result=%d", ALL_TEST_MODE ? finalACflg : ACflg);
-    mysql_close(conn);
+        write_log(oj_home, "result=%d", ALL_TEST_MODE ? finalACflg : ACflg);
+    //mysql_close(conn);
     if (record_call) {
         print_call_array();
     }

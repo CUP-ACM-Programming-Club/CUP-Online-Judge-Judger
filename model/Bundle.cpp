@@ -9,7 +9,7 @@ using std::cerr;
 using std::endl;
 
 #include "Bundle.h"
-#include "static_var.h"
+#include "../header/static_var.h"
 
 bool Bundle::setValue(string key, Pack val) {
     try {

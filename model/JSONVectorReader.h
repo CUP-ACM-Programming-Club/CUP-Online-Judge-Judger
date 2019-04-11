@@ -5,8 +5,8 @@
 #ifndef CPP_COMPILERARGSREADER_H
 #define CPP_COMPILERARGSREADER_H
 
-#include "rapidjson/document.h"
-#include "rapidjson/prettywriter.h"
+#include "../rapidjson/document.h"
+#include "../rapidjson/prettywriter.h"
 #include <vector>
 #include <iostream>
 #include <string>

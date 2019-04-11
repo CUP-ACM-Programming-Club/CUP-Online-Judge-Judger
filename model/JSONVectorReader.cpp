@@ -3,8 +3,8 @@
 //
 
 #include "JSONVectorReader.h"
-#include "rapidjson/document.h"
-#include "rapidjson/prettywriter.h"
+#include "../rapidjson/document.h"
+#include "../rapidjson/prettywriter.h"
 #include <iostream>
 #include <fstream>
 #define ASSERT_VALID(x) assert(x)
