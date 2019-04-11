@@ -962,7 +962,7 @@ void get_problem_info(int p_id, double &time_lmt, int &mem_lmt, int &isspj) {
 
 }
 
-void prepare_files(char *filename, int namelen, char *infile, int &p_id,
+void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
                    char *work_dir, char *outfile, char *userfile, int runner_id) {
     //              printf("ACflg=%d %d check a file!\n",ACflg,solution_id);
 
@@ -997,8 +997,9 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     if (use_ptrace)
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     // run me
-    if (lang != JAVA && lang != JAVA7 && lang != JAVA8 && lang != JAVA6)
+    if (!isJava(lang)) {
         chroot(work_dir);
+    }
 
     while (setgid(1536) != 0)
         sleep(1);
@@ -1838,7 +1839,6 @@ int main(int argc, char **argv) {
 
     int ACflg, PEflg;
     ACflg = PEflg = ACCEPT;
-    int namelen;
     int topmemory = ZERO_MEMORY;
     double usedtime = ZERO_TIME;
 
@@ -1987,11 +1987,16 @@ int main(int argc, char **argv) {
         exit(0);
     }
     int total_point = 0;
-    while((dirp = readdir(dp))) {
-        namelen = isInFile(dirp->d_name);
-        if(namelen) ++total_point;
+    int pass_point = ZERO_PASSPOINT;
+    vector<pair<string, int> >inFileList;
+    while((dirp = readdir(dp)) != nullptr) {
+        auto fileLen = isInFile(dirp->d_name);
+        if(isInFile(dirp->d_name)) {
+            inFileList.emplace_back(dirp->d_name, fileLen);
+        }
     }
-    dp = opendir(fullpath);
+    total_point = inFileList.size();
+    //dp = opendir(fullpath);
     Bundle bundle;
     bundle.setSolutionID(solution_id);
     bundle.setResult(RUNNING_JUDGING);
@@ -2004,14 +2009,19 @@ int main(int argc, char **argv) {
     webSocket << bundle.toJSONString();
     //webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
     //                     ZERO_PASSRATE);
-    int pass_point = ZERO_PASSPOINT;
-    for (; (ALL_TEST_MODE || ACflg == ACCEPT || ACflg == PRESENTATION_ERROR) && (dirp = readdir(dp)) != nullptr;) {
-        namelen = isInFile(dirp->d_name); // check if the file is *.in or not
-        if (namelen == 0)
-            continue;
+
+
+    for (auto& infilePair: inFileList) {
+        if(!(ALL_TEST_MODE || ACflg == ACCEPT || ACflg == PRESENTATION_ERROR) && ACflg != TIME_LIMIT_EXCEEDED) {
+            break;
+        }
+        if(ACflg == RUNTIME_ERROR) {
+            break;
+        }
+
         if (ACflg <= PRESENTATION_ERROR) {
             ++num_of_test;
-            prepare_files(dirp->d_name, namelen, infile, p_id, work_dir, outfile,
+            prepare_files(infilePair.first.c_str(), infilePair.second, infile, p_id, work_dir, outfile,
                           userfile, runner_id);
             init_syscalls_limits(lang);
 
@@ -2075,9 +2085,6 @@ int main(int argc, char **argv) {
         bundle.setPassPoint(pass_point);
         bundle.setPassRate(pass_rate / num_of_test);
         webSocket << bundle.toJSONString();
-        if(ACflg == TIME_LIMIT_EXCEEDED) {
-            break;
-        }
     }
     if (ACflg == ACCEPT && PEflg == PRESENTATION_ERROR)
         ACflg = PRESENTATION_ERROR;

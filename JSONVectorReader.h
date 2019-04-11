@@ -31,6 +31,8 @@ public:
 
     string GetString(string key);
 
+    int GetInt(string key);
+
 
     void documentIsLoaded();
 

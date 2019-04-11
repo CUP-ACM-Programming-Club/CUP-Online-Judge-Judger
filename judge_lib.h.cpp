@@ -165,7 +165,7 @@ const char *getFileNameFromPath(const char *path) {
     return path;
 }
 
-bool isJava(int lang) {
+bool isJava(const int lang) {
     switch (lang) {
         case JAVA:
         case JAVA6:
@@ -772,4 +772,3 @@ int detectArgType(const char* argument) {
         }
     }
 }
-
