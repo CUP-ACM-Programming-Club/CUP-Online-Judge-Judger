@@ -501,7 +501,7 @@ void _update_solution_mysql(int solution_id, int result, double time, int memory
                 result, time, memory, http_username, solution_id, 0);
     }
     //      printf("sql= %s\n",sql);
-    if (mysql_real_query(conn, sql, strlen(sql))) {
+    if (conn.query(conn, sql, strlen(sql))) {
         printf("..update failed! %s\n", mysql_error(conn));
     }
     if (sim) {
@@ -509,7 +509,7 @@ void _update_solution_mysql(int solution_id, int result, double time, int memory
                 "insert into sim(s_id,sim_s_id,sim) values(%d,%d,%d) on duplicate key update  sim_s_id=%d,sim=%d",
                 solution_id, sim_s_id, sim, sim_s_id, sim);
         //      printf("sql= %s\n",sql);
-        if (mysql_real_query(conn, sql, strlen(sql))) {
+        if (conn.query(conn, sql, strlen(sql))) {
             //              printf("..update failed! %s\n",mysql_error(conn));
         }
 
@@ -535,7 +535,7 @@ void _addceinfo_mysql(int solution_id) {
     FILE *fp = fopen("ce.txt", "re");
     snprintf(sql, (1 << 16) - 1, "DELETE FROM compileinfo WHERE solution_id=%d",
              solution_id);
-    mysql_real_query(conn, sql, strlen(sql));
+    conn.query(conn, sql, strlen(sql));
     cend = ceinfo;
     while (fgets(cend, 1024, fp)) {
         cend += strlen(cend);
@@ -556,7 +556,7 @@ void _addceinfo_mysql(int solution_id) {
     *end++ = ')';
     *end = 0;
     //      printf("%s\n",ceinfo);
-    if (mysql_real_query(conn, sql, end - sql))
+    if (conn.query(conn, sql, end - sql))
         printf("%s\n", mysql_error(conn));
     fclose(fp);
 }
@@ -573,7 +573,7 @@ void _addreinfo_mysql(int solution_id, const char *filename) {
     FILE *fp = fopen(filename, "re");
     snprintf(sql, (1 << 16) - 1, "DELETE FROM runtimeinfo WHERE solution_id=%d",
              solution_id);
-    mysql_real_query(conn, sql, strlen(sql));
+    conn.query(conn, sql, strlen(sql));
     rend = reinfo;
     while (fgets(rend, 1024, fp)) {
         rend += strlen(rend);
@@ -594,14 +594,14 @@ void _addreinfo_mysql(int solution_id, const char *filename) {
     *end++ = ')';
     *end = 0;
     //      printf("%s\n",ceinfo);
-    if (mysql_real_query(conn, sql, end - sql))
+    if (conn.query(conn, sql, end - sql))
         printf("%s\n", mysql_error(conn));
     fclose(fp);
 }
 
 void add_reinfo_mysql_by_string(int solution_id, string content) {
     string sql = "DELETE FROM runtimeinfo WHERE solution_id = " + to_string(solution_id);
-    mysql_real_query(conn, sql.c_str(), sql.length());
+    conn.query(conn, sql.c_str(), sql.length());
     if (content.length() > 4096) {
         content = content.substr(0, 4096);
     }
@@ -614,7 +614,7 @@ void add_reinfo_mysql_by_string(int solution_id, string content) {
     if (DEBUG) {
         cout << "SQL: " << sql << endl;
     }
-    if (mysql_real_query(conn, sql.c_str(), sql.length())) {
+    if (conn.query(conn, sql.c_str(), sql.length())) {
         cerr << "MYSQL error:" << mysql_error(conn) << endl;
     }
 }
@@ -637,12 +637,12 @@ void _update_user_mysql(char *user_id) {
     sprintf(sql,
             R"(UPDATE `users` SET `solved`=(SELECT count(DISTINCT `problem_id`) FROM `solution` WHERE `user_id`='%s' AND `result`='4') WHERE `user_id`='%s')",
             user_id, user_id);
-    if (mysql_real_query(conn, sql, strlen(sql)))
+    if (conn.query(conn, sql, strlen(sql)))
         write_log(oj_home, mysql_error(conn));
     sprintf(sql,
             R"(UPDATE `users` SET `submit`=(SELECT count(*) FROM `solution` WHERE `user_id`='%s' and problem_id>0) WHERE `user_id`='%s')",
             user_id, user_id);
-    if (mysql_real_query(conn, sql, strlen(sql)))
+    if (conn.query(conn, sql, strlen(sql)))
         write_log(oj_home, mysql_error(conn));
 }
 
@@ -656,12 +656,12 @@ void _update_problem_mysql(int p_id) {
     sprintf(sql,
             R"(UPDATE `problem` SET `accepted`=(SELECT count(*) FROM `solution` WHERE `problem_id`='%d' AND `result`='4') WHERE `problem_id`='%d')",
             p_id, p_id);
-    if (mysql_real_query(conn, sql, strlen(sql)))
+    if (conn.query(conn, sql, strlen(sql)))
         write_log(oj_home, mysql_error(conn));
     sprintf(sql,
             R"(UPDATE `problem` SET `submit`=(SELECT count(*) FROM `solution` WHERE `problem_id`='%d') WHERE `problem_id`='%d')",
             p_id, p_id);
-    if (mysql_real_query(conn, sql, strlen(sql)))
+    if (conn.query(conn, sql, strlen(sql)))
         write_log(oj_home, mysql_error(conn));
 }
 
@@ -837,7 +837,7 @@ void get_solution(int solution_id, char *work_dir, int lang, char *usercode) {
     MYSQL_ROW row;
     sprintf(sql, "SELECT source FROM source_code WHERE solution_id=%d",
             solution_id);
-    mysql_real_query(conn, sql, strlen(sql));
+    conn.query(conn, sql, strlen(sql));
     res = mysql_store_result(conn);
     row = mysql_fetch_row(res);
     sprintf(usercode, "%s", row[0]);
@@ -861,7 +861,7 @@ void get_custominput(int solution_id, char *work_dir) {
     MYSQL_ROW row;
     sprintf(sql, "SELECT input_text FROM custominput WHERE solution_id=%d",
             solution_id);
-    mysql_real_query(conn, sql, strlen(sql));
+    conn.query(conn, sql, strlen(sql));
     res = mysql_store_result(conn);
     row = mysql_fetch_row(res);
     if (row != nullptr) {
@@ -888,7 +888,7 @@ void get_solution_info(int solution_id, int &p_id, char *user_id,
             "SELECT problem_id, user_id, language FROM solution where solution_id=%d",
             solution_id);
     //printf("%s\n",sql);
-    mysql_real_query(conn, sql, strlen(sql));
+    conn.query(conn, sql, strlen(sql));
     res = mysql_store_result(conn);
     row = mysql_fetch_row(res);
     p_id = atoi(row[0]);
@@ -905,7 +905,7 @@ void get_problem_info(int p_id, double &time_lmt, int &mem_lmt, int &isspj) {
     sprintf(sql,
             "SELECT time_limit,memory_limit,spj FROM problem where problem_id=%d",
             p_id);
-    mysql_real_query(conn, sql, strlen(sql));
+    conn.query(conn, sql, strlen(sql));
     res = mysql_store_result(conn);
     row = mysql_fetch_row(res);
     time_lmt = atof(row[0]);
@@ -1624,7 +1624,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     if (DEBUG) {
         cout << sql << endl;
     }
-    mysql_real_query(conn, sql.c_str(), sql.length());
+    conn.query(conn, sql.c_str(), sql.length());
     res = mysql_store_result(conn);
     string uid;
     row = mysql_fetch_row(res);
@@ -1634,7 +1634,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     if (DEBUG) {
         cout << uid << endl;
     }
-    mysql_real_query(conn, sql.c_str(), sql.length());
+    conn.query(conn, sql.c_str(), sql.length());
     res = mysql_store_result(conn);
     string cpid;
     row = mysql_fetch_row(res);
@@ -2075,7 +2075,7 @@ int main(int argc, char **argv) {
      webSocket << bundle.toJSONString();
     string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
                  to_string(solution_id);
-    mysql_real_query(conn, sql.c_str(), sql.length());
+    conn.query(conn, sql.c_str(), sql.length());
 
     if (ALL_TEST_MODE) {
         if (num_of_test > 0) {

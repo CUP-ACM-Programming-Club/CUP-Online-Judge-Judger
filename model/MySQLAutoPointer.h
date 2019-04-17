@@ -30,6 +30,7 @@ public:
     bool setPort(int p);
     bool isConnected();
     bool setDebugMode(bool state);
+    bool query(MYSQL* pointer, string sql, int len);
 };
 
 

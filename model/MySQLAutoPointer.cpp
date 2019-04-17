@@ -89,3 +89,15 @@ bool MySQLAutoPointer::setPort(int p) {
 bool MySQLAutoPointer::isConnected() {
     return connected;
 }
+
+bool MySQLAutoPointer::query(MYSQL *pointer, string sql, int len) {
+    int ret = mysql_real_query(conn, sql.c_str(), len);
+    if(ret) {
+        string error = mysql_error(conn);
+        if(error.find("gone away") != error.npos) {
+            this->start();
+            ret = this->query(pointer, sql, len);
+        }
+    }
+    return ret;
+}
