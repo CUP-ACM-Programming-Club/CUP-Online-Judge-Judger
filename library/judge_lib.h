@@ -9,8 +9,8 @@
 #include <cctype>
 #include <iostream>
 #include <fstream>
-#include "static_var.h"
-#include "json.hpp"
+#include "../header/static_var.h"
+#include "../header/json.hpp"
 #include <cstdarg>
 
 using namespace std;
@@ -50,7 +50,7 @@ extern void read_int(char *buf, const char *key, int &value);
 
 extern const char *getFileNameFromPath(const char *path);
 
-extern bool isJava(int lang);
+extern bool isJava(const int lang);
 
 extern bool is_number(const string &s);
 
@@ -120,5 +120,6 @@ extern void clean_workdir(char *work_dir);
 
 extern int detectArgType(const char* argument);
 
+extern void write_log(const char* oj_home, const char *_fmt, ...);
 
 #endif //JUDGE_CLIENT_JUDGE_LIB_H

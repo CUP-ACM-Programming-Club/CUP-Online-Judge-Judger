@@ -3,8 +3,8 @@
 //
 
 #include "JSONVectorReader.h"
-#include "rapidjson/document.h"
-#include "rapidjson/prettywriter.h"
+#include "../rapidjson/document.h"
+#include "../rapidjson/prettywriter.h"
 #include <iostream>
 #include <fstream>
 #define ASSERT_VALID(x) assert(x)
@@ -42,7 +42,9 @@ vector<string> JSONVectorReader::GetArray(string key) {
     ASSERT_VALID(val.IsArray());
 
     for(Value::ConstValueIterator iter = val.Begin();iter != val.End();++iter) {
-        vec.emplace_back(iter->GetString());
+        if(iter->IsString()) {
+            vec.emplace_back(iter->GetString());
+        }
     }
     return vec;
 }
@@ -56,6 +58,17 @@ string JSONVectorReader::GetString(string key) {
     auto& val = document[key.c_str()];
     ASSERT_VALID(val.IsString());
     return string(val.GetString());
+}
+
+int JSONVectorReader::GetInt(string key) {
+    documentIsLoaded();
+    auto findMember = document.FindMember(key.c_str());
+    if(findMember == document.MemberEnd()) {
+        return -1;
+    }
+    auto& val = document[key.c_str()];
+    ASSERT_VALID(val.IsInt());
+    return val.GetInt();
 }
 
 void JSONVectorReader::documentIsLoaded() {

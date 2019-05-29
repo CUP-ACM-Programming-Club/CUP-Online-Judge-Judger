@@ -8,7 +8,7 @@
 #include <string>
 #include <algorithm>
 #include <unordered_map>
-#include "judge_lib.h"
+#include "../library/judge_lib.h"
 
 using std::unordered_map;
 using std::string;
