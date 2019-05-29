@@ -28,7 +28,6 @@ SOFTWARE.
 
 #ifndef NLOHMANN_JSON_HPP
 #define NLOHMANN_JSON_HPP
-
 #include <algorithm> // all_of, copy, fill, find, for_each, generate_n, none_of, remove, reverse, transform
 #include <array> // array
 #include <cassert> // assert
@@ -90,15 +89,15 @@ SOFTWARE.
 #endif
 
 // allow to disable exceptions
-#if (defined(__cpp_exceptions) || defined(__EXCEPTIONS) || defined(_CPPUNWIND)) && not defined(JSON_NOEXCEPTION)
+//#if  (defined(__cpp_exceptions) || defined(__EXCEPTIONS) || defined(_CPPUNWIND)) && not defined(JSON_NOEXCEPTION)
     #define JSON_THROW(exception) throw exception
     #define JSON_TRY try
     #define JSON_CATCH(exception) catch(exception)
-#else
+/*#else
     #define JSON_THROW(exception) std::abort()
     #define JSON_TRY if(true)
     #define JSON_CATCH(exception) if(false)
-#endif
+#endif*/
 
 // manual branch prediction
 #if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)

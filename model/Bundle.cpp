@@ -1,5 +1,5 @@
 #include <utility>
-
+#include "../header/json.hpp"
 //
 // Created by Ryan on 2018-12-18.
 //
@@ -7,7 +7,7 @@
 
 using std::cerr;
 using std::endl;
-
+using nlohmann::detail::type_error;
 #include "Bundle.h"
 #include "../header/static_var.h"
 
@@ -95,18 +95,24 @@ string Bundle::toJSONString() {
     json JSON;
     JSON["type"] = "judger";
     for(auto i:_map) {
-        switch(i.second.getType()) {
-            case INT:
-                JSON["value"][i.first] = i.second.getInt();
-                break;
-            case DOUBLE:
-                JSON["value"][i.first] = i.second.getFloat();
-                break;
-            case STRING:
-                JSON["value"][i.first] = i.second.getString();
-                break;
-            default:
-                JSON["value"][i.first] = false;
+        try {
+            switch (i.second.getType()) {
+                case INT:
+                    JSON["value"][i.first] = i.second.getInt();
+                    break;
+                case DOUBLE:
+                    JSON["value"][i.first] = i.second.getFloat();
+                    break;
+                case STRING:
+                    JSON["value"][i.first] = i.second.getString();
+                    break;
+                default:
+                    JSON["value"][i.first] = false;
+            }
+            JSON.dump();
+        }
+        catch(type_error& e) {
+            JSON["value"][i.first] = e.what();
         }
     }
     return JSON.dump();

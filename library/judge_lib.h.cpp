@@ -249,7 +249,6 @@ FILE *read_cmd_output(const char *fmt, ...) {
 
 
 void copy_shell_runtime(char *work_dir) {
-
     execute_cmd("/bin/mkdir %s/lib", work_dir);
     execute_cmd("/bin/mkdir %s/lib64", work_dir);
     execute_cmd("/bin/mkdir %s/bin", work_dir);
@@ -259,11 +258,12 @@ void copy_shell_runtime(char *work_dir) {
     execute_cmd("/bin/cp -a /lib/x86_64-linux-gnu %s/lib/", work_dir);
     execute_cmd("/bin/cp /lib64/* %s/lib64/", work_dir);
     //  execute_cmd("/bin/cp /lib32 %s/", work_dir);
-    execute_cmd("/bin/cp /bin/busybox %s/bin/", work_dir);
-    execute_cmd("/bin/ln -s /bin/busybox %s/bin/sh", work_dir);
-    execute_cmd("/bin/cp /bin/bash %s/bin/bash", work_dir);
-    execute_cmd("/bin/cp /bin/ldd %s/bin", work_dir);
-    execute_cmd("/bin/cp /bin/ls %s/bin", work_dir);
+    //execute_cmd("/bin/cp /bin/busybox %s/bin/", work_dir);
+    //execute_cmd("/bin/ln -s /bin/busybox %s/bin/sh", work_dir);
+    //execute_cmd("/bin/cp /bin/bash %s/bin/bash", work_dir);
+    //execute_cmd("/bin/cp /bin/ldd %s/bin", work_dir);
+    //execute_cmd("/bin/cp /bin/ls %s/bin", work_dir);
+    cout << "copy shell runtime finish" << endl;
 }
 
 void copy_objc_runtime(char *work_dir) {
@@ -400,6 +400,7 @@ void copy_guile_runtime(char *work_dir) {
 void copy_python_runtime(char *work_dir) {
 
     copy_shell_runtime(work_dir);
+    cout << "copy python runtime start" << endl;
     execute_cmd("mkdir -p %s/usr/include", work_dir);
     execute_cmd("mkdir -p %s/dev", work_dir);
     execute_cmd("mkdir -p %s/usr/lib", work_dir);
@@ -421,6 +422,7 @@ void copy_python_runtime(char *work_dir) {
     execute_cmd("/bin/mkdir -p %s/etc", work_dir);
     execute_cmd("/bin/grep judge /etc/passwd>%s/etc/passwd", work_dir);
     execute_cmd("/bin/mount -o bind /dev %s/dev", work_dir);
+    cout << "copy python runtime finish" << endl;
 }
 
 
