@@ -83,7 +83,7 @@ public:
 private:
     unordered_map<string, Pack> _map;
     void init();
-    bool setValue(string key, Pack val);
+    bool setValue(const string& key, Pack val);
     string trim(string&);
     string checkUTF8Valid(string&);
     const int CODE_LENGTH_LIMIT = 1 << 13;

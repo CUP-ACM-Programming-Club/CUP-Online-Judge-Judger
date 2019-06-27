@@ -11,7 +11,7 @@ using nlohmann::detail::type_error;
 #include "Bundle.h"
 #include "../header/static_var.h"
 
-bool Bundle::setValue(string key, Pack val) {
+bool Bundle::setValue(const string& key, Pack val) {
     try {
         this->_map[key] = std::move(val);
     }
