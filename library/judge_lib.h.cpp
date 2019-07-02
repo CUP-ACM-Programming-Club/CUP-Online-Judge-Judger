@@ -249,6 +249,7 @@ FILE *read_cmd_output(const char *fmt, ...) {
 
 
 void copy_shell_runtime(char *work_dir) {
+    cout << "copy shell runtime start" << endl;
     execute_cmd("/bin/mkdir %s/lib", work_dir);
     execute_cmd("/bin/mkdir %s/lib64", work_dir);
     execute_cmd("/bin/mkdir %s/bin", work_dir);
@@ -763,6 +764,9 @@ int detectArgType(const char* argument) {
         }
         else if(!strcmp(argument + 1,"admin")) {
             return _ADMIN;
+        }
+        else if(!strcmp(argument + 1, "no-sim")) {
+            return _NO_SIM;
         }
     }
     else {

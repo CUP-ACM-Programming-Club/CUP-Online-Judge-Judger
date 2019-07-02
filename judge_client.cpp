@@ -119,6 +119,7 @@ static char record_call = 0;
 static int use_ptrace = 1;
 static int judger_number = 0;
 static bool admin = false;
+static bool no_sim = false;
 int solution_id;
 //static int sleep_tmp;
 #define ZOJ_COM
@@ -485,8 +486,6 @@ int compare(const char *file1, const char *file2) {
     }
 #endif
 }
-
-
 /* write result back to database */
 void _update_solution_mysql(int solution_id, int result, double time, int memory,
                             int sim, int sim_s_id, double pass_rate) {
@@ -673,6 +672,7 @@ void update_problem(int pid) {
 int compile(int lang, char *work_dir) {
     int pid;
     Bundle bundle;
+    bundle.setJudger(http_username);
     bundle.setSolutionID(solution_id);
     bundle.setResult(COMPILING);
     bundle.setFinished(NOT_FINISHED);
@@ -1140,6 +1140,7 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
     userout.close();
     fstream users(userfile);
     string tmp;
+    freopen("/dev/tty", "w", stdout);
     while (getline(users, tmp))
         cout << tmp << endl;
     pid = fork();
@@ -1206,8 +1207,7 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         } else {
             cout << "ERROR WIFEXITED:" << WIFEXITED(ret) << endl;
         }
-        if (DEBUG)
-            printf("spj1=%d\n", ret);
+        cout << "spj1=" << ret << endl;
         if (ret)
             ret = WEXITSTATUS(ret);
         if (ret && ret < ACCEPT) {
@@ -1216,13 +1216,11 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         exit(ret);
     } else {
         int status;
+        cout << "fork pid: " << pid << endl;
         waitpid(pid, &status, 0);
-        if (DEBUG) {
-            cout << "status:" << status << endl;
-        }
+        cout << "status:" << status << endl;
         ret = WEXITSTATUS(status);
-        if (DEBUG)
-            printf("spj2=%d\n", ret);
+        cout << "spj2=" << ret << endl;
     }
     return ret;
 }
@@ -1528,7 +1526,10 @@ void init_parameters(int argc, char **argv, int &solution_id,
             record_call = 1;
         } else if (argType == _ADMIN) {
             admin = true;
-        } else {
+        } else if (argType == _NO_SIM) {
+            no_sim = true;
+        }
+        else {
             ++i;
             if (i >= argc) {
                 error = true;
@@ -1576,8 +1577,10 @@ void init_parameters(int argc, char **argv, int &solution_id,
 }
 
 int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
+    if (no_sim) {
+        return 0;
+    }
     char src_pth[BUFFER_SIZE];
-    //char cmd[BUFFER_SIZE];
     sprintf(src_pth, "Main.%s", lang_ext[lang]);
     if (DEBUG) {
         cout << "get sim: " << src_pth << endl;
@@ -1749,6 +1752,7 @@ int main(int argc, char **argv) {
             _compile_info += tmp + "\n";
         }
         Bundle bundle;
+        bundle.setJudger(http_username);
         bundle.setSolutionID(solution_id);
         bundle.setResult(COMPILE_ERROR);
         bundle.setFinished(FINISHED);
@@ -1844,6 +1848,7 @@ int main(int argc, char **argv) {
         get_custominput(solution_id, work_dir);
         init_syscalls_limits(lang);
         Bundle bundle;
+        bundle.setJudger(http_username);
         bundle.setSolutionID(solution_id);
         bundle.setResult(RUNNING_JUDGING);
         bundle.setFinished(NOT_FINISHED);
@@ -1950,6 +1955,7 @@ int main(int argc, char **argv) {
     total_point = inFileList.size();
     //dp = opendir(fullpath);
     Bundle bundle;
+    bundle.setJudger(http_username);
     bundle.setSolutionID(solution_id);
     bundle.setResult(RUNNING_JUDGING);
     bundle.setFinished(NOT_FINISHED);

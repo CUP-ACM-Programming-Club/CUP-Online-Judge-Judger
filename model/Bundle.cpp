@@ -11,7 +11,7 @@ using nlohmann::detail::type_error;
 #include "Bundle.h"
 #include "../header/static_var.h"
 
-bool Bundle::setValue(const string& key, Pack val) {
+bool Bundle::setValue(string key, Pack val) {
     try {
         this->_map[key] = std::move(val);
     }
@@ -48,6 +48,14 @@ bool Bundle::setPassPoint(int pass_point) {
 
 bool Bundle::setPassRate(double pass_rate) {
     return setValue("pass_rate", Pack(pass_rate));
+}
+
+bool Bundle::setJudger(char * str) {
+    return setValue("judger", Pack(string(str)));
+}
+
+bool Bundle::setJudger(string& str) {
+    return setValue("judger", Pack(string(str)));
 }
 
 

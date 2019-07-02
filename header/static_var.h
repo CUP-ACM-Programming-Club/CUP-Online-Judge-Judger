@@ -126,7 +126,8 @@ enum ArgsType {
     _RECORD_CALL = 4,
     _SOLUTION_ID = 5,
     _RUNNER_ID = 6,
-    _ADMIN = 7
+    _ADMIN = 7,
+    _NO_SIM = 8
 };
 
 static char lang_ext[30][8] = {"c", "cc", "pas", "java", "rb", "sh", "py",

@@ -72,6 +72,8 @@ public:
     bool setMemoryUse(int);
     bool setPassPoint(int);
     bool setPassRate(double);
+    bool setJudger(char*);
+    bool setJudger(string&);
     bool setTestRunResult(string&);
     bool setCompileInfo(string&);
     bool setSim(int);
@@ -83,7 +85,7 @@ public:
 private:
     unordered_map<string, Pack> _map;
     void init();
-    bool setValue(const string& key, Pack val);
+    bool setValue(string key, Pack val);
     string trim(string&);
     string checkUTF8Valid(string&);
     const int CODE_LENGTH_LIMIT = 1 << 13;
