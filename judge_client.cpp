@@ -717,7 +717,7 @@ int compile(int lang, char *work_dir) {
             freopen("ce.txt", "w", stdout);
         }
         if (lang != CPP17 && lang != JAVA && lang != 9 && lang != FREEBASIC
-             && lang != JAVA7 && lang != JAVA8 && lang != JAVA6) {
+            && lang != JAVA7 && lang != JAVA8 && lang != JAVA6) {
             execute_cmd("mkdir -p bin usr lib lib64 etc/alternatives proc tmp dev");
             execute_cmd("chown judge *");
             execute_cmd("mount -o bind /bin bin");
@@ -1141,8 +1141,10 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
     fstream users(userfile);
     string tmp;
     freopen("/dev/tty", "w", stdout);
-    while (getline(users, tmp))
-        cout << tmp << endl;
+    if (DEBUG) {
+        while (getline(users, tmp))
+            cout << tmp << endl;
+    }
     pid = fork();
     int ret = 0;
     if (pid == CHILD_PROCESS) {
@@ -1858,7 +1860,7 @@ int main(int argc, char **argv) {
         bundle.setPassRate(ZERO_PASSRATE);
         webSocket << bundle.toJSONString();
         //        webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
- //                            ZERO_PASSRATE);
+        //                            ZERO_PASSRATE);
         pid_t pidApp = fork();
 
         if (pidApp == CHILD_PROCESS) {
@@ -1922,8 +1924,8 @@ int main(int argc, char **argv) {
         bundle.setTestRunResult(test_run_out);
         webSocket << bundle.toJSONString();
 //        webSocket << ws_send(solution_id, TEST_RUN, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
-  //                           ZERO_PASSRATE,
-   //                          test_run_out);
+        //                           ZERO_PASSRATE,
+        //                          test_run_out);
 
         auto fpid = fork();
         if (fpid == CHILD_PROCESS) {
@@ -2075,10 +2077,10 @@ int main(int argc, char **argv) {
     bundle.setSim(sim);
     bundle.setSimSource(sim_s_id);
     //webSocket << ws_send(solution_id, ALL_TEST_MODE ? finalACflg : ACflg, FINISHED, usedtime,
-     //                    topmemory / ONE_KILOBYTE,
-     //                    pass_point,
-     //                    pass_rate / num_of_test, "", "", sim, sim_s_id);
-     webSocket << bundle.toJSONString();
+    //                    topmemory / ONE_KILOBYTE,
+    //                    pass_point,
+    //                    pass_rate / num_of_test, "", "", sim, sim_s_id);
+    webSocket << bundle.toJSONString();
     string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
                  to_string(solution_id);
     conn.query(conn, sql.c_str(), sql.length());
