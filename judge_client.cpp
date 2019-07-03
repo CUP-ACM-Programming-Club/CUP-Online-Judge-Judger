@@ -47,7 +47,6 @@
 //#include <sys/types.h>
 #ifndef _NO_MYSQL
 #ifdef __APPLE_CC__
-
 #include <mysql.h>
 
 #else
@@ -87,44 +86,9 @@ using ConfigReader = JSONVectorReader;
 
 #endif
 
-
-static char host_name[BUFFER_SIZE];
-static char user_name[BUFFER_SIZE];
-static char password[BUFFER_SIZE];
-static char db_name[BUFFER_SIZE];
-static char oj_home[BUFFER_SIZE];
-//static char data_list[BUFFER_SIZE][BUFFER_SIZE];
-//static int data_list_len = 0;
-
-static int port_number;
-static int max_running;
-static int sleep_time;
-static int java_time_bonus = 5;
-static int java_memory_bonus = 512;
-static char java_xms[BUFFER_SIZE];
-static char java_xmx[BUFFER_SIZE];
-static int sim_enable = 0;
-static int ALL_TEST_MODE = 0;
-static int full_diff = 0;
-static int use_max_time = 0;
-
-static int http_judge = 0;
-static char http_baseurl[BUFFER_SIZE];
-
-static char http_username[BUFFER_SIZE];
-static char http_password[BUFFER_SIZE];
-static int SHARE_MEMORY_RUN = 0;
-
-static char record_call = 0;
-static int use_ptrace = 1;
-static int judger_number = 0;
-static bool admin = false;
-int solution_id;
 //static int sleep_tmp;
 #define ZOJ_COM
-MySQLAutoPointer conn;
 
-websocket webSocket;
 
 
 
@@ -485,8 +449,6 @@ int compare(const char *file1, const char *file2) {
     }
 #endif
 }
-
-
 /* write result back to database */
 void _update_solution_mysql(int solution_id, int result, double time, int memory,
                             int sim, int sim_s_id, double pass_rate) {
@@ -628,9 +590,6 @@ void adddiffinfo(int solution_id) {
     _addreinfo_mysql(solution_id, "diff.out");
 }
 
-void addcustomout(int solution_id) {
-    _addreinfo_mysql(solution_id, "user.out");
-}
 
 void _update_user_mysql(char *user_id) {
     char sql[BUFFER_SIZE];
@@ -672,7 +631,8 @@ void update_problem(int pid) {
 
 int compile(int lang, char *work_dir) {
     int pid;
-    Bundle bundle;
+    bundle.clear();
+    bundle.setJudger(http_username);
     bundle.setSolutionID(solution_id);
     bundle.setResult(COMPILING);
     bundle.setFinished(NOT_FINISHED);
@@ -692,7 +652,7 @@ int compile(int lang, char *work_dir) {
         LIM.rlim_cur = 60;
         setrlimit(RLIMIT_CPU, &LIM);
         int cpu_alarm_limit = 10;
-        if (lang == JAVA || lang == JAVA7 || lang == JAVA8 || lang == JAVA6) {
+        if (isJava(lang)) {
             cpu_alarm_limit = 30;
         }
         alarm(static_cast<unsigned int>(cpu_alarm_limit));
@@ -716,8 +676,8 @@ int compile(int lang, char *work_dir) {
         } else {
             freopen("ce.txt", "w", stdout);
         }
-        if (lang != CPP17 && lang != JAVA && lang != 9 && lang != FREEBASIC
-             && lang != JAVA7 && lang != JAVA8 && lang != JAVA6) {
+        if (!isCOrCPP(lang) && lang != FREEBASIC
+            && !isJava(lang)) {
             execute_cmd("mkdir -p bin usr lib lib64 etc/alternatives proc tmp dev");
             execute_cmd("chown judge *");
             execute_cmd("mount -o bind /bin bin");
@@ -728,10 +688,7 @@ int compile(int lang, char *work_dir) {
 #endif
             execute_cmd("mount -o bind /etc/alternatives etc/alternatives");
             execute_cmd("mount -o bind /proc proc");
-            if (lang > PASCAL && lang != OBJC && lang != CLANG && lang != CLANGPP && lang != CLANG11 &&
-                lang != CLANGPP17 && lang != CPP11 &&
-                lang != CPP98 &&
-                lang != C99)
+            if (lang > PASCAL && lang != OBJC && !isCOrCPP(lang))
                 execute_cmd("mount -o bind /dev dev");
             chroot(work_dir);
             //chroot(work_dir);
@@ -761,7 +718,7 @@ int compile(int lang, char *work_dir) {
         } else {
             vector<string> _args = compilerArgsReader.GetArray(to_string(lang));
             if (_args.empty()) {
-                cout << "Noting to do" << endl;
+                cout << "Nothing to do" << endl;
                 exit(0);
             }
             int len = static_cast<int>(_args.size());
@@ -779,8 +736,9 @@ int compile(int lang, char *work_dir) {
             }
             execvp(args[0], (char *const *) args);
         }
-        if (DEBUG)
-            printf("compile end!\n");
+        if (DEBUG) {
+            cout << "Copilation end!\n" << endl;
+        }
         //exit(!system("cat ce.txt"));
         exit(0);
     } else {
@@ -1140,8 +1098,11 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
     userout.close();
     fstream users(userfile);
     string tmp;
-    while (getline(users, tmp))
-        cout << tmp << endl;
+    freopen("/dev/tty", "w", stdout);
+    if (DEBUG) {
+        while (getline(users, tmp))
+            cout << tmp << endl;
+    }
     pid = fork();
     int ret = 0;
     if (pid == CHILD_PROCESS) {
@@ -1206,8 +1167,7 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         } else {
             cout << "ERROR WIFEXITED:" << WIFEXITED(ret) << endl;
         }
-        if (DEBUG)
-            printf("spj1=%d\n", ret);
+        cout << "spj1=" << ret << endl;
         if (ret)
             ret = WEXITSTATUS(ret);
         if (ret && ret < ACCEPT) {
@@ -1216,13 +1176,11 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
         exit(ret);
     } else {
         int status;
+        cout << "fork pid: " << pid << endl;
         waitpid(pid, &status, 0);
-        if (DEBUG) {
-            cout << "status:" << status << endl;
-        }
+        cout << "status:" << status << endl;
         ret = WEXITSTATUS(status);
-        if (DEBUG)
-            printf("spj2=%d\n", ret);
+        cout << "spj2=" << ret << endl;
     }
     return ret;
 }
@@ -1365,7 +1323,8 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
 
         if (WIFEXITED(status))
             break;
-        if (get_file_size("error.out")) {
+        bool has_error = get_file_size("error.out") > 0;
+        if (has_error) {
             if (DEBUG) {
                 cerr << "Catch error:" << endl;
                 string tmp;
@@ -1383,11 +1342,10 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
                 print_runtimeerror(contents.c_str());
                 //ptrace(PTRACE_KILL, pidApp, NULL, NULL);
                 //print_runtimeerror(contents.c_str());
-                if (!ALL_TEST_MODE)
-                    break;
+                break;
             }
         }
-        if ((lang < RUBY || lang == CSHARP) && get_file_size("error.out") && !ALL_TEST_MODE) {
+        if ((lang < RUBY || lang == CSHARP) && has_error && !ALL_TEST_MODE) {
             ACflg = RUNTIME_ERROR;
             //addreinfo(solution_id);
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
@@ -1528,7 +1486,10 @@ void init_parameters(int argc, char **argv, int &solution_id,
             record_call = 1;
         } else if (argType == _ADMIN) {
             admin = true;
-        } else {
+        } else if (argType == _NO_SIM) {
+            no_sim = true;
+        }
+        else {
             ++i;
             if (i >= argc) {
                 error = true;
@@ -1576,8 +1537,10 @@ void init_parameters(int argc, char **argv, int &solution_id,
 }
 
 int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
+    if (no_sim) {
+        return 0;
+    }
     char src_pth[BUFFER_SIZE];
-    //char cmd[BUFFER_SIZE];
     sprintf(src_pth, "Main.%s", lang_ext[lang]);
     if (DEBUG) {
         cout << "get sim: " << src_pth << endl;
@@ -1748,7 +1711,8 @@ int main(int argc, char **argv) {
         while (getline(ceinformation, tmp)) {
             _compile_info += tmp + "\n";
         }
-        Bundle bundle;
+        bundle.clear();
+        bundle.setJudger(http_username);
         bundle.setSolutionID(solution_id);
         bundle.setResult(COMPILE_ERROR);
         bundle.setFinished(FINISHED);
@@ -1843,7 +1807,8 @@ int main(int argc, char **argv) {
         printf("running a custom input...\n");
         get_custominput(solution_id, work_dir);
         init_syscalls_limits(lang);
-        Bundle bundle;
+        bundle.clear();
+        bundle.setJudger(http_username);
         bundle.setSolutionID(solution_id);
         bundle.setResult(RUNNING_JUDGING);
         bundle.setFinished(NOT_FINISHED);
@@ -1853,7 +1818,7 @@ int main(int argc, char **argv) {
         bundle.setPassRate(ZERO_PASSRATE);
         webSocket << bundle.toJSONString();
         //        webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
- //                            ZERO_PASSRATE);
+        //                            ZERO_PASSRATE);
         pid_t pidApp = fork();
 
         if (pidApp == CHILD_PROCESS) {
@@ -1917,8 +1882,8 @@ int main(int argc, char **argv) {
         bundle.setTestRunResult(test_run_out);
         webSocket << bundle.toJSONString();
 //        webSocket << ws_send(solution_id, TEST_RUN, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
-  //                           ZERO_PASSRATE,
-   //                          test_run_out);
+        //                           ZERO_PASSRATE,
+        //                          test_run_out);
 
         auto fpid = fork();
         if (fpid == CHILD_PROCESS) {
@@ -1949,7 +1914,8 @@ int main(int argc, char **argv) {
     }
     total_point = inFileList.size();
     //dp = opendir(fullpath);
-    Bundle bundle;
+    bundle.clear();
+    bundle.setJudger(http_username);
     bundle.setSolutionID(solution_id);
     bundle.setResult(RUNNING_JUDGING);
     bundle.setFinished(NOT_FINISHED);
@@ -2069,10 +2035,10 @@ int main(int argc, char **argv) {
     bundle.setSim(sim);
     bundle.setSimSource(sim_s_id);
     //webSocket << ws_send(solution_id, ALL_TEST_MODE ? finalACflg : ACflg, FINISHED, usedtime,
-     //                    topmemory / ONE_KILOBYTE,
-     //                    pass_point,
-     //                    pass_rate / num_of_test, "", "", sim, sim_s_id);
-     webSocket << bundle.toJSONString();
+    //                    topmemory / ONE_KILOBYTE,
+    //                    pass_point,
+    //                    pass_rate / num_of_test, "", "", sim, sim_s_id);
+    webSocket << bundle.toJSONString();
     string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
                  to_string(solution_id);
     conn.query(conn, sql.c_str(), sql.length());

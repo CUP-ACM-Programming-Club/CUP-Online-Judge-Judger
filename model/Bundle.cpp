@@ -9,9 +9,9 @@ using std::cerr;
 using std::endl;
 using nlohmann::detail::type_error;
 #include "Bundle.h"
-#include "../header/static_var.h"
+#include "../library/judge_lib.h"
 
-bool Bundle::setValue(string key, Pack val) {
+bool Bundle::setValue(const string& key, Pack val) {
     try {
         this->_map[key] = std::move(val);
     }
@@ -48,6 +48,14 @@ bool Bundle::setPassPoint(int pass_point) {
 
 bool Bundle::setPassRate(double pass_rate) {
     return setValue("pass_rate", Pack(pass_rate));
+}
+
+bool Bundle::setJudger(char * str) {
+    return setValue("judger", Pack(string(str)));
+}
+
+bool Bundle::setJudger(string& str) {
+    return setValue("judger", Pack(string(str)));
 }
 
 
@@ -143,5 +151,18 @@ Bundle::operator string() {
 
 void Bundle::clear() {
     init();
+    if (has("wid") && get("wid").isInt()) {
+        setValue("wid", Pack(get("wid").setInt(get("wid").getInt() + 1)));
+    }
+    else {
+        setValue("wid", Pack(0));
+    }
 }
 
+Pack& Bundle::get(const string& key) {
+    return this->_map[key];
+}
+
+bool Bundle::has(const string& key) {
+    return this->_map.find(key) != this->_map.end();
+}

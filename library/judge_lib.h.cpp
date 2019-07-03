@@ -177,6 +177,36 @@ bool isJava(const int lang) {
     }
 }
 
+bool isC(const int lang) {
+    switch (lang) {
+        case C11:
+        case C99:
+        case CLANG:
+        case CLANG11:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool isCPP(const int lang) {
+    switch (lang) {
+        case CPP11:
+        case CPP17:
+        case CPP98:
+        case CLANGPP:
+        case CLANGPP17:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool isCOrCPP(const int lang) {
+    return isC(lang) || isCPP(lang);
+}
+
+
 bool is_number(const string &s) {
     for (auto c:s) {
         if (!isdigit(c))return false;
@@ -249,6 +279,7 @@ FILE *read_cmd_output(const char *fmt, ...) {
 
 
 void copy_shell_runtime(char *work_dir) {
+    cout << "copy shell runtime start" << endl;
     execute_cmd("/bin/mkdir %s/lib", work_dir);
     execute_cmd("/bin/mkdir %s/lib64", work_dir);
     execute_cmd("/bin/mkdir %s/bin", work_dir);
@@ -763,6 +794,9 @@ int detectArgType(const char* argument) {
         }
         else if(!strcmp(argument + 1,"admin")) {
             return _ADMIN;
+        }
+        else if(!strcmp(argument + 1, "no-sim")) {
+            return _NO_SIM;
         }
     }
     else {
