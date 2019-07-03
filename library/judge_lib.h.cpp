@@ -177,6 +177,36 @@ bool isJava(const int lang) {
     }
 }
 
+bool isC(const int lang) {
+    switch (lang) {
+        case C11:
+        case C99:
+        case CLANG:
+        case CLANG11:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool isCPP(const int lang) {
+    switch (lang) {
+        case CPP11:
+        case CPP17:
+        case CPP98:
+        case CLANGPP:
+        case CLANGPP17:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool isCOrCPP(const int lang) {
+    return isC(lang) || isCPP(lang);
+}
+
+
 bool is_number(const string &s) {
     for (auto c:s) {
         if (!isdigit(c))return false;

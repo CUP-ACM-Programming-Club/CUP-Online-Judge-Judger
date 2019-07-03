@@ -52,6 +52,13 @@ extern const char *getFileNameFromPath(const char *path);
 
 extern bool isJava(const int lang);
 
+extern bool isC(const int);
+
+extern bool isCPP(const int);
+
+extern bool isCOrCPP(const int);
+
+
 extern bool is_number(const string &s);
 
 extern bool check_valid_presentation_error(const char *ansfile, const char *userfile);
