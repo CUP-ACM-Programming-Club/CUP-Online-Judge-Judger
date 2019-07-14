@@ -70,7 +70,7 @@ private:
 
     bool has(const string&);
 
-    const int CODE_LENGTH_LIMIT = 1 << 13;
+    const unsigned CODE_LENGTH_LIMIT = 1 << 13;
 };
 
 

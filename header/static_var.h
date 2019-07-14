@@ -131,12 +131,9 @@ enum ArgsType {
     _SOLUTION_ID = 5,
     _RUNNER_ID = 6,
     _ADMIN = 7,
-    _NO_SIM = 8
+    _NO_SIM = 8,
+    _NO_MYSQL = 9
 };
-
-static char lang_ext[30][8] = {"c", "cc", "pas", "java", "rb", "sh", "py",
-                               "php", "pl", "cs", "m", "bas", "scm", "c", "cc", "lua", "js", "go", "py", "cc", "cc",
-                               "c", "kt", "java", "java", "py", "py","java","c","cc"};
 
 const int CODESIZE = 64 * ONE_KILOBYTE;
 const int BUFFER_SIZE = 5 * ONE_KILOBYTE;
@@ -148,7 +145,8 @@ const int STD_F_LIM = STD_MB * 32;
 const int DEFAULT_SOLUTION_ID = 1000;
 extern int DEBUG;
 extern int NO_RECORD;
-
+extern bool MYSQL_MODE;
+extern char lang_ext[30][8];
 extern char host_name[BUFFER_SIZE];
 extern char user_name[BUFFER_SIZE];
 extern char password[BUFFER_SIZE];

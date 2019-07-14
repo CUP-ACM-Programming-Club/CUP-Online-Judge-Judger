@@ -72,8 +72,8 @@ bool utf8_check_is_valid(const string &string) {
 
 
 string ws_send(const int &solution_id, const int &state, const int &finished, const double &time,
-                      const int &memory, const int &pass_point, const double &pass_rate, const string &test_run_result,
-                      const string &compile_info, const int sim, const int sim_s_id) {
+               const int &memory, const int &pass_point, const double &pass_rate, const string &test_run_result,
+               const string &compile_info, const int sim, const int sim_s_id) {
     json send_msg;
     send_msg["type"] = "judger";
     send_msg["value"]["solution_id"] = solution_id;
@@ -653,6 +653,7 @@ void copy_js_runtime(char *work_dir) {
 
     execute_cmd("/bin/cp /usr/local/bin/node %s/", work_dir);
 }
+
 int isInFile(const char fname[]) {
     auto l = static_cast<int>(strlen(fname));
     if (l <= 3 || strcmp(fname + l - 3, ".in") != 0)
@@ -708,7 +709,7 @@ char *escape(char s[], const char t[]) {
 }
 
 int fix_python_mis_judge(char *work_dir, int &ACflg, int &topmemory,
-                                int mem_lmt) {
+                         int mem_lmt) {
     int comp_res = execute_cmd(
             "/bin/grep 'MemoryError'  %s/error.out", work_dir);
 
@@ -722,7 +723,7 @@ int fix_python_mis_judge(char *work_dir, int &ACflg, int &topmemory,
 }
 
 int fix_java_mis_judge(char *work_dir, int &ACflg, int &topmemory,
-                              int mem_lmt) {
+                       int mem_lmt) {
     int comp_res;
     execute_cmd("chmod 700 %s/error.out", work_dir);
     if (DEBUG)
@@ -772,44 +773,40 @@ void clean_workdir(char *work_dir) {
 
 }
 
-int detectArgType(const char* argument) {
+int detectArgType(const char *argument) {
     if (argument[0] == '-') {
-        if (!strcmp(argument + 1,"language")) {
+        if (!strcmp(argument + 1, "language")) {
             return _LANG_NAME;
-        }
-        else if(!strcmp(argument + 1,"no_record")) {
+        } else if (!strcmp(argument + 1, "no_record")) {
             return _NO_RECORD;
-        }
-        else if(!strcmp(argument + 1, "dir")) {
+        } else if (!strcmp(argument + 1, "dir")) {
             return _DIR;
-        }
-        else if(!strcmp(argument + 1,"record")) {
+        } else if (!strcmp(argument + 1, "record")) {
             return _RECORD_CALL;
-        }
-        else if(!strcmp(argument + 1,"solution_id")) {
+        } else if (!strcmp(argument + 1, "solution_id")) {
             return _SOLUTION_ID;
-        }
-        else if(!strcmp(argument + 1,"runner_id")) {
+        } else if (!strcmp(argument + 1, "runner_id")) {
             return _RUNNER_ID;
-        }
-        else if(!strcmp(argument + 1,"admin")) {
+        } else if (!strcmp(argument + 1, "admin")) {
             return _ADMIN;
-        }
-        else if(!strcmp(argument + 1, "no-sim")) {
+        } else if (!strcmp(argument + 1, "no-sim")) {
             return _NO_SIM;
-        }
-    }
-    else {
-        if (!strcmp(argument,"DEBUG")) {
-            return _DEBUG;
+        } else if (!strcmp(argument + 1, "no-mysql")) {
+            return _NO_MYSQL;
         }
         else {
+            return _ERROR;
+        }
+    } else {
+        if (!strcmp(argument, "DEBUG")) {
+            return _DEBUG;
+        } else {
             return _ERROR;
         }
     }
 }
 
-void write_log(const char* oj_home, const char *_fmt, ...) {
+void write_log(const char *oj_home, const char *_fmt, ...) {
     va_list ap;
     char fmt[FOUR * ONE_KILOBYTE];
     strncpy(fmt, _fmt, FOUR * ONE_KILOBYTE);
@@ -832,4 +829,38 @@ void write_log(const char* oj_home, const char *_fmt, ...) {
     //}
     va_end(ap);
     fclose(fp);
+}
+
+bool initWebSocketConnection(string &ip, int port) {
+    webSocket.connect("ws://" + ip + ":" + to_string(port));
+    return webSocket.isConnected();
+}
+
+bool initWebSocketConnection(string &&ip, int port) {
+    webSocket.connect("ws://" + ip + ":" + to_string(port));
+    return webSocket.isConnected();
+}
+
+void get_solution_info(int solution_id, int &p_id, char *user_id,
+                       int &lang) {
+    get_solution_info_from_mysql(solution_id, p_id, user_id, lang);
+}
+
+void get_solution_info_from_mysql(int solution_id, int& p_id, char *user_id, int& lang) {
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+
+    char sql[BUFFER_SIZE];
+    // get the problem id and user id from Table:solution
+    sprintf(sql,
+            "SELECT problem_id, user_id, language FROM solution where solution_id=%d",
+            solution_id);
+    //printf("%s\n",sql);
+    conn.query(conn, sql, strlen(sql));
+    res = mysql_store_result(conn);
+    row = mysql_fetch_row(res);
+    p_id = atoi(row[0]);
+    strcpy(user_id, row[1]);
+    lang = atoi(row[2]);
+    mysql_free_result(res);
 }

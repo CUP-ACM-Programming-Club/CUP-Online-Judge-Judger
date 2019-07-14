@@ -16,21 +16,25 @@ private:
     bool connected = false;
     bool closed = false;
     bool DEBUG = false;
-    int port_number;
+    int port_number{};
+    bool _start = false;
     string host_name,user_name,password, db_name;
+    void checkIfNotStart();
 public:
     MySQLAutoPointer() = default;
     ~MySQLAutoPointer();
     operator MYSQL*();
     bool start();
-    bool setHostName(string h);
-    bool setUserName(string u);
-    bool setPassword(string p);
-    bool setDBName(string db);
+    bool setHostName(const string& h);
+    bool setUserName(const string& u);
+    bool setPassword(const string& p);
+    bool setDBName(const string& db);
     bool setPort(int p);
     bool isConnected();
     bool setDebugMode(bool state);
-    bool query(MYSQL* pointer, string sql, int len);
+    bool query(MYSQL* pointer, const string& sql, unsigned len);
+    bool query(const string& sql);
+    bool query(string sql, unsigned len);
 };
 
 

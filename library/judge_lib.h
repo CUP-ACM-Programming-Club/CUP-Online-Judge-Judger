@@ -129,4 +129,12 @@ extern int detectArgType(const char* argument);
 
 extern void write_log(const char* oj_home, const char *_fmt, ...);
 
+extern bool initWebSocketConnection(string&& ip, int port);
+
+extern bool initWebSocketConnection(string& ip, int port);
+
+extern void get_solution_info(int, int&, char*, int&);
+
+extern void get_solution_info_from_mysql(int, int&, char*, int&);
+
 #endif //JUDGE_CLIENT_JUDGE_LIB_H

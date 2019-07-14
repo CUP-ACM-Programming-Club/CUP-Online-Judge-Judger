@@ -631,16 +631,6 @@ void update_problem(int pid) {
 
 int compile(int lang, char *work_dir) {
     int pid;
-    bundle.clear();
-    bundle.setJudger(http_username);
-    bundle.setSolutionID(solution_id);
-    bundle.setResult(COMPILING);
-    bundle.setFinished(NOT_FINISHED);
-    bundle.setUsedTime(ZERO_TIME);
-    bundle.setMemoryUse(ZERO_MEMORY);
-    bundle.setPassPoint(ZERO_PASSPOINT);
-    bundle.setPassRate(ZERO_PASSRATE);
-    webSocket << bundle.toJSONString();
     //webSocket << ws_send(solution_id, 2, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE);
     string configJSONDir = oj_home;
     configJSONDir += "/etc/compile.json";
@@ -833,28 +823,6 @@ void get_custominput(int solution_id, char *work_dir) {
     }
     mysql_free_result(res);
 }
-
-
-void get_solution_info(int solution_id, int &p_id, char *user_id,
-                       int &lang) {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-
-    char sql[BUFFER_SIZE];
-    // get the problem id and user id from Table:solution
-    sprintf(sql,
-            "SELECT problem_id, user_id, language FROM solution where solution_id=%d",
-            solution_id);
-    //printf("%s\n",sql);
-    conn.query(conn, sql, strlen(sql));
-    res = mysql_store_result(conn);
-    row = mysql_fetch_row(res);
-    p_id = atoi(row[0]);
-    strcpy(user_id, row[1]);
-    lang = atoi(row[2]);
-    mysql_free_result(res);
-}
-
 
 void get_problem_info(int p_id, double &time_lmt, int &mem_lmt, int &isspj) {
     char sql[BUFFER_SIZE];
@@ -1488,6 +1456,8 @@ void init_parameters(int argc, char **argv, int &solution_id,
             admin = true;
         } else if (argType == _NO_SIM) {
             no_sim = true;
+        } else if (argType == _NO_MYSQL) {
+            MYSQL_MODE = false;
         }
         else {
             ++i;
@@ -1507,6 +1477,9 @@ void init_parameters(int argc, char **argv, int &solution_id,
                     break;
                 case _RUNNER_ID:
                     judger_number = runner_id = atoi(argv[i]);
+                    break;
+                default:
+                    error = true;
                     break;
             }
         }
@@ -1546,8 +1519,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
         cout << "get sim: " << src_pth << endl;
     }
     int sim = 0;
-    if (admin) {}
-    else {
+    if (!admin) {
         sim = execute_cmd("/usr/bin/sim.sh %s %d", src_pth, pid);
     }
     if (!sim) {
@@ -1559,14 +1531,16 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
         execute_cmd("/bin/cp %s ../data/%d/ac/%d.%s", src_pth, pid, solution_id,
                     lang_ext[lang]);
         //c cpp will
-        if (lang == C11 || lang == C99)
+        if (isC(lang)) {
             execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
                         solution_id, lang_ext[0], pid, solution_id,
                         lang_ext[1]);
-        if (lang == CPP17 || lang == CPP11 || lang == CPP98)
+        }
+        else if (isCPP(lang)) {
             execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
                         solution_id, lang_ext[1], pid, solution_id,
                         lang_ext[0]);
+        }
 
     } else {
 
@@ -1597,7 +1571,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     if (DEBUG) {
         cout << uid << endl;
     }
-    conn.query(conn, sql.c_str(), sql.length());
+    conn.query(conn, sql, sql.length());
     res = mysql_store_result(conn);
     string cpid;
     row = mysql_fetch_row(res);
@@ -1606,8 +1580,9 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     if (DEBUG) {
         cout << cpid << endl;
     }
-    if (uid == cpid)
+    if (uid == cpid) {
         sim = 0;
+    }
     //if (solution_id <= sim_s_id)
     //  sim = 0;
 
@@ -1649,7 +1624,6 @@ void print_call_array() {
 
 
 int main(int argc, char **argv) {
-    webSocket.connect("ws://localhost:5100");
     char work_dir[BUFFER_SIZE];
     char usercode[CODESIZE];
     char user_id[BUFFER_SIZE];
@@ -1660,14 +1634,15 @@ int main(int argc, char **argv) {
     double time_lmt;
     init_parameters(argc, argv, solution_id, runner_id);
     init_mysql_conf();
+    initWebSocketConnection("localhost", 5100);
     if (!conn.start()) {
+        cerr << "Failed to create a MYSQL connection." << endl;
         exit(0); //exit if mysql is down
     }
     //set work directory to start running & judging
     sprintf(work_dir, "%s/run%d/", oj_home, runner_id);
     string global_work_dir = string(work_dir);
     clean_workdir(work_dir);
-
     if (SHARE_MEMORY_RUN)
         mk_shm_workdir(work_dir);
 
@@ -1703,7 +1678,16 @@ int main(int argc, char **argv) {
         printf("time: %f mem: %d\n", time_lmt, mem_lmt);
     }
 
-
+    bundle.clear();
+    bundle.setJudger(http_username);
+    bundle.setSolutionID(solution_id);
+    bundle.setResult(COMPILING);
+    bundle.setFinished(NOT_FINISHED);
+    bundle.setUsedTime(ZERO_TIME);
+    bundle.setMemoryUse(ZERO_MEMORY);
+    bundle.setPassPoint(ZERO_PASSPOINT);
+    bundle.setPassRate(ZERO_PASSRATE);
+    webSocket << bundle.toJSONString();
     if (compile(lang, work_dir) != COMPILED) {
         addceinfo(solution_id);
         string _compile_info, tmp;

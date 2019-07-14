@@ -11,6 +11,7 @@ char oj_home[BUFFER_SIZE];
 //static int data_list_len = 0;
 int DEBUG = 0;
 int NO_RECORD = 0;
+bool MYSQL_MODE = true;
 int port_number;
 int max_running = 1;
 int sleep_time;
@@ -29,7 +30,9 @@ char http_baseurl[BUFFER_SIZE];
 char http_username[BUFFER_SIZE];
 char http_password[BUFFER_SIZE];
 int SHARE_MEMORY_RUN = 0;
-
+char lang_ext[30][8] = {"c", "cc", "pas", "java", "rb", "sh", "py",
+                        "php", "pl", "cs", "m", "bas", "scm", "c", "cc", "lua", "js", "go", "py", "cc", "cc",
+                        "c", "kt", "java", "java", "py", "py","java","c","cc"};
 char record_call = 0;
 int use_ptrace = 1;
 int judger_number = 0;
