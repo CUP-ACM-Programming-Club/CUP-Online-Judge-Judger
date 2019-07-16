@@ -156,10 +156,6 @@ extern char db_name[BUFFER_SIZE];
 extern char oj_home[BUFFER_SIZE];
 //extern char data_list[BUFFER_SIZE][BUFFER_SIZE];
 //extern int data_list_len = 0;
-
-extern int port_number;
-extern int max_running;
-extern int sleep_time;
 extern int java_time_bonus;
 extern int java_memory_bonus;
 extern char java_xms[BUFFER_SIZE];

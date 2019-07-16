@@ -181,9 +181,7 @@ void init_mysql_conf() {
     user_name[0] = 0;
     password[0] = 0;
     db_name[0] = 0;
-    port_number = 3306;
-    max_running = 3;
-    sleep_time = 3;
+    auto port_number = 3306;
     strcpy(java_xms, "-Xms32m");
     strcpy(java_xmx, "-Xmx256m");
     sprintf(buf, "%s/etc/judge.conf", oj_home);
@@ -212,6 +210,9 @@ void init_mysql_conf() {
 
         }
         //fclose(fp);
+    }
+    else {
+        throw "Failed to parse judge.conf";
     }
     conn.setPort(port_number);
     conn.setDBName(db_name);
@@ -576,7 +577,7 @@ void add_reinfo_mysql_by_string(int solution_id, string content) {
     if (DEBUG) {
         cout << "SQL: " << sql << endl;
     }
-    if (conn.query(conn, sql.c_str(), sql.length())) {
+    if (conn.query(conn, sql, sql.length())) {
         cerr << "MYSQL error:" << mysql_error(conn) << endl;
     }
 }
@@ -888,7 +889,6 @@ void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
     sprintf(infile, "%s/data/%d/%s.in", oj_home, p_id, fname);
     execute_cmd("/bin/cp '%s' %s/data.in", infile, work_dir);
     execute_cmd("/bin/cp %s/data/%d/*.dic %s/", oj_home, p_id, work_dir);
-
     sprintf(outfile, "%s/data/%d/%s.out", oj_home, p_id, fname0);
     sprintf(userfile, "%s/run%d/user.out", oj_home, runner_id);
 }
@@ -1508,6 +1508,8 @@ void init_parameters(int argc, char **argv, int &solution_id,
                 case _RUNNER_ID:
                     judger_number = runner_id = atoi(argv[i]);
                     break;
+                default:
+                    break;
             }
         }
     }
@@ -1515,25 +1517,27 @@ void init_parameters(int argc, char **argv, int &solution_id,
         chdir(oj_home);
         return;
     }
-    DEBUG = (argc > 4);
-    if (argc > 5 && !strcmp(argv[5], "DEBUG")) {
-        NO_RECORD = 1;
-    } else {
-        record_call = (argc > 5);
-    }
-    if (argc > 5) {
-        strcpy(LANG_NAME, argv[5]);
-    }
-    if (argc > 3)
-        strcpy(oj_home, argv[3]);
-    else
-        strcpy(oj_home, "/home/judge");
+    else {// old parameter pass way
+        DEBUG = (argc > 4);
+        if (argc > 5 && !strcmp(argv[5], "DEBUG")) {
+            NO_RECORD = 1;
+        } else {
+            record_call = (argc > 5);
+        }
+        if (argc > 5) {
+            strcpy(LANG_NAME, argv[5]);
+        }
+        if (argc > 3)
+            strcpy(oj_home, argv[3]);
+        else
+            strcpy(oj_home, "/home/judge");
 
-    chdir(oj_home); // change the dir// init our work
+        chdir(oj_home); // change the dir// init our work
 
-    solution_id = atoi(argv[1]);
-    runner_id = atoi(argv[2]);
-    judger_number = runner_id;
+        solution_id = atoi(argv[1]);
+        runner_id = atoi(argv[2]);
+        judger_number = runner_id;
+    }
 }
 
 int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
@@ -1546,8 +1550,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
         cout << "get sim: " << src_pth << endl;
     }
     int sim = 0;
-    if (admin) {}
-    else {
+    if (!admin) {
         sim = execute_cmd("/usr/bin/sim.sh %s %d", src_pth, pid);
     }
     if (!sim) {
@@ -1559,14 +1562,16 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
         execute_cmd("/bin/cp %s ../data/%d/ac/%d.%s", src_pth, pid, solution_id,
                     lang_ext[lang]);
         //c cpp will
-        if (lang == C11 || lang == C99)
+        if (isC(lang)) {
             execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
                         solution_id, lang_ext[0], pid, solution_id,
                         lang_ext[1]);
-        if (lang == CPP17 || lang == CPP11 || lang == CPP98)
+        }
+        if (isCPP(lang)) {
             execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
                         solution_id, lang_ext[1], pid, solution_id,
                         lang_ext[0]);
+        }
 
     } else {
 
