@@ -106,16 +106,14 @@ void init_syscalls_limits(int lang) {
         for (i = 0; i < call_array_size; i++) {
             call_counter[i] = 0;
         }
-    } else if (lang == C11 || lang == CPP17 || lang == CLANG || lang == CLANGPP || lang == CLANG11 ||
-               lang == CLANGPP17 || lang == C99 || lang == CPP11 ||
-               lang == CPP98) { // C & C++
+    } else if (isCOrCPP(lang)) { // C & C++
         for (i = 0; i == 0 || LANG_CV[i]; i++) {
             call_counter[LANG_CV[i]] = HOJ_MAX_LIMIT;
         }
     } else if (lang == PASCAL) { // Pascal
         for (i = 0; i == 0 || LANG_PV[i]; i++)
             call_counter[LANG_PV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == JAVA || lang == JAVA7 || lang == JAVA8 || lang == JAVA6) { // Java
+    } else if (isJava(lang)) { // Java
         for (i = 0; i == 0 || LANG_JV[i]; i++)
             call_counter[LANG_JV[i]] = HOJ_MAX_LIMIT;
     } else if (lang == RUBY) { // Ruby
@@ -632,16 +630,6 @@ void update_problem(int pid) {
 
 int compile(int lang, char *work_dir) {
     int pid;
-    bundle.clear();
-    bundle.setJudger(http_username);
-    bundle.setSolutionID(solution_id);
-    bundle.setResult(COMPILING);
-    bundle.setFinished(NOT_FINISHED);
-    bundle.setUsedTime(ZERO_TIME);
-    bundle.setMemoryUse(ZERO_MEMORY);
-    bundle.setPassPoint(ZERO_PASSPOINT);
-    bundle.setPassRate(ZERO_PASSRATE);
-    webSocket << bundle.toJSONString();
     //webSocket << ws_send(solution_id, 2, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE);
     string configJSONDir = oj_home;
     configJSONDir += "/etc/compile.json";
@@ -661,14 +649,14 @@ int compile(int lang, char *work_dir) {
         LIM.rlim_cur = static_cast<rlim_t>(10 * COMPILE_STD_MB);
         setrlimit(RLIMIT_FSIZE, &LIM);
 
-        if (lang == JAVA || lang == GO || lang == JAVA8 || lang == JAVA7 || lang == JAVA6) {
+        if (isJava(lang) || lang == GO) {
             LIM.rlim_max = static_cast<rlim_t>(COMPILE_STD_MB << 11);
             LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB << 11);
         } else {
             LIM.rlim_max = static_cast<rlim_t>(COMPILE_STD_MB * 256);
             LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB * 256);
         }
-        if (lang != JAVA && lang != JAVA8 && lang != JAVA7 && lang != JAVA6) {
+        if (!isJava(lang)) {
             setrlimit(RLIMIT_AS, &LIM);
         }
         if (lang != PASCAL && lang != FREEBASIC) {
@@ -835,28 +823,6 @@ void get_custominput(int solution_id, char *work_dir) {
     mysql_free_result(res);
 }
 
-
-void get_solution_info(int solution_id, int &p_id, char *user_id,
-                       int &lang) {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-
-    char sql[BUFFER_SIZE];
-    // get the problem id and user id from Table:solution
-    sprintf(sql,
-            "SELECT problem_id, user_id, language FROM solution where solution_id=%d",
-            solution_id);
-    //printf("%s\n",sql);
-    conn.query(conn, sql, strlen(sql));
-    res = mysql_store_result(conn);
-    row = mysql_fetch_row(res);
-    p_id = atoi(row[0]);
-    strcpy(user_id, row[1]);
-    lang = atoi(row[2]);
-    mysql_free_result(res);
-}
-
-
 void get_problem_info(int p_id, double &time_lmt, int &mem_lmt, int &isspj) {
     char sql[BUFFER_SIZE];
     MYSQL_RES *res;
@@ -972,8 +938,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     // set the memory
     LIM.rlim_cur = static_cast<rlim_t>(STD_MB * mem_lmt / 2 * 3);
     LIM.rlim_max = static_cast<rlim_t>(STD_MB * mem_lmt * 2);
-    if (lang < JAVA || (lang >= CLANG && lang <= CLANGPP) || (lang >= CPP11 && lang <= C99) || lang == CLANG11 ||
-        lang == CLANGPP17) {
+    if (lang < JAVA || isCOrCPP(lang)) {
         setrlimit(RLIMIT_AS, &LIM);
     }
 
@@ -1250,7 +1215,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
         ACflg = comp_res;
     }
     //jvm popup messages, if don't consider them will get miss-WrongAnswer
-    if (lang == JAVA || lang == JAVA7 || lang == JAVA8 || lang == JAVA6) {
+    if (isJava(lang)) {
         fix_java_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
     }
     if (lang == PYTHON2 || lang == PYTHON3 || lang == PyPy || lang == PyPy3) {
@@ -1302,10 +1267,9 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         wait4(pidApp, &status, 0, &ruse);
 
         //jvm gc ask VM before need,so used kernel page fault times and page size
-        if (lang == JAVA || lang == PHP ||
+        if (isJava(lang) || lang == PHP ||
             lang == JAVASCRIPT || lang == CSHARP ||
-            lang == GO || lang == JAVA7 || lang == JAVA8 || lang == JAVA6 || lang == CLANG || lang == CLANGPP ||
-            lang == CLANG11 || lang == CLANGPP17) {
+            lang == GO  || isCOrCPP(lang)) {
             tempmemory = get_page_fault_mem(ruse, pidApp);
         } else {        //other use VmPeak
             tempmemory = get_proc_status(pidApp, "VmPeak:") << 10;
@@ -1337,7 +1301,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
             stringstream buffer;
             buffer << file.rdbuf();
             string contents(buffer.str());
-            if (contents.find("Killed") != contents.npos) {
+            if (contents.find("Killed") != std::string::npos) {
                 write_log(oj_home, contents.c_str());
                 print_runtimeerror(contents.c_str());
                 //ptrace(PTRACE_KILL, pidApp, NULL, NULL);
@@ -1488,6 +1452,8 @@ void init_parameters(int argc, char **argv, int &solution_id,
             admin = true;
         } else if (argType == _NO_SIM) {
             no_sim = true;
+        } else if (argType == _NO_MYSQL) {
+            MYSQL_MODE = false;
         }
         else {
             ++i;
@@ -1509,6 +1475,7 @@ void init_parameters(int argc, char **argv, int &solution_id,
                     judger_number = runner_id = atoi(argv[i]);
                     break;
                 default:
+                    error = true;
                     break;
             }
         }
@@ -1567,7 +1534,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
                         solution_id, lang_ext[0], pid, solution_id,
                         lang_ext[1]);
         }
-        if (isCPP(lang)) {
+        else if (isCPP(lang)) {
             execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
                         solution_id, lang_ext[1], pid, solution_id,
                         lang_ext[0]);
@@ -1602,7 +1569,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     if (DEBUG) {
         cout << uid << endl;
     }
-    conn.query(conn, sql.c_str(), sql.length());
+    conn.query(conn, sql, sql.length());
     res = mysql_store_result(conn);
     string cpid;
     row = mysql_fetch_row(res);
@@ -1611,8 +1578,9 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     if (DEBUG) {
         cout << cpid << endl;
     }
-    if (uid == cpid)
+    if (uid == cpid) {
         sim = 0;
+    }
     //if (solution_id <= sim_s_id)
     //  sim = 0;
 
@@ -1654,7 +1622,6 @@ void print_call_array() {
 
 
 int main(int argc, char **argv) {
-    webSocket.connect("ws://localhost:5100");
     char work_dir[BUFFER_SIZE];
     char usercode[CODESIZE];
     char user_id[BUFFER_SIZE];
@@ -1665,14 +1632,15 @@ int main(int argc, char **argv) {
     double time_lmt;
     init_parameters(argc, argv, solution_id, runner_id);
     init_mysql_conf();
+    initWebSocketConnection("localhost", 5100);
     if (!conn.start()) {
+        cerr << "Failed to create a MYSQL connection." << endl;
         exit(0); //exit if mysql is down
     }
     //set work directory to start running & judging
     sprintf(work_dir, "%s/run%d/", oj_home, runner_id);
     string global_work_dir = string(work_dir);
     clean_workdir(work_dir);
-
     if (SHARE_MEMORY_RUN)
         mk_shm_workdir(work_dir);
 
@@ -1686,8 +1654,7 @@ int main(int argc, char **argv) {
     //copy source file
     get_solution(solution_id, work_dir, lang, usercode);
     //java is lucky
-    if ((lang >= JAVA && lang != OBJC && lang != CLANG && lang != CLANGPP && lang != CLANG11 && lang != CLANGPP17 &&
-         lang < CPP11) || lang >= JAVA8) {  // Clang Clang++ not VM or Script
+    if (lang != OBJC && !isCOrCPP(lang) && lang != PASCAL) {  // Clang Clang++ not VM or Script
         // the limit for java
         time_lmt = time_lmt * java_time_bonus + java_time_bonus;
         mem_lmt = mem_lmt + java_memory_bonus;
@@ -1700,15 +1667,26 @@ int main(int argc, char **argv) {
     }
 
     //never bigger than judged set value;
-    if (time_lmt > 300 * SECOND || time_lmt < ZERO)
+    if (time_lmt > 300 * SECOND || time_lmt < ZERO) {
         time_lmt = 300 * SECOND;
-    if (mem_lmt > ONE_KILOBYTE || mem_lmt < ONE)
+    }
+    if (mem_lmt > ONE_KILOBYTE || mem_lmt < ONE) {
         mem_lmt = ONE_KILOBYTE;//ONE_KILOBYTE MB
+    }
     if (DEBUG) {
         printf("time: %f mem: %d\n", time_lmt, mem_lmt);
     }
 
-
+    bundle.clear();
+    bundle.setJudger(http_username);
+    bundle.setSolutionID(solution_id);
+    bundle.setResult(COMPILING);
+    bundle.setFinished(NOT_FINISHED);
+    bundle.setUsedTime(ZERO_TIME);
+    bundle.setMemoryUse(ZERO_MEMORY);
+    bundle.setPassPoint(ZERO_PASSPOINT);
+    bundle.setPassRate(ZERO_PASSRATE);
+    webSocket << bundle.toJSONString();
     if (compile(lang, work_dir) != COMPILED) {
         addceinfo(solution_id);
         string _compile_info, tmp;
@@ -1745,16 +1723,6 @@ int main(int argc, char **argv) {
     char outfile[BUFFER_SIZE];
     char userfile[BUFFER_SIZE];
     sprintf(fullpath, "%s/data/%d", oj_home, p_id); // the fullpath of data dir
-
-    // open DIRs
-    DIR *dp;
-    dirent *dirp;
-    if (p_id > CHILD_PROCESS && (dp = opendir(fullpath)) == nullptr) {
-        write_log(oj_home, "No such dir:%s!\n", fullpath);
-        //mysql_close(conn);
-        exit(-1);
-    }
-
     int ACflg, PEflg;
     ACflg = PEflg = ACCEPT;
     int topmemory = ZERO_MEMORY;
@@ -1910,13 +1878,7 @@ int main(int argc, char **argv) {
     }
     int total_point = 0;
     int pass_point = ZERO_PASSPOINT;
-    vector<pair<string, int> >inFileList;
-    while((dirp = readdir(dp)) != nullptr) {
-        auto fileLen = isInFile(dirp->d_name);
-        if(isInFile(dirp->d_name)) {
-            inFileList.emplace_back(dirp->d_name, fileLen);
-        }
-    }
+    vector<pair<string, int> >inFileList = getFileList(fullpath, isInFile);
     total_point = inFileList.size();
     //dp = opendir(fullpath);
     bundle.clear();
@@ -2005,7 +1967,7 @@ int main(int argc, char **argv) {
     if (ACflg == ACCEPT && PEflg == PRESENTATION_ERROR)
         ACflg = PRESENTATION_ERROR;
     if (sim_enable && ACflg == ACCEPT && (!ALL_TEST_MODE || finalACflg == ACCEPT)
-        && (lang < BASH || lang == CLANG || lang == CLANGPP || lang >= CPP11)) { //bash don't supported
+        && (lang < BASH || isCOrCPP(lang) || lang >= CPP11)) { //bash don't supported
         sim = get_sim(solution_id, lang, p_id, sim_s_id);
     } else {
         sim = ZERO_SIM;
@@ -2019,14 +1981,12 @@ int main(int argc, char **argv) {
         if (pid == CHILD_PROCESS) {
             conn.start();
             addreinfo(solution_id);
-            //mysql_close(conn);
             exit(0);
         }
     }
     if (use_max_time) {
         usedtime = max_case_time;
     }
-
 
     if (ACflg == TIME_LIMIT_EXCEEDED || (ALL_TEST_MODE && finalACflg == TIME_LIMIT_EXCEEDED)) {
         usedtime = time_lmt * 1000;
@@ -2039,14 +1999,10 @@ int main(int argc, char **argv) {
     bundle.setPassRate(pass_rate / num_of_test);
     bundle.setSim(sim);
     bundle.setSimSource(sim_s_id);
-    //webSocket << ws_send(solution_id, ALL_TEST_MODE ? finalACflg : ACflg, FINISHED, usedtime,
-    //                    topmemory / ONE_KILOBYTE,
-    //                    pass_point,
-    //                    pass_rate / num_of_test, "", "", sim, sim_s_id);
     webSocket << bundle.toJSONString();
     string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
                  to_string(solution_id);
-    conn.query(conn, sql.c_str(), sql.length());
+    conn.query(conn, sql, sql.length());
 
     if (ALL_TEST_MODE) {
         if (num_of_test > 0) {
@@ -2078,6 +2034,5 @@ int main(int argc, char **argv) {
     if (record_call) {
         print_call_array();
     }
-    closedir(dp);
     return 0;
 }

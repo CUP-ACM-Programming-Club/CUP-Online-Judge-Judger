@@ -1,3 +1,5 @@
+#include <utility>
+
 //
 // Created by ryan on 19-4-11.
 //
@@ -15,6 +17,7 @@ MySQLAutoPointer::operator MYSQL*() {
 
 bool MySQLAutoPointer::start() {
     conn = mysql_init(nullptr);
+    _start = true;
     //mysql_real_connect(conn,host_name,user_name,password,db_name,port_number,0,0);
     const char timeout = 30;
     mysql_options(conn, MYSQL_OPT_CONNECT_TIMEOUT, &timeout);
@@ -46,7 +49,7 @@ bool MySQLAutoPointer::setDebugMode(bool state) {
     return DEBUG;
 }
 
-bool MySQLAutoPointer::setDBName(string db) {
+bool MySQLAutoPointer::setDBName(const string& db) {
     if(db.empty()) {
         return false;
     }
@@ -54,7 +57,7 @@ bool MySQLAutoPointer::setDBName(string db) {
     return true;
 }
 
-bool MySQLAutoPointer::setHostName(string h) {
+bool MySQLAutoPointer::setHostName(const string& h) {
     if(h.empty()) {
         return false;
     }
@@ -62,7 +65,7 @@ bool MySQLAutoPointer::setHostName(string h) {
     return true;
 }
 
-bool MySQLAutoPointer::setPassword(string p) {
+bool MySQLAutoPointer::setPassword(const string& p) {
     if(p.empty()) {
         return false;
     }
@@ -70,7 +73,7 @@ bool MySQLAutoPointer::setPassword(string p) {
     return true;
 }
 
-bool MySQLAutoPointer::setUserName(string u) {
+bool MySQLAutoPointer::setUserName(const string& u) {
     if(u.empty()) {
         return false;
     }
@@ -90,14 +93,29 @@ bool MySQLAutoPointer::isConnected() {
     return connected;
 }
 
-bool MySQLAutoPointer::query(MYSQL *pointer, string sql, int len) {
+bool MySQLAutoPointer::query(MYSQL *pointer, const string& sql, unsigned len) {
+    checkIfNotStart();
     int ret = mysql_real_query(conn, sql.c_str(), len);
     if(ret) {
         string error = mysql_error(conn);
-        if(error.find("gone away") != error.npos) {
+        if(error.find("gone away") != std::string::npos) {
             this->start();
             ret = this->query(pointer, sql, len);
         }
     }
     return ret;
+}
+
+bool MySQLAutoPointer::query(const string& sql) {
+    return query(this->conn, sql, sql.length());
+}
+
+bool MySQLAutoPointer::query(string sql, unsigned len) {
+    return query(this->conn, std::move(sql), len);
+}
+
+void MySQLAutoPointer::checkIfNotStart() {
+    if (!_start) {
+        this->start();
+    }
 }
