@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <mutex>
 using namespace std;
 #include <mysql/mysql.h>
 
@@ -19,6 +20,7 @@ private:
     int port_number{};
     bool _start = false;
     string host_name,user_name,password, db_name;
+    std::mutex lock;
     void checkIfNotStart();
 public:
     MySQLAutoPointer() = default;

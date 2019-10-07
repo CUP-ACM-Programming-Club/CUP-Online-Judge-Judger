@@ -5,10 +5,11 @@
 #ifndef JUDGE_CLIENT_STATIC_VAR_H
 #define JUDGE_CLIENT_STATIC_VAR_H
 
-
+#include <thread>
 #include "../model/MySQLAutoPointer.h"
 #include "../model/websocket.h"
 #include "../model/Bundle.h"
+#include "../model/ThreadPool.h"
 
 enum count {
     ZERO = 0,
@@ -179,4 +180,5 @@ extern int solution_id;
 extern MySQLAutoPointer conn;
 extern websocket webSocket;
 extern Bundle bundle;
+extern ThreadPool threadPool;
 #endif //JUDGE_CLIENT_STATIC_VAR_H

@@ -42,3 +42,5 @@ MySQLAutoPointer conn;
 websocket webSocket;
 
 Bundle bundle;
+
+ThreadPool threadPool(std::thread::hardware_concurrency());

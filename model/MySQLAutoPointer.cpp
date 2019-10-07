@@ -94,6 +94,7 @@ bool MySQLAutoPointer::isConnected() {
 }
 
 bool MySQLAutoPointer::query(MYSQL *pointer, const string& sql, unsigned len) {
+    std::lock_guard<std::mutex> lockGuard(lock);
     checkIfNotStart();
     int ret = mysql_real_query(conn, sql.c_str(), len);
     if(ret) {

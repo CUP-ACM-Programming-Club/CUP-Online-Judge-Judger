@@ -9,9 +9,10 @@
 #include <cctype>
 #include <iostream>
 #include <fstream>
-#include "../header/static_var.h"
+#include <deque>
 #include "../header/json.hpp"
 #include <cstdarg>
+#include <future>
 
 using namespace std;
 using json = nlohmann::json;

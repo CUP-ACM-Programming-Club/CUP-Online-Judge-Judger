@@ -6,8 +6,12 @@
 #define JUDGE_CLIENT_WEBSOCKET_H
 
 #include <bits/stdc++.h>
+#include <mutex>
+#include <thread>
 #include "easywsclient.hpp"
 #include "../header/json.hpp"
+#include "./ThreadPool.h"
+#include "../library/judge_lib.h"
 
 class websocket
 {
@@ -38,8 +42,6 @@ public:
 
 	websocket &send(const nlohmann::json &json);
 
-	easywsclient::WebSocket::pointer get_pointer();
-
 	websocket &operator<<(const std::string &str);
 
 	websocket &operator<<(const nlohmann::json &json);
@@ -47,8 +49,16 @@ public:
 private:
 	easywsclient::WebSocket::pointer wsconnect;
 	bool connected;
+	std::mutex lock;
 	std::string address_;
 	int port_;
+    vector<std::future<bool>>taskQueue_;
+    deque<easywsclient::WebSocket::pointer> wsconnectQueue;
+    std::mutex queueLock;
+    void drain();
+    void initQueue(const string& url);
+    easywsclient::WebSocket::pointer getConnection();
+    void recycleConnection(easywsclient::WebSocket::pointer pointer);
 };
 
 

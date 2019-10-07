@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 project(judge_client)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif ()
@@ -80,11 +80,13 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(MYSQL DEFAULT_MSG
         REQUIRED_VARS MYSQL_LIBRARY MYSQL_INCLUDE_DIR
         VERSION_VAR MYSQL_VERSION_STRING)
+find_package(Threads)
 
 set(MYSQL_INCLUDE_DIRS ${MYSQL_INCLUDE_DIR})
 set(MYSQL_LIBRARIES ${MYSQL_LIBRARY})
 
 mark_as_advanced(MYSQL_INCLUDE_DIR MYSQL_LIBRARY)
 include_directories(${MYSQL_INCLUDE_DIR})
-add_executable(judge_client header/okcalls.h header/ncalls.h header/okcalls32.h header/okcalls64.h header/json.hpp model/easywsclient.cpp model/easywsclient.hpp judge_client.cpp model/websocket.cpp model/websocket.h library/judge_lib.h header/static_var.h model/JSONVectorReader.h model/JSONVectorReader.cpp model/Bundle.cpp model/Bundle.h library/judge_lib.h.cpp model/MySQLAutoPointer.cpp model/MySQLAutoPointer.h header/static_var.cpp model/Pack.cpp model/Pack.h)
+add_executable(judge_client header/okcalls.h header/ncalls.h header/okcalls32.h header/okcalls64.h header/json.hpp model/easywsclient.cpp model/easywsclient.hpp judge_client.cpp model/websocket.cpp model/websocket.h library/judge_lib.h header/static_var.h model/JSONVectorReader.h model/JSONVectorReader.cpp model/Bundle.cpp model/Bundle.h library/judge_lib.h.cpp model/MySQLAutoPointer.cpp model/MySQLAutoPointer.h header/static_var.cpp model/Pack.cpp model/Pack.h model/ThreadPool.h)
 target_link_libraries(judge_client ${MYSQL_LIBRARIES})
+target_link_libraries(judge_client ${CMAKE_THREAD_LIBS_INIT})

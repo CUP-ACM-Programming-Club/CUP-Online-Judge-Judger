@@ -4,6 +4,7 @@
 
 #include <dirent.h>
 #include "judge_lib.h"
+#include "../header/static_var.h"
 
 using namespace std;
 using json = nlohmann::json;
@@ -880,9 +881,10 @@ vector<pair<string, int> >getFileList(const string& path, function<int(const cha
             inFileList.emplace_back(dirp->d_name, fileLen);
         }
     }
+    return inFileList;
 }
 
 vector<pair<string, int> >getFileList(const string& path) {
     auto func = [&](const char*) -> int{return 1;};
-    getFileList(path, func);
+    return getFileList(path, func);
 }
