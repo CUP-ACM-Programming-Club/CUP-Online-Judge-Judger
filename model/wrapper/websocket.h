@@ -8,10 +8,10 @@
 #include <bits/stdc++.h>
 #include <mutex>
 #include <thread>
-#include "easywsclient.hpp"
-#include "../header/json.hpp"
-#include "./ThreadPool.h"
-#include "../library/judge_lib.h"
+#include "../../library/easywsclient.hpp"
+#include "../../library/json.hpp"
+#include "../base/ThreadPool.h"
+#include "../../library/judge_lib.h"
 
 class websocket
 {

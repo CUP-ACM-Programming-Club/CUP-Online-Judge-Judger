@@ -55,14 +55,14 @@
 #endif
 
 #include "header/okcalls.h"
-#include "model/websocket.h"
+#include "model/wrapper/websocket.h"
 #include "header/static_var.h"
 
-#include "model/JSONVectorReader.h"
-#include "model/Bundle.h"
+#include "model/base/JSONVectorReader.h"
+#include "model/base/Bundle.h"
 
 #include "library/judge_lib.h"
-#include "model/MySQLAutoPointer.h"
+#include "model/base/MySQLAutoPointer.h"
 using namespace std;
 using json = nlohmann::json;
 using CompilerArgsReader = JSONVectorReader;
@@ -191,7 +191,7 @@ void init_mysql_conf() {
             read_buf(buf, "OJ_PASSWORD", password);
             read_buf(buf, "OJ_DB_NAME", db_name);
             read_int(buf, "OJ_PORT_NUMBER", port_number);
-            read_int(buf, "OJ_JAVA_TIME_BONUS", java_time_bonus);
+            read_int(buf, "OJ_JAVA_TIME_BONUS", javaTimeBonus);
             read_int(buf, "OJ_JAVA_MEMORY_BONUS", java_memory_bonus);
             read_int(buf, "OJ_SIM_ENABLE", sim_enable);
             read_buf(buf, "OJ_JAVA_XMS", java_xms);
@@ -1627,9 +1627,9 @@ int main(int argc, char **argv) {
     char user_id[BUFFER_SIZE];
     solution_id = DEFAULT_SOLUTION_ID;
     int runner_id = 0;
-    int p_id, mem_lmt, lang, SPECIAL_JUDGE, sim, sim_s_id = ZERO_SIM;
+    int p_id, memoryLimit, lang, SPECIAL_JUDGE, sim, sim_s_id = ZERO_SIM;
     double max_case_time = ZERO_TIME;
-    double time_lmt;
+    double timeLimit;
     init_parameters(argc, argv, solution_id, runner_id);
     init_mysql_conf();
     initWebSocketConnection("localhost", 5100);
@@ -1646,7 +1646,7 @@ int main(int argc, char **argv) {
 
     chdir(work_dir);
     get_solution_info(solution_id, p_id, user_id, lang);
-    get_problem_info(abs(p_id), time_lmt, mem_lmt, SPECIAL_JUDGE);
+    get_problem_info(abs(p_id), timeLimit, memoryLimit, SPECIAL_JUDGE);
     //get the limit
     if (p_id <= TEST_RUN_SUBMIT) {//Is custom input
         SPECIAL_JUDGE = NONE_SPECIAL_JUDGE;
@@ -1656,8 +1656,8 @@ int main(int argc, char **argv) {
     //java is lucky
     if (lang != OBJC && !isCOrCPP(lang) && lang != PASCAL) {  // Clang Clang++ not VM or Script
         // the limit for java
-        time_lmt = time_lmt * java_time_bonus + java_time_bonus;
-        mem_lmt = mem_lmt + java_memory_bonus;
+        timeLimit = timeLimit * javaTimeBonus + javaTimeBonus;
+        memoryLimit = memoryLimit + java_memory_bonus;
         // copy java.policy
         if (isJava(lang)) {
             execute_cmd("/bin/cp %s/etc/java0.policy %s/java.policy", oj_home, work_dir);
@@ -1667,14 +1667,14 @@ int main(int argc, char **argv) {
     }
 
     //never bigger than judged set value;
-    if (time_lmt > 300 * SECOND || time_lmt < ZERO) {
-        time_lmt = 300 * SECOND;
+    if (timeLimit > 300 * SECOND || timeLimit < ZERO) {
+        timeLimit = 300 * SECOND;
     }
-    if (mem_lmt > ONE_KILOBYTE || mem_lmt < ONE) {
-        mem_lmt = ONE_KILOBYTE;//ONE_KILOBYTE MB
+    if (memoryLimit > ONE_KILOBYTE || memoryLimit < ONE) {
+        memoryLimit = ONE_KILOBYTE;//ONE_KILOBYTE MB
     }
     if (DEBUG) {
-        printf("time: %f mem: %d\n", time_lmt, mem_lmt);
+        printf("time: %f mem: %d\n", timeLimit, memoryLimit);
     }
 
     bundle.clear();
@@ -1795,17 +1795,17 @@ int main(int argc, char **argv) {
         pid_t pidApp = fork();
 
         if (pidApp == CHILD_PROCESS) {
-            run_solution(lang, work_dir, time_lmt, usedtime, mem_lmt);
+            run_solution(lang, work_dir, timeLimit, usedtime, memoryLimit);
         } else {
             watch_solution(pidApp, infile, ACflg, SPECIAL_JUDGE, userfile, outfile,
-                           solution_id, lang, topmemory, mem_lmt, usedtime, time_lmt,
+                           solution_id, lang, topmemory, memoryLimit, usedtime, timeLimit,
                            p_id, PEflg, work_dir);
 
         }
         fix_python_syntax_error_response(ACflg, lang);
         string error_message;
         if (ACflg == TIME_LIMIT_EXCEEDED) {
-            usedtime = time_lmt * 1000;
+            usedtime = timeLimit * 1000;
             error_message = "Time Limit Exceeded.Kill Process.\n";
             //add_reinfo_mysql_by_string(solution_id, error_message);
         } else if (ACflg == RUNTIME_ERROR) {
@@ -1840,7 +1840,7 @@ int main(int argc, char **argv) {
             cout << "test_run_out:" << endl << test_run_out << endl;
         }
 
-        if(usedtime == time_lmt * 1000) {
+        if(usedtime == timeLimit * 1000) {
             test_run_out += "\n测试运行中发生运行超时，程序被强制停止";
         }
 
@@ -1915,21 +1915,21 @@ int main(int argc, char **argv) {
             if (pidApp == CHILD_PROCESS) {
                 if (DEBUG) {
                     printf("Running solution\n");
-                    cout << "Time limit ALL_TEST_MODE:" << (time_lmt + 1) << endl;
-                    cout << "Time limit NORMAL:" << ((time_lmt - usedtime / 1000) + 1) << endl;
+                    cout << "Time limit ALL_TEST_MODE:" << (timeLimit + 1) << endl;
+                    cout << "Time limit NORMAL:" << ((timeLimit - usedtime / 1000) + 1) << endl;
                 }
-                run_solution(lang, work_dir, time_lmt, usedtime, mem_lmt);
+                run_solution(lang, work_dir, timeLimit, usedtime, memoryLimit);
             } else {
 
                 if (DEBUG) {
                     cout << "Run test point:" << num_of_test << endl;
                 }
                 watch_solution(pidApp, infile, ACflg, SPECIAL_JUDGE, userfile, outfile,
-                               solution_id, lang, topmemory, mem_lmt, usedtime, time_lmt,
+                               solution_id, lang, topmemory, memoryLimit, usedtime, timeLimit,
                                p_id, PEflg, work_dir);
-                judge_solution(ACflg, usedtime, time_lmt, SPECIAL_JUDGE, p_id, infile,
+                judge_solution(ACflg, usedtime, timeLimit, SPECIAL_JUDGE, p_id, infile,
                                outfile, userfile, usercode, PEflg, lang, work_dir, topmemory,
-                               mem_lmt, solution_id, num_of_test, global_work_dir);
+                               memoryLimit, solution_id, num_of_test, global_work_dir);
                 if (use_max_time) {
                     max_case_time = max(usedtime, max_case_time);
                     usedtime = ZERO_TIME;
@@ -1937,10 +1937,10 @@ int main(int argc, char **argv) {
                 //clean_session(pidApp);
             }
 
-            if (usedtime > time_lmt * 1000 || ACflg == TIME_LIMIT_EXCEEDED) {
+            if (usedtime > timeLimit * 1000 || ACflg == TIME_LIMIT_EXCEEDED) {
                 cout << "Time Limit Exceeded" << endl;
                 ACflg = TIME_LIMIT_EXCEEDED;
-                usedtime = time_lmt * 1000;
+                usedtime = timeLimit * 1000;
             }
 
             if (ACflg == ACCEPT) {
@@ -1958,8 +1958,8 @@ int main(int argc, char **argv) {
                 ACflg = ACCEPT;
             }
         }
-        bundle.setUsedTime(min(usedtime, time_lmt * 1000));
-        bundle.setMemoryUse(min(topmemory / ONE_KILOBYTE, mem_lmt * STD_MB / ONE_KILOBYTE));
+        bundle.setUsedTime(min(usedtime, timeLimit * 1000));
+        bundle.setMemoryUse(min(topmemory / ONE_KILOBYTE, memoryLimit * STD_MB / ONE_KILOBYTE));
         bundle.setPassPoint(pass_point);
         bundle.setPassRate(pass_rate / num_of_test);
         webSocket << bundle.toJSONString();
@@ -1989,7 +1989,7 @@ int main(int argc, char **argv) {
     }
 
     if (ACflg == TIME_LIMIT_EXCEEDED || (ALL_TEST_MODE && finalACflg == TIME_LIMIT_EXCEEDED)) {
-        usedtime = time_lmt * 1000;
+        usedtime = timeLimit * 1000;
     }
     bundle.setResult(ALL_TEST_MODE ? finalACflg : ACflg);
     bundle.setFinished(FINISHED);

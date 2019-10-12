@@ -3,8 +3,8 @@
 //
 
 #include "JSONVectorReader.h"
-#include "../rapidjson/document.h"
-#include "../rapidjson/prettywriter.h"
+#include "../../rapidjson/document.h"
+#include "../../rapidjson/prettywriter.h"
 #include <iostream>
 #include <fstream>
 #define ASSERT_VALID(x) assert(x)
@@ -27,11 +27,11 @@ bool JSONVectorReader::loadFile(const string &filePath) {
     return isLoad = !document.ParseInsitu((char *) s.c_str()).HasParseError();
 }
 
-bool JSONVectorReader::loadJSON(string jsonPlainText) {
+bool JSONVectorReader::loadJSON(const string& jsonPlainText) {
     return !document.ParseInsitu((char *) jsonPlainText.c_str()).HasParseError();
 }
 
-vector<string> JSONVectorReader::GetArray(string key) {
+vector<string> JSONVectorReader::GetArray(const string& key) {
     documentIsLoaded();
     vector<string> vec;
     auto findMember = document.FindMember(key.c_str());

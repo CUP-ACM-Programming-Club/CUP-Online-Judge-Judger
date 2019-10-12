@@ -5,8 +5,8 @@
 #ifndef CPP_COMPILERARGSREADER_H
 #define CPP_COMPILERARGSREADER_H
 
-#include "../rapidjson/document.h"
-#include "../rapidjson/prettywriter.h"
+#include "../../rapidjson/document.h"
+#include "../../rapidjson/prettywriter.h"
 #include <vector>
 #include <iostream>
 #include <string>
@@ -25,14 +25,13 @@ public:
 
     bool loadFile(const string &filePath);
 
-    bool loadJSON(string jsonPlainText);
+    bool loadJSON(const string& jsonPlainText);
 
-    vector<string> GetArray(string key);
+    vector<string> GetArray(const string& key);
 
     string GetString(string key);
 
     int GetInt(string key);
-
 
     void documentIsLoaded();
 

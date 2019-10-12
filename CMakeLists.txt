@@ -87,6 +87,6 @@ set(MYSQL_LIBRARIES ${MYSQL_LIBRARY})
 
 mark_as_advanced(MYSQL_INCLUDE_DIR MYSQL_LIBRARY)
 include_directories(${MYSQL_INCLUDE_DIR})
-add_executable(judge_client header/okcalls.h header/ncalls.h header/okcalls32.h header/okcalls64.h header/json.hpp model/easywsclient.cpp model/easywsclient.hpp judge_client.cpp model/websocket.cpp model/websocket.h library/judge_lib.h header/static_var.h model/JSONVectorReader.h model/JSONVectorReader.cpp model/Bundle.cpp model/Bundle.h library/judge_lib.h.cpp model/MySQLAutoPointer.cpp model/MySQLAutoPointer.h header/static_var.cpp model/Pack.cpp model/Pack.h model/ThreadPool.h)
+add_executable(judge_client header/okcalls.h header/ncalls.h header/okcalls32.h header/okcalls64.h library/json.hpp library/easywsclient.cpp library/easywsclient.hpp judge_client.cpp model/wrapper/websocket.cpp model/wrapper/websocket.h library/judge_lib.h header/static_var.h model/base/JSONVectorReader.h model/base/JSONVectorReader.cpp model/base/Bundle.cpp model/base/Bundle.h library/judge_lib.h.cpp model/base/MySQLAutoPointer.cpp model/base/MySQLAutoPointer.h header/static_var.cpp model/base/Pack.cpp model/base/Pack.h model/wrapper/CompilerConfigReader.cpp model/wrapper/CompilerConfigReader.h model/base/ThreadPool.h)
 target_link_libraries(judge_client ${MYSQL_LIBRARIES})
 target_link_libraries(judge_client ${CMAKE_THREAD_LIBS_INIT})

@@ -5,7 +5,7 @@
 //
 
 #include "MySQLAutoPointer.h"
-#include "../library/judge_lib.h"
+#include "../../library/judge_lib.h"
 MySQLAutoPointer::~MySQLAutoPointer() {
     if(connected) {
         mysql_close(conn);

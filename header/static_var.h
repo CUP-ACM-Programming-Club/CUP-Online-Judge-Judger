@@ -6,10 +6,10 @@
 #define JUDGE_CLIENT_STATIC_VAR_H
 
 #include <thread>
-#include "../model/MySQLAutoPointer.h"
-#include "../model/websocket.h"
-#include "../model/Bundle.h"
-#include "../model/ThreadPool.h"
+#include "../model/base/MySQLAutoPointer.h"
+#include "../model/wrapper/websocket.h"
+#include "../model/base/Bundle.h"
+#include "../model/base/ThreadPool.h"
 
 enum count {
     ZERO = 0,
@@ -31,13 +31,13 @@ enum time {
     DAY = HOUR * 24
 };
 
-enum space_size {
+enum SpaceSizeConstants {
     ONE_KILOBYTE = 1u << 10,
     ONE_MEGABYTE = 1u << 20,
     ONE_GIGABYTE = 1u << 30
 };
 
-enum language {
+enum LanguageConstants {
     C11 = 0,
     CPP17 = 1,
     PASCAL = 2,
@@ -155,7 +155,7 @@ extern char db_name[BUFFER_SIZE];
 extern char oj_home[BUFFER_SIZE];
 //extern char data_list[BUFFER_SIZE][BUFFER_SIZE];
 //extern int data_list_len = 0;
-extern int java_time_bonus;
+extern int javaTimeBonus;
 extern int java_memory_bonus;
 extern char java_xms[BUFFER_SIZE];
 extern char java_xmx[BUFFER_SIZE];
