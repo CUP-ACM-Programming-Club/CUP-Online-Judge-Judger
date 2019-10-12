@@ -9,7 +9,11 @@
 #include <cstring>
 #include <mutex>
 using namespace std;
+#ifdef __APPLE_CC__
+#include <mysql.h>
+#else
 #include <mysql/mysql.h>
+#endif
 
 class MySQLAutoPointer {
 private:
