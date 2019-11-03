@@ -49,6 +49,8 @@ public:
 
     bool setTotalPoint(int);
 
+    bool setRuntimeInfo(string &);
+
     void clear();
 
     string toJSONString();

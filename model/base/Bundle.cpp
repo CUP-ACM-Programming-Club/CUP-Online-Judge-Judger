@@ -166,3 +166,7 @@ Pack& Bundle::get(const string& key) {
 bool Bundle::has(const string& key) {
     return this->_map.find(key) != this->_map.end();
 }
+
+bool Bundle::setRuntimeInfo(string& runtime_info) {
+    return setValue("runtime_info", Pack(checkUTF8Valid(runtime_info)));
+}

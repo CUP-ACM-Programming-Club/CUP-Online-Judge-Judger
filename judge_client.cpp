@@ -527,6 +527,19 @@ void addceinfo(int solution_id) {
     _addceinfo_mysql(solution_id);
 }
 
+string getRuntimeInfoContents(string filename) {
+    char buffer[4096];
+    string runtimeInfo;
+    FILE *fp = fopen(filename.c_str(), "re");
+    while (fgets(buffer, 1024, fp)) {
+        runtimeInfo += buffer;
+        if (runtimeInfo.length() > 4096) {
+            break;
+        }
+    }
+    return runtimeInfo;
+}
+
 /* write runtime error message back to database */
 void _addreinfo_mysql(int solution_id, const char *filename) {
     char sql[(1 << 16)], *end;
@@ -1991,8 +2004,16 @@ int main(int argc, char **argv) {
     if (ACflg == TIME_LIMIT_EXCEEDED || (ALL_TEST_MODE && finalACflg == TIME_LIMIT_EXCEEDED)) {
         usedtime = timeLimit * 1000;
     }
+    string runtimeInfo = getRuntimeInfoContents("diff.out");
+    if ((ACflg == WRONG_ANSWER || ACflg == PRESENTATION_ERROR)) {
+        if (DEBUG)
+            printf("add diff info of %d..... \n", solution_id);
+        // if (!SPECIAL_JUDGE)
+        add_reinfo_mysql_by_string(solution_id, runtimeInfo);
+    }
     bundle.setResult(ALL_TEST_MODE ? finalACflg : ACflg);
     bundle.setFinished(FINISHED);
+    bundle.setRuntimeInfo(runtimeInfo);
     bundle.setUsedTime(usedtime);
     bundle.setMemoryUse(topmemory / ONE_KILOBYTE);
     bundle.setPassPoint(pass_point);
@@ -2017,13 +2038,7 @@ int main(int argc, char **argv) {
         update_solution(solution_id, ACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
                         sim_s_id, ZERO_PASSRATE);
     }
-    if ((ALL_TEST_MODE && (SPECIAL_JUDGE || finalACflg == WRONG_ANSWER || finalACflg == PRESENTATION_ERROR)) ||
-        (ACflg == WRONG_ANSWER || ACflg == PRESENTATION_ERROR)) {
-        if (DEBUG)
-            printf("add diff info of %d..... \n", solution_id);
-        // if (!SPECIAL_JUDGE)
-        adddiffinfo(solution_id);
-    }
+
     update_user(user_id);
     update_problem(p_id);
     clean_workdir(work_dir);
