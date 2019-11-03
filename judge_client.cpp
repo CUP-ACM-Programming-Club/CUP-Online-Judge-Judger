@@ -1824,7 +1824,8 @@ int main(int argc, char **argv) {
         } else if (ACflg == RUNTIME_ERROR) {
             if (DEBUG)
                 printf("add RE info of %d..... \n", solution_id);
-            addreinfo(solution_id);
+            error_message = "Runtime Error. Kill Process.\n";
+            // addreinfo(solution_id);
         } else if (ACflg == MEMORY_LIMIT_EXCEEDED) {
             error_message = "Memory Limit Exceeded.Kill Process.\n";
             //add_reinfo_mysql_by_string(solution_id, error_message);
@@ -1986,14 +1987,16 @@ int main(int argc, char **argv) {
         sim = ZERO_SIM;
     }
     //if(ACflg == OJ_RE)addreinfo(solution_id);
-
+    string runtimeInfo;
     if ((ALL_TEST_MODE && finalACflg == RUNTIME_ERROR) || ACflg == RUNTIME_ERROR) {
+        runtimeInfo = getRuntimeInfoContents("error.out");
         if (DEBUG)
             printf("add RE info of %d..... \n", solution_id);
         auto pid = fork();
         if (pid == CHILD_PROCESS) {
             conn.start();
-            addreinfo(solution_id);
+            add_reinfo_mysql_by_string(solution_id, runtimeInfo);
+            // addreinfo(solution_id);
             exit(0);
         }
     }
@@ -2004,8 +2007,8 @@ int main(int argc, char **argv) {
     if (ACflg == TIME_LIMIT_EXCEEDED || (ALL_TEST_MODE && finalACflg == TIME_LIMIT_EXCEEDED)) {
         usedtime = timeLimit * 1000;
     }
-    string runtimeInfo = getRuntimeInfoContents("diff.out");
     if ((ACflg == WRONG_ANSWER || ACflg == PRESENTATION_ERROR)) {
+        runtimeInfo = getRuntimeInfoContents("diff.out");
         if (DEBUG)
             printf("add diff info of %d..... \n", solution_id);
         // if (!SPECIAL_JUDGE)
