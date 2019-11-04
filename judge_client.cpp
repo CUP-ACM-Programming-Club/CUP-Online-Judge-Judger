@@ -1978,8 +1978,10 @@ int main(int argc, char **argv) {
         bundle.setPassRate(pass_rate / num_of_test);
         webSocket << bundle.toJSONString();
     }
-    if (ACflg == ACCEPT && PEflg == PRESENTATION_ERROR)
+    ACflg = finalACflg;
+    if (ACflg == ACCEPT && PEflg == PRESENTATION_ERROR) {
         ACflg = PRESENTATION_ERROR;
+    }
     if (sim_enable && ACflg == ACCEPT && (!ALL_TEST_MODE || finalACflg == ACCEPT)
         && (lang < BASH || isCOrCPP(lang) || lang >= CPP11)) { //bash don't supported
         sim = get_sim(solution_id, lang, p_id, sim_s_id);
@@ -2003,7 +2005,6 @@ int main(int argc, char **argv) {
     if (use_max_time) {
         usedtime = max_case_time;
     }
-
     if (ACflg == TIME_LIMIT_EXCEEDED || (ALL_TEST_MODE && finalACflg == TIME_LIMIT_EXCEEDED)) {
         usedtime = timeLimit * 1000;
     }
