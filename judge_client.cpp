@@ -2013,7 +2013,7 @@ int main(int argc, char **argv) {
         if (DEBUG)
             printf("add diff info of %d..... \n", solution_id);
         // if (!SPECIAL_JUDGE)
-        add_reinfo_mysql_by_string(solution_id, runtimeInfo);
+//        add_reinfo_mysql_by_string(solution_id, runtimeInfo);
     }
     bundle.setResult(ALL_TEST_MODE ? finalACflg : ACflg);
     bundle.setFinished(FINISHED);
