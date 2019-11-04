@@ -449,7 +449,7 @@ int compare(const char *file1, const char *file2) {
 #endif
 }
 /* write result back to database */
-void _update_solution_mysql(int solution_id, int result, double time, int memory,
+[[deprecated]] void _update_solution_mysql(int solution_id, int result, double time, int memory,
                             int sim, int sim_s_id, double pass_rate) {
     char sql[BUFFER_SIZE];
     if (ALL_TEST_MODE) {
@@ -478,7 +478,7 @@ void _update_solution_mysql(int solution_id, int result, double time, int memory
 
 }
 
-void update_solution(int solution_id, int result, double time, int memory, int sim,
+[[deprecated]] void update_solution(int solution_id, int result, double time, int memory, int sim,
                      int sim_s_id, double pass_rate) {
     if (NO_RECORD) {
         return;
@@ -490,7 +490,7 @@ void update_solution(int solution_id, int result, double time, int memory, int s
 }
 
 /* write compile error message back to database */
-void _addceinfo_mysql(int solution_id) {
+[[deprecated]] void _addceinfo_mysql(int solution_id) {
     char sql[(1 << 16)], *end;
     char ceinfo[(1 << 16)], *cend;
     FILE *fp = fopen("ce.txt", "re");
@@ -523,11 +523,11 @@ void _addceinfo_mysql(int solution_id) {
 }
 
 
-void addceinfo(int solution_id) {
+[[deprecated]] void addceinfo(int solution_id) {
     _addceinfo_mysql(solution_id);
 }
 
-string getRuntimeInfoContents(string filename) {
+string getRuntimeInfoContents(const string& filename) {
     char buffer[4096];
     string runtimeInfo;
     FILE *fp = fopen(filename.c_str(), "re");
@@ -541,7 +541,7 @@ string getRuntimeInfoContents(string filename) {
 }
 
 /* write runtime error message back to database */
-void _addreinfo_mysql(int solution_id, const char *filename) {
+[[deprecated]] void _addreinfo_mysql(int solution_id, const char *filename) {
     char sql[(1 << 16)], *end;
     char reinfo[(1 << 16)], *rend;
     FILE *fp = fopen(filename, "re");
@@ -573,7 +573,7 @@ void _addreinfo_mysql(int solution_id, const char *filename) {
     fclose(fp);
 }
 
-void add_reinfo_mysql_by_string(int solution_id, string content) {
+[[deprecated]] void add_reinfo_mysql_by_string(int solution_id, string content) {
     string sql = "DELETE FROM runtimeinfo WHERE solution_id = " + to_string(solution_id);
     conn.query(conn, sql.c_str(), sql.length());
     if (content.length() > 4096) {
@@ -594,11 +594,11 @@ void add_reinfo_mysql_by_string(int solution_id, string content) {
 }
 
 
-void addreinfo(int solution_id) {
+[[deprecated]] void addreinfo(int solution_id) {
     _addreinfo_mysql(solution_id, "error.out");
 }
 
-void adddiffinfo(int solution_id) {
+[[deprecated]] void adddiffinfo(int solution_id) {
     _addreinfo_mysql(solution_id, "diff.out");
 }
 
@@ -1701,7 +1701,7 @@ int main(int argc, char **argv) {
     bundle.setPassRate(ZERO_PASSRATE);
     webSocket << bundle.toJSONString();
     if (compile(lang, work_dir) != COMPILED) {
-        addceinfo(solution_id);
+//        addceinfo(solution_id);
         string _compile_info, tmp;
         fstream ceinformation("ce.txt");
         while (getline(ceinformation, tmp)) {
@@ -1994,13 +1994,6 @@ int main(int argc, char **argv) {
         runtimeInfo = getRuntimeInfoContents("error.out");
         if (DEBUG)
             printf("add RE info of %d..... \n", solution_id);
-        auto pid = fork();
-        if (pid == CHILD_PROCESS) {
-            conn.start();
-            add_reinfo_mysql_by_string(solution_id, runtimeInfo);
-            // addreinfo(solution_id);
-            exit(0);
-        }
     }
     if (use_max_time) {
         usedtime = max_case_time;
