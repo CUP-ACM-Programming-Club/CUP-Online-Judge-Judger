@@ -22,61 +22,75 @@ bool Bundle::setValue(const string& key, Pack val) {
     return true;
 }
 
-bool Bundle::setSolutionID(int solution_id) {
-    return setValue("solution_id", Pack(solution_id));
+Bundle& Bundle::setSolutionID(int solution_id) {
+    setValue("solution_id", Pack(solution_id));
+    return *this;
 }
 
-bool Bundle::setResult(int state) {
-    return setValue("state", Pack(state));
+Bundle& Bundle::setResult(int state) {
+    setValue("state", Pack(state));
+    return *this;
 }
 
-bool Bundle::setFinished(int finished) {
-    return setValue("finish", Pack(finished));
+Bundle& Bundle::setFinished(int finished) {
+    setValue("finish", Pack(finished));
+    return *this;
 }
 
-bool Bundle::setUsedTime(double time) {
-    return setValue("time", Pack(time));
+Bundle& Bundle::setUsedTime(double time) {
+    setValue("time", Pack(time));
+    return *this;
 }
 
-bool Bundle::setMemoryUse(int memory) {
-    return setValue("memory", Pack(memory));
+Bundle& Bundle::setMemoryUse(int memory) {
+    setValue("memory", Pack(memory));
+    return *this;
 }
 
-bool Bundle::setPassPoint(int pass_point) {
-    return setValue("pass_point", Pack(pass_point));
+Bundle& Bundle::setPassPoint(int pass_point) {
+    setValue("pass_point", Pack(pass_point));
+    return *this;
 }
 
-bool Bundle::setPassRate(double pass_rate) {
-    return setValue("pass_rate", Pack(pass_rate));
+Bundle& Bundle::setPassRate(double pass_rate) {
+    setValue("pass_rate", Pack(pass_rate));
+    return *this;
 }
 
-bool Bundle::setJudger(char * str) {
-    return setValue("judger", Pack(string(str)));
+Bundle& Bundle::setJudger(char * str) {
+    setValue("judger", Pack(string(str)));
+    return *this;
 }
 
-bool Bundle::setJudger(string& str) {
-    return setValue("judger", Pack(string(str)));
+Bundle& Bundle::setJudger(string& str) {
+    setValue("judger", Pack(string(str)));
+    return *this;
 }
 
 
-bool Bundle::setTestRunResult(string &test_run_result) {
-    return setValue("test_run_result", Pack(checkUTF8Valid(test_run_result)));
+Bundle& Bundle::setTestRunResult(string &test_run_result) {
+    setValue("test_run_result", Pack(checkUTF8Valid(test_run_result)));
+    return *this;
 }
 
-bool Bundle::setCompileInfo(string &compile_info) {
-    return setValue("compile_info", Pack(checkUTF8Valid(compile_info)));
+Bundle& Bundle::setCompileInfo(string &compile_info) {
+    setValue("compile_info", Pack(checkUTF8Valid(compile_info)));
+    return *this;
 }
 
-bool Bundle::setSim(int sim) {
-    return setValue("sim", Pack(sim));
+Bundle& Bundle::setSim(int sim) {
+    setValue("sim", Pack(sim));
+    return *this;
 }
 
-bool Bundle::setSimSource(int sim_s_id) {
-    return setValue("sim_s_id", Pack(sim_s_id));
+Bundle& Bundle::setSimSource(int sim_s_id) {
+    setValue("sim_s_id", Pack(sim_s_id));
+    return *this;
 }
 
-bool Bundle::setTotalPoint(int total_point) {
-    return setValue("total_point", Pack(total_point));
+Bundle& Bundle::setTotalPoint(int total_point) {
+    setValue("total_point", Pack(total_point));
+    return *this;
 }
 
 string Bundle::trim(string &str) {
@@ -149,7 +163,7 @@ Bundle::operator string() {
     return toJSONString();
 }
 
-void Bundle::clear() {
+Bundle& Bundle::clear() {
     init();
     if (has("wid") && get("wid").isInt()) {
         setValue("wid", Pack(get("wid").setInt(get("wid").getInt() + 1)));
@@ -157,6 +171,7 @@ void Bundle::clear() {
     else {
         setValue("wid", Pack(0));
     }
+    return *this;
 }
 
 Pack& Bundle::get(const string& key) {
@@ -167,6 +182,7 @@ bool Bundle::has(const string& key) {
     return this->_map.find(key) != this->_map.end();
 }
 
-bool Bundle::setRuntimeInfo(string& runtime_info) {
-    return setValue("runtime_info", Pack(checkUTF8Valid(runtime_info)));
+Bundle& Bundle::setRuntimeInfo(string& runtime_info) {
+    setValue("runtime_info", Pack(checkUTF8Valid(runtime_info)));
+    return *this;
 }

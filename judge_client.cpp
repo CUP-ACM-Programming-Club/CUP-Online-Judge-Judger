@@ -55,7 +55,7 @@
 #endif
 
 #include "header/okcalls.h"
-#include "model/wrapper/websocket.h"
+#include "model/websocket/WebSocketSender.h"
 #include "header/static_var.h"
 
 #include "model/base/JSONVectorReader.h"

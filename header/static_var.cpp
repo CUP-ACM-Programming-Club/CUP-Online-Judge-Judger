@@ -39,7 +39,7 @@ int solution_id;
 //static int sleep_tmp;
 MySQLAutoPointer conn;
 
-websocket webSocket;
+WebSocketSender webSocket;
 
 Bundle bundle;
 

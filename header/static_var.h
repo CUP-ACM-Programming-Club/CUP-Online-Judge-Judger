@@ -7,7 +7,7 @@
 
 #include <thread>
 #include "../model/base/MySQLAutoPointer.h"
-#include "../model/wrapper/websocket.h"
+#include "../model/websocket/WebSocketSender.h"
 #include "../model/base/Bundle.h"
 #include "../model/base/ThreadPool.h"
 
@@ -178,7 +178,7 @@ extern bool admin;
 extern bool no_sim;
 extern int solution_id;
 extern MySQLAutoPointer conn;
-extern websocket webSocket;
+extern WebSocketSender webSocket;
 extern Bundle bundle;
 extern ThreadPool threadPool;
 #endif //JUDGE_CLIENT_STATIC_VAR_H

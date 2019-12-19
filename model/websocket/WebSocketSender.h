@@ -2,8 +2,8 @@
 // Created by ryan on 18-1-9.
 //
 
-#ifndef JUDGE_CLIENT_WEBSOCKET_H
-#define JUDGE_CLIENT_WEBSOCKET_H
+#ifndef JUDGE_CLIENT_WEBSOCKETSENDER_H
+#define JUDGE_CLIENT_WEBSOCKETSENDER_H
 
 #include <bits/stdc++.h>
 #include <mutex>
@@ -13,14 +13,14 @@
 #include "../base/ThreadPool.h"
 #include "../../library/judge_lib.h"
 
-class websocket
+class WebSocketSender
 {
 public:
-	websocket();
+	WebSocketSender();
 
-	explicit websocket(const std::string &url);
+	explicit WebSocketSender(const std::string &url);
 
-	~websocket();
+	~WebSocketSender();
 
 	bool connect(const std::string &url);
 
@@ -34,17 +34,17 @@ public:
 
 	bool isConnected();
 
-	websocket &emit(const std::string &str);
+	WebSocketSender &emit(const std::string &str);
 
-	websocket &emit(const nlohmann::json &json);
+	WebSocketSender &emit(const nlohmann::json &json);
 
-	websocket &send(const std::string &str);
+	WebSocketSender &send(const std::string &str);
 
-	websocket &send(const nlohmann::json &json);
+	WebSocketSender &send(const nlohmann::json &json);
 
-	websocket &operator<<(const std::string &str);
+	WebSocketSender &operator<<(const std::string &str);
 
-	websocket &operator<<(const nlohmann::json &json);
+	WebSocketSender &operator<<(const nlohmann::json &json);
 
 private:
 	easywsclient::WebSocket::pointer wsconnect;
@@ -62,4 +62,4 @@ private:
 };
 
 
-#endif //JUDGE_CLIENT_WEBSOCKET_H
+#endif //JUDGE_CLIENT_WEBSOCKETSENDER_H

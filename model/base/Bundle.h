@@ -21,37 +21,37 @@ public:
 
     ~Bundle() = default;
 
-    bool setSolutionID(int);
+    Bundle& setSolutionID(int);
 
-    bool setResult(int);
+    Bundle& setResult(int);
 
-    bool setFinished(int);
+    Bundle& setFinished(int);
 
-    bool setUsedTime(double);
+    Bundle& setUsedTime(double);
 
-    bool setMemoryUse(int);
+    Bundle& setMemoryUse(int);
 
-    bool setPassPoint(int);
+    Bundle& setPassPoint(int);
 
-    bool setPassRate(double);
+    Bundle& setPassRate(double);
 
-    bool setJudger(char *);
+    Bundle& setJudger(char *);
 
-    bool setJudger(string &);
+    Bundle& setJudger(string &);
 
-    bool setTestRunResult(string &);
+    Bundle& setTestRunResult(string &);
 
-    bool setCompileInfo(string &);
+    Bundle& setCompileInfo(string &);
 
-    bool setSim(int);
+    Bundle& setSim(int);
 
-    bool setSimSource(int);
+    Bundle& setSimSource(int);
 
-    bool setTotalPoint(int);
+    Bundle& setTotalPoint(int);
 
-    bool setRuntimeInfo(string &);
+    Bundle& setRuntimeInfo(string &);
 
-    void clear();
+    Bundle& clear();
 
     string toJSONString();
 
