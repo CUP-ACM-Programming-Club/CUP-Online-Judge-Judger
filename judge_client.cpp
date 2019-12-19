@@ -1718,15 +1718,15 @@ int main(int argc, char **argv) {
         bundle.setPassRate(ZERO_PASSRATE);
         bundle.setCompileInfo(_compile_info);
         webSocket << bundle.toJSONString();
-        update_solution(solution_id, COMPILE_ERROR, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
-        update_user(user_id);
-        update_problem(p_id);
+        // update_solution(solution_id, COMPILE_ERROR, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
+        // update_user(user_id);
+        // update_problem(p_id);
         //mysql_close(conn);
         clean_workdir(work_dir);
         write_log(oj_home, "compile error");
         exit(0);
     } else {
-        update_solution(solution_id, RUNNING_JUDGING, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
+        // update_solution(solution_id, RUNNING_JUDGING, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         umount(work_dir);
     }
     //exit(0);
@@ -1885,7 +1885,7 @@ int main(int argc, char **argv) {
             exit(0);
         }
 
-        update_solution(solution_id, TEST_RUN, usedtime, topmemory / ONE_KILOBYTE, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
+        // update_solution(solution_id, TEST_RUN, usedtime, topmemory / ONE_KILOBYTE, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         clean_workdir(work_dir);
         //mysql_close(conn);
         exit(0);
@@ -2029,15 +2029,15 @@ int main(int argc, char **argv) {
         if (DEBUG) {
             cout << "Write Usedtime: " << usedtime << endl;
         }
-        update_solution(solution_id, finalACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
-                        sim_s_id, pass_rate);
+        // update_solution(solution_id, finalACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
+        //                sim_s_id, pass_rate);
     } else {
-        update_solution(solution_id, ACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
-                        sim_s_id, ZERO_PASSRATE);
+        // update_solution(solution_id, ACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
+        //                sim_s_id, ZERO_PASSRATE);
     }
 
-    update_user(user_id);
-    update_problem(p_id);
+    // update_user(user_id);
+    // update_problem(p_id);
     clean_workdir(work_dir);
 
     if (DEBUG)
