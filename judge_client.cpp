@@ -1765,6 +1765,7 @@ int main(int argc, char **argv) {
         // update_problem(p_id);
         //mysql_close(conn);
         clean_workdir(work_dir);
+        removeSubmissionInfo(solution_id);
         write_log(oj_home, "compile error");
         exit(0);
     } else {
@@ -1934,6 +1935,7 @@ int main(int argc, char **argv) {
 
         // update_solution(solution_id, TEST_RUN, usedtime, topmemory / ONE_KILOBYTE, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         clean_workdir(work_dir);
+        removeSubmissionInfo(solution_id);
         //mysql_close(conn);
         exit(0);
     }
@@ -2086,7 +2088,7 @@ int main(int argc, char **argv) {
     // update_user(user_id);
     // update_problem(p_id);
     clean_workdir(work_dir);
-
+    removeSubmissionInfo(solution_id);
     if (DEBUG)
         write_log(oj_home, "result=%d", ALL_TEST_MODE ? finalACflg : ACflg);
     //mysql_close(conn);

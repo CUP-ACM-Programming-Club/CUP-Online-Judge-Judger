@@ -143,6 +143,8 @@ extern void getSolutionInfoFromSubmissionInfo(SubmissionInfo&, int&, char*, int&
 
 extern void buildSubmissionInfo(SubmissionInfo&, int);
 
+void removeSubmissionInfo(int);
+
 extern vector<pair<string, int> >getFileList(const string& path, function<int(const char*)>);
 
 extern vector<pair<string, int> >getFileList(const string& path);

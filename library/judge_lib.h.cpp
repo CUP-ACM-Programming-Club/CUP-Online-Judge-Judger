@@ -773,7 +773,6 @@ void clean_workdir(char *work_dir) {
         execute_cmd("/bin/mv %s/* %s/log/", work_dir, work_dir);
         execute_cmd("/bin/rm -rf %s/log/*", work_dir);
     }
-
 }
 
 int detectArgType(const char *argument) {
@@ -877,6 +876,10 @@ void getSolutionInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, int& p_id
 void buildSubmissionInfo(SubmissionInfo& submissionInfo, int solution_id) {
     string filePath = string(oj_home) + "/submission/" + to_string(solution_id) + ".json";
     submissionInfo.readFromFile(filePath);
+}
+
+void removeSubmissionInfo(int solution_id) {
+    execute_cmd("/bin/rm -rf %s/submission/%d.json", oj_home, solution_id);
 }
 
 vector<pair<string, int> >getFileList(const string& path, function<int(const char*)> func) {
