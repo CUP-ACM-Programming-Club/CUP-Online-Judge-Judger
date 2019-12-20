@@ -1596,7 +1596,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
             cout << "FIND SIM! sim:" << sim << " sim_s_id:" << sim_s_id << endl;
         }
     }
-
+/*
     MYSQL_RES *res;
     MYSQL_ROW row;
     string sql = "SELECT user_id FROM solution WHERE solution_id=" + to_string(solution_id);
@@ -1624,7 +1624,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     }
     if (uid == cpid) {
         sim = 0;
-    }
+    }*/
     //if (solution_id <= sim_s_id)
     //  sim = 0;
 

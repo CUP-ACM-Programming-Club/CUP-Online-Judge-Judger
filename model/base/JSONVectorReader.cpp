@@ -87,14 +87,16 @@ bool JSONVectorReader::GetBool(const string& key) {
 bool JSONVectorReader::has(const string &key) {
     documentIsLoaded();
     auto findMember = document.FindMember(key.c_str());
-    if (findMember == document.MemberEnd()) {
-        return false;
-    }
+    return !(findMember == document.MemberEnd());
 }
 
 double JSONVectorReader::GetDouble(const string &key) {
     documentIsLoaded();
     auto& val = document[key.c_str()];
-    ASSERT_VALID(val.IsDouble());
-    return val.GetDouble();
+    if (val.IsDouble()) {
+        return val.GetDouble();
+    }
+    else {
+        return GetInt(key);
+    }
 }
