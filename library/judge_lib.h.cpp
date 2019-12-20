@@ -903,3 +903,135 @@ vector<pair<string, int> >getFileList(const string& path) {
     auto func = [&](const char*) -> int{return 1;};
     return getFileList(path, func);
 }
+
+
+int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
+    if (no_sim) {
+        return 0;
+    }
+    char src_pth[BUFFER_SIZE];
+    sprintf(src_pth, "Main.%s", lang_ext[lang]);
+    if (DEBUG) {
+        cout << "get sim: " << src_pth << endl;
+    }
+    int sim = 0;
+    if (!admin) {
+        sim = execute_cmd("/usr/bin/sim.sh %s %d", src_pth, pid);
+    }
+    if (!sim) {
+        if (DEBUG) {
+            cout << "SIM is not detected!" << endl;
+        }
+        execute_cmd("/bin/mkdir ../data/%d/ac/", pid);
+
+        execute_cmd("/bin/cp %s ../data/%d/ac/%d.%s", src_pth, pid, solution_id,
+                    lang_ext[lang]);
+        //c cpp will
+        if (isC(lang)) {
+            execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
+                        solution_id, lang_ext[0], pid, solution_id,
+                        lang_ext[1]);
+        }
+        else if (isCPP(lang)) {
+            execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
+                        solution_id, lang_ext[1], pid, solution_id,
+                        lang_ext[0]);
+        }
+
+    } else {
+
+        FILE *pf;
+        pf = fopen("sim", "r");
+        if (pf) {
+            fscanf(pf, "%d%d", &sim, &sim_s_id);
+            fclose(pf);
+        }
+        if (DEBUG) {
+            cout << "FIND SIM! sim:" << sim << " sim_s_id:" << sim_s_id << endl;
+        }
+    }
+    return sim;
+}
+
+string getFileContent(const string& file) {
+    string content, tmp;
+    fstream fileStream("ce.txt");
+    while (getline(fileStream, tmp)) {
+        content += tmp + "\n";
+    }
+    return content;
+}
+
+void mk_shm_workdir(char *work_dir) {
+    char shm_path[BUFFER_SIZE];
+    sprintf(shm_path, "/dev/shm/hustoj/%s", work_dir);
+    execute_cmd("/bin/mkdir -p %s", shm_path);
+    execute_cmd("/bin/ln -s %s %s/", shm_path, oj_home);
+    execute_cmd("/bin/chown judge %s ", shm_path);
+    execute_cmd("chmod 755 %s ", shm_path);
+    //sim need a soft link in shm_dir to work correctly
+    sprintf(shm_path, "/dev/shm/hustoj/%s/", oj_home);
+    execute_cmd("/bin/ln -s %s/data %s", oj_home, shm_path);
+}
+
+int get_proc_status(int pid, const char *mark) {
+    FILE *pf;
+    char fn[BUFFER_SIZE], buf[BUFFER_SIZE];
+    int ret = 0;
+    sprintf(fn, "/proc/%d/status", pid);
+    pf = fopen(fn, "re");
+    auto m = static_cast<int>(strlen(mark));
+    while (pf && fgets(buf, BUFFER_SIZE - 1, pf)) {
+
+        buf[strlen(buf) - 1] = 0;
+        if (strncmp(buf, mark, m) == 0) {
+            sscanf(buf + m + 1, "%d", &ret);
+        }
+    }
+    if (pf)
+        fclose(pf);
+    return ret;
+}
+
+void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
+                   char *work_dir, char *outfile, char *userfile, int runner_id) {
+    //              printf("ACflg=%d %d check a file!\n",ACflg,solution_id);
+
+    char fname0[BUFFER_SIZE];
+    char fname[BUFFER_SIZE];
+    strncpy(fname0, filename, static_cast<size_t>(namelen));
+    fname0[namelen] = 0;
+    escape(fname, fname0);
+    printf("%s\n%s\n", fname0, fname);
+    sprintf(infile, "%s/data/%d/%s.in", oj_home, p_id, fname);
+    execute_cmd("/bin/cp '%s' %s/data.in", infile, work_dir);
+    execute_cmd("/bin/cp %s/data/%d/*.dic %s/", oj_home, p_id, work_dir);
+    sprintf(outfile, "%s/data/%d/%s.out", oj_home, p_id, fname0);
+    sprintf(userfile, "%s/run%d/user.out", oj_home, runner_id);
+}
+
+
+void fix_python_syntax_error_response(int &ACflg, int lang) {
+    if (ACflg != ACCEPT) return;
+    if (lang == PYTHON2 || lang == PYTHON3 || lang == PyPy || lang == PyPy3) {
+        cerr << "Try to get sizeof error.out" << endl;
+        auto error_size = get_file_size("error.out");
+        cerr << "Error size:" << error_size << endl;
+        if (error_size > 0) {
+            fstream ferr("error.out");
+            string tmp, content;
+            while (getline(ferr, tmp)) {
+                content += tmp;
+            }
+            if (content.find("SyntaxError") != content.npos) {
+                ACflg = RUNTIME_ERROR;
+            }
+        }
+    }
+}
+
+void print_runtimeerror(const char *err) {
+    FILE *ferr = fopen("error.out", "a+");
+    fprintf(ferr, "Runtime Error:%s\n", err);
+    fclose(ferr);
+}

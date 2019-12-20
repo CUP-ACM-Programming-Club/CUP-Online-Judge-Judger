@@ -149,4 +149,19 @@ extern vector<pair<string, int> >getFileList(const string& path, function<int(co
 
 extern vector<pair<string, int> >getFileList(const string& path);
 
+int get_sim(int solution_id, int lang, int pid, int &sim_s_id);
+
+string getFileContent(const string& file);
+
+void mk_shm_workdir(char *work_dir);
+
+int get_proc_status(int pid, const char *mark);
+
+void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
+                   char *work_dir, char *outfile, char *userfile, int runner_id);
+
+void fix_python_syntax_error_response(int &ACflg, int lang);
+
+void print_runtimeerror(const char *err);
+
 #endif //JUDGE_CLIENT_JUDGE_LIB_H

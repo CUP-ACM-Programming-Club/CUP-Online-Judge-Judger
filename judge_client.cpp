@@ -449,84 +449,6 @@ int compare(const char *file1, const char *file2) {
     }
 #endif
 }
-/* write result back to database */
-[[deprecated]] void _update_solution_mysql(int solution_id, int result, double time, int memory,
-                            int sim, int sim_s_id, double pass_rate) {
-    char sql[BUFFER_SIZE];
-    if (ALL_TEST_MODE) {
-        sprintf(sql,
-                "UPDATE solution SET result=%d,time=%f,memory=%d,pass_rate=%f,judger='%s' WHERE solution_id=%d LIMIT 1%c",
-                result, time, memory, pass_rate, http_username, solution_id, 0);
-    } else {
-        sprintf(sql,
-                "UPDATE solution SET result=%d,time=%f,memory=%d,judger='%s' WHERE solution_id=%d LIMIT 1%c",
-                result, time, memory, http_username, solution_id, 0);
-    }
-    //      printf("sql= %s\n",sql);
-    if (conn.query(conn, sql, strlen(sql))) {
-        printf("..update failed! %s\n", mysql_error(conn));
-    }
-    if (sim) {
-        sprintf(sql,
-                "insert into sim(s_id,sim_s_id,sim) values(%d,%d,%d) on duplicate key update  sim_s_id=%d,sim=%d",
-                solution_id, sim_s_id, sim, sim_s_id, sim);
-        //      printf("sql= %s\n",sql);
-        if (conn.query(conn, sql, strlen(sql))) {
-            //              printf("..update failed! %s\n",mysql_error(conn));
-        }
-
-    }
-
-}
-
-[[deprecated]] void update_solution(int solution_id, int result, double time, int memory, int sim,
-                     int sim_s_id, double pass_rate) {
-    if (NO_RECORD) {
-        return;
-    }
-    if (result == TIME_LIMIT_EXCEEDED && memory == ZERO_MEMORY)
-        result = MEMORY_LIMIT_EXCEEDED;
-    _update_solution_mysql(solution_id, result, time, memory, sim, sim_s_id,
-                           pass_rate);
-}
-
-/* write compile error message back to database */
-[[deprecated]] void _addceinfo_mysql(int solution_id) {
-    char sql[(1 << 16)], *end;
-    char ceinfo[(1 << 16)], *cend;
-    FILE *fp = fopen("ce.txt", "re");
-    snprintf(sql, (1 << 16) - 1, "DELETE FROM compileinfo WHERE solution_id=%d",
-             solution_id);
-    conn.query(conn, sql, strlen(sql));
-    cend = ceinfo;
-    while (fgets(cend, 1024, fp)) {
-        cend += strlen(cend);
-        if (cend - ceinfo > 4096)
-            break;
-    }
-    cend = nullptr;
-    end = sql;
-    strcpy(end, "INSERT INTO compileinfo VALUES(");
-    end += strlen(sql);
-    *end++ = '\'';
-    end += sprintf(end, "%d", solution_id);
-    *end++ = '\'';
-    *end++ = ',';
-    *end++ = '\'';
-    end += mysql_real_escape_string(conn, end, ceinfo, strlen(ceinfo));
-    *end++ = '\'';
-    *end++ = ')';
-    *end = 0;
-    //      printf("%s\n",ceinfo);
-    if (conn.query(conn, sql, end - sql))
-        printf("%s\n", mysql_error(conn));
-    fclose(fp);
-}
-
-
-[[deprecated]] void addceinfo(int solution_id) {
-    _addceinfo_mysql(solution_id);
-}
 
 string getRuntimeInfoContents(const string& filename) {
     char buffer[4096];
@@ -540,107 +462,6 @@ string getRuntimeInfoContents(const string& filename) {
     }
     return runtimeInfo;
 }
-
-/* write runtime error message back to database */
-[[deprecated]] void _addreinfo_mysql(int solution_id, const char *filename) {
-    char sql[(1 << 16)], *end;
-    char reinfo[(1 << 16)], *rend;
-    FILE *fp = fopen(filename, "re");
-    snprintf(sql, (1 << 16) - 1, "DELETE FROM runtimeinfo WHERE solution_id=%d",
-             solution_id);
-    conn.query(conn, sql, strlen(sql));
-    rend = reinfo;
-    while (fgets(rend, 1024, fp)) {
-        rend += strlen(rend);
-        if (rend - reinfo > 4096)
-            break;
-    }
-    rend = nullptr;
-    end = sql;
-    strcpy(end, "INSERT INTO runtimeinfo VALUES(");
-    end += strlen(sql);
-    *end++ = '\'';
-    end += sprintf(end, "%d", solution_id);
-    *end++ = '\'';
-    *end++ = ',';
-    *end++ = '\'';
-    end += mysql_real_escape_string(conn, end, reinfo, strlen(reinfo));
-    *end++ = '\'';
-    *end++ = ')';
-    *end = 0;
-    //      printf("%s\n",ceinfo);
-    if (conn.query(conn, sql, end - sql))
-        printf("%s\n", mysql_error(conn));
-    fclose(fp);
-}
-
-[[deprecated]] void add_reinfo_mysql_by_string(int solution_id, string content) {
-    string sql = "DELETE FROM runtimeinfo WHERE solution_id = " + to_string(solution_id);
-    conn.query(conn, sql.c_str(), sql.length());
-    if (content.length() > 4096) {
-        content = content.substr(0, 4096);
-    }
-    sql = "INSERT INTO runtimeinfo VALUES('" + to_string(solution_id) + "','";
-    char from_buffer[4192], to_buffer[4192];
-    strcpy(from_buffer, content.c_str());
-    mysql_real_escape_string(conn, to_buffer, from_buffer, content.length());
-    sql += to_buffer;
-    sql += "')";
-    if (DEBUG) {
-        cout << "SQL: " << sql << endl;
-    }
-    if (conn.query(conn, sql, sql.length())) {
-        cerr << "MYSQL error:" << mysql_error(conn) << endl;
-    }
-}
-
-
-[[deprecated]] void addreinfo(int solution_id) {
-    _addreinfo_mysql(solution_id, "error.out");
-}
-
-[[deprecated]] void adddiffinfo(int solution_id) {
-    _addreinfo_mysql(solution_id, "diff.out");
-}
-
-
-void _update_user_mysql(char *user_id) {
-    char sql[BUFFER_SIZE];
-    sprintf(sql,
-            R"(UPDATE `users` SET `solved`=(SELECT count(DISTINCT `problem_id`) FROM `solution` WHERE `user_id`='%s' AND `result`='4') WHERE `user_id`='%s')",
-            user_id, user_id);
-    if (conn.query(conn, sql, strlen(sql)))
-        write_log(oj_home, mysql_error(conn));
-    sprintf(sql,
-            R"(UPDATE `users` SET `submit`=(SELECT count(*) FROM `solution` WHERE `user_id`='%s' and problem_id>0) WHERE `user_id`='%s')",
-            user_id, user_id);
-    if (conn.query(conn, sql, strlen(sql)))
-        write_log(oj_home, mysql_error(conn));
-}
-
-
-void update_user(char *user_id) {
-    _update_user_mysql(user_id);
-}
-
-void _update_problem_mysql(int p_id) {
-    char sql[BUFFER_SIZE];
-    sprintf(sql,
-            R"(UPDATE `problem` SET `accepted`=(SELECT count(*) FROM `solution` WHERE `problem_id`='%d' AND `result`='4') WHERE `problem_id`='%d')",
-            p_id, p_id);
-    if (conn.query(conn, sql, strlen(sql)))
-        write_log(oj_home, mysql_error(conn));
-    sprintf(sql,
-            R"(UPDATE `problem` SET `submit`=(SELECT count(*) FROM `solution` WHERE `problem_id`='%d') WHERE `problem_id`='%d')",
-            p_id, p_id);
-    if (conn.query(conn, sql, strlen(sql)))
-        write_log(oj_home, mysql_error(conn));
-}
-
-void update_problem(int pid) {
-    _update_problem_mysql(pid);
-}
-
 
 int compile(int lang, char *work_dir) {
     int pid;
@@ -771,25 +592,6 @@ int compile(int lang, char *work_dir) {
  return ret;
  }
  */
-int get_proc_status(int pid, const char *mark) {
-    FILE *pf;
-    char fn[BUFFER_SIZE], buf[BUFFER_SIZE];
-    int ret = 0;
-    sprintf(fn, "/proc/%d/status", pid);
-    pf = fopen(fn, "re");
-    auto m = static_cast<int>(strlen(mark));
-    while (pf && fgets(buf, BUFFER_SIZE - 1, pf)) {
-
-        buf[strlen(buf) - 1] = 0;
-        if (strncmp(buf, mark, m) == 0) {
-            sscanf(buf + m + 1, "%d", &ret);
-        }
-    }
-    if (pf)
-        fclose(pf);
-    return ret;
-}
-
 
 void get_solution(int solution_id, char *work_dir, int lang, char *usercode) {
     char sql[BUFFER_SIZE], src_pth[BUFFER_SIZE];
@@ -884,23 +686,6 @@ void getProblemInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, double& ti
     if (time_lmt <= 0) {
         time_lmt = 1;
     }
-}
-
-void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
-                   char *work_dir, char *outfile, char *userfile, int runner_id) {
-    //              printf("ACflg=%d %d check a file!\n",ACflg,solution_id);
-
-    char fname0[BUFFER_SIZE];
-    char fname[BUFFER_SIZE];
-    strncpy(fname0, filename, static_cast<size_t>(namelen));
-    fname0[namelen] = 0;
-    escape(fname, fname0);
-    printf("%s\n%s\n", fname0, fname);
-    sprintf(infile, "%s/data/%d/%s.in", oj_home, p_id, fname);
-    execute_cmd("/bin/cp '%s' %s/data.in", infile, work_dir);
-    execute_cmd("/bin/cp %s/data/%d/*.dic %s/", oj_home, p_id, work_dir);
-    sprintf(outfile, "%s/data/%d/%s.out", oj_home, p_id, fname0);
-    sprintf(userfile, "%s/run%d/user.out", oj_home, runner_id);
 }
 
 void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
@@ -1079,26 +864,8 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
 
 int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
                   char *userfile, char *usercode, string& global_work_dir) {
-
     pid_t pid;
     printf("pid=%d\n", problem_id);
-    /*
-    string fullpath = oj_home;
-    fullpath += string("/data/") + to_string(problem_id);
-    auto dp = opendir(fullpath.c_str());
-    dirent *dirp;
-    bool isWindowsSpecialJudge = false;
-    if (dp == nullptr) {
-
-    } else {
-        for (; dirp = readdir(dp);) {
-            string filename(dirp->d_name);
-            if (filename.find(".exe") != filename.npos) {
-                isWindowsSpecialJudge = true;
-            }
-        }
-    }
-     */
     printf("%s\n", usercode);
     string outfiled(global_work_dir);
     outfiled += "usercode.code";
@@ -1194,25 +961,6 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
     return ret;
 }
 
-void fix_python_syntax_error_response(int &ACflg, int lang) {
-    if (ACflg != ACCEPT) return;
-    if (lang == PYTHON2 || lang == PYTHON3 || lang == PyPy || lang == PyPy3) {
-        cerr << "Try to get sizeof error.out" << endl;
-        auto error_size = get_file_size("error.out");
-        cerr << "Error size:" << error_size << endl;
-        if (error_size > 0) {
-            fstream ferr("error.out");
-            string tmp, content;
-            while (getline(ferr, tmp)) {
-                content += tmp;
-            }
-            if (content.find("SyntaxError") != content.npos) {
-                ACflg = RUNTIME_ERROR;
-            }
-        }
-    }
-}
-
 void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
                     int p_id, char *infile, char *outfile, char *userfile, char *usercode, int &PEflg,
                     int lang, char *work_dir, int &topmemory, int mem_lmt,
@@ -1282,13 +1030,6 @@ int get_page_fault_mem(struct rusage &ruse, pid_t &pidApp) {
      */
     return m_minflt;
 }
-
-void print_runtimeerror(const char *err) {
-    FILE *ferr = fopen("error.out", "a+");
-    fprintf(ferr, "Runtime Error:%s\n", err);
-    fclose(ferr);
-}
-
 
 void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
                     char *userfile, char *outfile, int solution_id, int lang,
@@ -1551,99 +1292,6 @@ void init_parameters(int argc, char **argv, int &solution_id,
     }
 }
 
-int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
-    if (no_sim) {
-        return 0;
-    }
-    char src_pth[BUFFER_SIZE];
-    sprintf(src_pth, "Main.%s", lang_ext[lang]);
-    if (DEBUG) {
-        cout << "get sim: " << src_pth << endl;
-    }
-    int sim = 0;
-    if (!admin) {
-        sim = execute_cmd("/usr/bin/sim.sh %s %d", src_pth, pid);
-    }
-    if (!sim) {
-        if (DEBUG) {
-            cout << "SIM is not detected!" << endl;
-        }
-        execute_cmd("/bin/mkdir ../data/%d/ac/", pid);
-
-        execute_cmd("/bin/cp %s ../data/%d/ac/%d.%s", src_pth, pid, solution_id,
-                    lang_ext[lang]);
-        //c cpp will
-        if (isC(lang)) {
-            execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
-                        solution_id, lang_ext[0], pid, solution_id,
-                        lang_ext[1]);
-        }
-        else if (isCPP(lang)) {
-            execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
-                        solution_id, lang_ext[1], pid, solution_id,
-                        lang_ext[0]);
-        }
-
-    } else {
-
-        FILE *pf;
-        pf = fopen("sim", "r");
-        if (pf) {
-            fscanf(pf, "%d%d", &sim, &sim_s_id);
-            fclose(pf);
-        }
-        if (DEBUG) {
-            cout << "FIND SIM! sim:" << sim << " sim_s_id:" << sim_s_id << endl;
-        }
-    }
-/*
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    string sql = "SELECT user_id FROM solution WHERE solution_id=" + to_string(solution_id);
-    if (DEBUG) {
-        cout << sql << endl;
-    }
-    conn.query(conn, sql.c_str(), sql.length());
-    res = mysql_store_result(conn);
-    string uid;
-    row = mysql_fetch_row(res);
-    if (row)
-        uid = row[0];
-    sql = "SELECT user_id FROM solution WHERE solution_id=" + to_string(sim_s_id);
-    if (DEBUG) {
-        cout << uid << endl;
-    }
-    conn.query(conn, sql, sql.length());
-    res = mysql_store_result(conn);
-    string cpid;
-    row = mysql_fetch_row(res);
-    if (row)
-        cpid = row[0];
-    if (DEBUG) {
-        cout << cpid << endl;
-    }
-    if (uid == cpid) {
-        sim = 0;
-    }*/
-    //if (solution_id <= sim_s_id)
-    //  sim = 0;
-
-    return sim;
-}
-
-void mk_shm_workdir(char *work_dir) {
-    char shm_path[BUFFER_SIZE];
-    sprintf(shm_path, "/dev/shm/hustoj/%s", work_dir);
-    execute_cmd("/bin/mkdir -p %s", shm_path);
-    execute_cmd("/bin/ln -s %s %s/", shm_path, oj_home);
-    execute_cmd("/bin/chown judge %s ", shm_path);
-    execute_cmd("chmod 755 %s ", shm_path);
-    //sim need a soft link in shm_dir to work correctly
-    sprintf(shm_path, "/dev/shm/hustoj/%s/", oj_home);
-    execute_cmd("/bin/ln -s %s/data %s", oj_home, shm_path);
-}
-
-
 void print_call_array() {
     printf("int LANG_%sV[256]={", LANG_NAME);
     int i = 0;
@@ -1661,7 +1309,6 @@ void print_call_array() {
         }
     }
     printf("0};\n");
-
 }
 
 
@@ -1743,37 +1390,20 @@ int main(int argc, char **argv) {
     bundle.setPassRate(ZERO_PASSRATE);
     webSocket << bundle.toJSONString();
     if (compile(lang, work_dir) != COMPILED) {
-//        addceinfo(solution_id);
-        string _compile_info, tmp;
-        fstream ceinformation("ce.txt");
-        while (getline(ceinformation, tmp)) {
-            _compile_info += tmp + "\n";
-        }
-        bundle.clear();
+        string _compile_info = getFileContent("ce.txt");
         bundle.setJudger(http_username);
         bundle.setSolutionID(solution_id);
         bundle.setResult(COMPILE_ERROR);
         bundle.setFinished(FINISHED);
-        bundle.setUsedTime(ZERO_TIME);
-        bundle.setMemoryUse(ZERO_MEMORY);
-        bundle.setPassPoint(ZERO_PASSPOINT);
-        bundle.setPassRate(ZERO_PASSRATE);
         bundle.setCompileInfo(_compile_info);
         webSocket << bundle.toJSONString();
-        // update_solution(solution_id, COMPILE_ERROR, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
-        // update_user(user_id);
-        // update_problem(p_id);
-        //mysql_close(conn);
         clean_workdir(work_dir);
         removeSubmissionInfo(solution_id);
         write_log(oj_home, "compile error");
         exit(0);
     } else {
-        // update_solution(solution_id, RUNNING_JUDGING, ZERO_TIME, ZERO_MEMORY, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         umount(work_dir);
     }
-    //exit(0);
-    // run
     char fullpath[BUFFER_SIZE];
     char infile[BUFFER_SIZE];
     char outfile[BUFFER_SIZE];
@@ -1841,15 +1471,9 @@ int main(int argc, char **argv) {
             getCustomInputFromSubmissionInfo(submissionInfo);
         }
         init_syscalls_limits(lang);
-        bundle.clear();
         bundle.setJudger(http_username);
         bundle.setSolutionID(solution_id);
         bundle.setResult(RUNNING_JUDGING);
-        bundle.setFinished(NOT_FINISHED);
-        bundle.setUsedTime(ZERO_TIME);
-        bundle.setMemoryUse(ZERO_MEMORY);
-        bundle.setPassPoint(ZERO_PASSPOINT);
-        bundle.setPassRate(ZERO_PASSRATE);
         webSocket << bundle.toJSONString();
         //        webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
         //                            ZERO_PASSRATE);
@@ -1916,24 +1540,6 @@ int main(int argc, char **argv) {
         bundle.setPassRate(ZERO_PASSRATE);
         bundle.setTestRunResult(test_run_out);
         webSocket << bundle.toJSONString();
-//        webSocket << ws_send(solution_id, TEST_RUN, FINISHED, usedtime, topmemory / ONE_KILOBYTE, ZERO_PASSPOINT,
-        //                           ZERO_PASSRATE,
-        //                          test_run_out);
-
-        auto fpid = fork();
-        if (fpid == CHILD_PROCESS) {
-            if (!conn.start()) {
-                if (DEBUG) {
-                    cout << "Init mysql connection ERROR in custom input database insert" << endl;
-                }
-            } else {
-                add_reinfo_mysql_by_string(solution_id, test_run_out);
-                //mysql_close(conn);
-            }
-            exit(0);
-        }
-
-        // update_solution(solution_id, TEST_RUN, usedtime, topmemory / ONE_KILOBYTE, ZERO_SIM, ZERO_SIM, ZERO_PASSRATE);
         clean_workdir(work_dir);
         removeSubmissionInfo(solution_id);
         //mysql_close(conn);
@@ -1943,22 +1549,11 @@ int main(int argc, char **argv) {
     int pass_point = ZERO_PASSPOINT;
     vector<pair<string, int> >inFileList = getFileList(fullpath, isInFile);
     total_point = inFileList.size();
-    //dp = opendir(fullpath);
-    bundle.clear();
     bundle.setJudger(http_username);
     bundle.setSolutionID(solution_id);
     bundle.setResult(RUNNING_JUDGING);
-    bundle.setFinished(NOT_FINISHED);
-    bundle.setUsedTime(ZERO_TIME);
-    bundle.setMemoryUse(ZERO_MEMORY);
-    bundle.setPassPoint(ZERO_PASSPOINT);
-    bundle.setPassRate(ZERO_PASSRATE);
     bundle.setTotalPoint(total_point);
     webSocket << bundle.toJSONString();
-    //webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
-    //                     ZERO_PASSRATE);
-
-
     for (auto& infilePair: inFileList) {
         if(!(ALL_TEST_MODE || ACflg == ACCEPT || ACflg == PRESENTATION_ERROR) && ACflg != TIME_LIMIT_EXCEEDED) {
             break;
