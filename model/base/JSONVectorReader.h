@@ -29,9 +29,15 @@ public:
 
     vector<string> GetArray(const string& key);
 
-    string GetString(string key);
+    string GetString(const string& key);
 
-    int GetInt(string key);
+    int GetInt(const string& key);
+
+    bool GetBool(const string& key);
+
+    double GetDouble(const string& key);
+
+    bool has(const string& key);
 
     void documentIsLoaded();
 

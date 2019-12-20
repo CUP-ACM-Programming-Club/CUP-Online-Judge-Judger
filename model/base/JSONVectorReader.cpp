@@ -49,7 +49,7 @@ vector<string> JSONVectorReader::GetArray(const string& key) {
     return vec;
 }
 
-string JSONVectorReader::GetString(string key) {
+string JSONVectorReader::GetString(const string& key) {
     documentIsLoaded();
     auto findMember = document.FindMember(key.c_str());
     if(findMember == document.MemberEnd()) {
@@ -60,7 +60,7 @@ string JSONVectorReader::GetString(string key) {
     return string(val.GetString());
 }
 
-int JSONVectorReader::GetInt(string key) {
+int JSONVectorReader::GetInt(const string& key) {
     documentIsLoaded();
     auto findMember = document.FindMember(key.c_str());
     if(findMember == document.MemberEnd()) {
@@ -77,4 +77,24 @@ void JSONVectorReader::documentIsLoaded() {
     }
 }
 
+bool JSONVectorReader::GetBool(const string& key) {
+    documentIsLoaded();
+    auto& val = document[key.c_str()];
+    ASSERT_VALID(val.IsBool());
+    return val.GetBool();
+}
 
+bool JSONVectorReader::has(const string &key) {
+    documentIsLoaded();
+    auto findMember = document.FindMember(key.c_str());
+    if (findMember == document.MemberEnd()) {
+        return false;
+    }
+}
+
+double JSONVectorReader::GetDouble(const string &key) {
+    documentIsLoaded();
+    auto& val = document[key.c_str()];
+    ASSERT_VALID(val.IsDouble());
+    return val.GetDouble();
+}

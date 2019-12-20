@@ -2018,9 +2018,9 @@ int main(int argc, char **argv) {
     bundle.setSim(sim);
     bundle.setSimSource(sim_s_id);
     webSocket << bundle.toJSONString();
-    string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
-                 to_string(solution_id);
-    conn.query(conn, sql, sql.length());
+//    string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
+//                 to_string(solution_id);
+//    conn.query(conn, sql, sql.length());
 
     if (ALL_TEST_MODE) {
         if (num_of_test > 0) {
