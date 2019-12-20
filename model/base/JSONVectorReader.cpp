@@ -24,11 +24,11 @@ bool JSONVectorReader::loadFile(const string &filePath) {
         s += line;
     }
     JSON_FILE.close();
-    return isLoad = !document.ParseInsitu((char *) s.c_str()).HasParseError();
+    return isLoad = !document.Parse((char *) s.c_str()).HasParseError();
 }
 
 bool JSONVectorReader::loadJSON(const string& jsonPlainText) {
-    return !document.ParseInsitu((char *) jsonPlainText.c_str()).HasParseError();
+    return !document.Parse((char *) jsonPlainText.c_str()).HasParseError();
 }
 
 vector<string> JSONVectorReader::GetArray(const string& key) {
