@@ -63,6 +63,7 @@
 
 #include "library/judge_lib.h"
 #include "model/base/MySQLAutoPointer.h"
+#include "model/SubmissionInfo.h"
 using namespace std;
 using json = nlohmann::json;
 using CompilerArgsReader = JSONVectorReader;
@@ -813,6 +814,19 @@ void get_solution(int solution_id, char *work_dir, int lang, char *usercode) {
     fclose(fp_src);
 }
 
+void getSolutionFromSubmissionInfo(SubmissionInfo& submissionInfo, char* usercode) {
+    char src_pth[BUFFER_SIZE];
+    sprintf(usercode, "%s", submissionInfo.getSource().c_str());
+    sprintf(src_pth, "Main.%s", lang_ext[submissionInfo.getLanguage()]);
+    if (DEBUG) {
+        printf("Main=%s", src_pth);
+        cout << usercode << endl;
+    }
+    FILE *fp_src = fopen(src_pth, "we");
+    fprintf(fp_src, "%s", usercode);
+    fclose(fp_src);
+}
+
 
 void get_custominput(int solution_id, char *work_dir) {
     char sql[BUFFER_SIZE], src_pth[BUFFER_SIZE];
@@ -836,6 +850,14 @@ void get_custominput(int solution_id, char *work_dir) {
     mysql_free_result(res);
 }
 
+void getCustomInputFromSubmissionInfo(SubmissionInfo& submissionInfo) {
+    char src_pth[BUFFER_SIZE];
+    sprintf(src_pth, "data.in");
+    FILE *fp_src = fopen(src_pth, "w");
+    fprintf(fp_src, "%s", submissionInfo.getCustomInput().c_str());
+    fclose(fp_src);
+}
+
 void get_problem_info(int p_id, double &time_lmt, int &mem_lmt, int &isspj) {
     char sql[BUFFER_SIZE];
     MYSQL_RES *res;
@@ -853,6 +875,15 @@ void get_problem_info(int p_id, double &time_lmt, int &mem_lmt, int &isspj) {
     if (time_lmt <= 0)
         time_lmt = 1;
 
+}
+
+void getProblemInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, double& time_lmt, int& mem_lmt, int& isspj) {
+    time_lmt = submissionInfo.getTimeLimit();
+    mem_lmt = int(submissionInfo.getMemoryLimit());
+    isspj = int(submissionInfo.getSpecialJudge());
+    if (time_lmt <= 0) {
+        time_lmt = 1;
+    }
 }
 
 void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
@@ -1638,6 +1669,7 @@ int main(int argc, char **argv) {
     char work_dir[BUFFER_SIZE];
     char usercode[CODESIZE];
     char user_id[BUFFER_SIZE];
+    SubmissionInfo submissionInfo;
     solution_id = DEFAULT_SOLUTION_ID;
     int runner_id = 0;
     int p_id, memoryLimit, lang, SPECIAL_JUDGE, sim, sim_s_id = ZERO_SIM;
@@ -1658,14 +1690,24 @@ int main(int argc, char **argv) {
         mk_shm_workdir(work_dir);
 
     chdir(work_dir);
-    get_solution_info(solution_id, p_id, user_id, lang);
-    get_problem_info(abs(p_id), timeLimit, memoryLimit, SPECIAL_JUDGE);
+    if (MYSQL_MODE) {
+        get_solution_info(solution_id, p_id, user_id, lang);
+        get_problem_info(abs(p_id), timeLimit, memoryLimit, SPECIAL_JUDGE);
+        get_solution(solution_id, work_dir, lang, usercode);
+    }
+    else {
+        buildSubmissionInfo(submissionInfo, solution_id);
+        getSolutionInfoFromSubmissionInfo(submissionInfo, p_id, user_id, lang);
+        getProblemInfoFromSubmissionInfo(submissionInfo, timeLimit, memoryLimit, SPECIAL_JUDGE);
+        getSolutionFromSubmissionInfo(submissionInfo, usercode);
+    }
+/*
+*/
     //get the limit
     if (p_id <= TEST_RUN_SUBMIT) {//Is custom input
         SPECIAL_JUDGE = NONE_SPECIAL_JUDGE;
     }
     //copy source file
-    get_solution(solution_id, work_dir, lang, usercode);
     //java is lucky
     if (lang != OBJC && !isCOrCPP(lang) && lang != PASCAL) {  // Clang Clang++ not VM or Script
         // the limit for java
@@ -1791,7 +1833,12 @@ int main(int argc, char **argv) {
     int finalACflg = ACflg;
     if (p_id <= TEST_RUN_PROBLEM) {  //custom input running
         printf("running a custom input...\n");
-        get_custominput(solution_id, work_dir);
+        if (MYSQL_MODE) {
+            get_custominput(solution_id, work_dir);
+        }
+        else {
+            getCustomInputFromSubmissionInfo(submissionInfo);
+        }
         init_syscalls_limits(lang);
         bundle.clear();
         bundle.setJudger(http_username);

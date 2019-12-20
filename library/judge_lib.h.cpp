@@ -5,6 +5,7 @@
 #include <dirent.h>
 #include "judge_lib.h"
 #include "../header/static_var.h"
+#include "../model/SubmissionInfo.h"
 
 using namespace std;
 using json = nlohmann::json;
@@ -865,6 +866,17 @@ void get_solution_info_from_mysql(int solution_id, int& p_id, char *user_id, int
     strcpy(user_id, row[1]);
     lang = atoi(row[2]);
     mysql_free_result(res);
+}
+
+void getSolutionInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, int& p_id, char* user_id, int& lang) {
+    p_id = submissionInfo.getProblemId();
+    sprintf(user_id, "%s", submissionInfo.getUserId().c_str());
+    lang = submissionInfo.getLanguage();
+}
+
+void buildSubmissionInfo(SubmissionInfo& submissionInfo, int solution_id) {
+    string filePath = string(oj_home) + "/submission/" + to_string(solution_id) + ".json";
+    submissionInfo.readFromFile(filePath);
 }
 
 vector<pair<string, int> >getFileList(const string& path, function<int(const char*)> func) {

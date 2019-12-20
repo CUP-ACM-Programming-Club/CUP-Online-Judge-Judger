@@ -11,6 +11,7 @@
 #include <fstream>
 #include <deque>
 #include "json.hpp"
+#include "../model/SubmissionInfo.h"
 #include <cstdarg>
 #include <future>
 
@@ -137,6 +138,10 @@ extern bool initWebSocketConnection(string& ip, int port);
 extern void get_solution_info(int, int&, char*, int&);
 
 extern void get_solution_info_from_mysql(int, int&, char*, int&);
+
+extern void getSolutionInfoFromSubmissionInfo(SubmissionInfo&, int&, char*, int&);
+
+extern void buildSubmissionInfo(SubmissionInfo&, int);
 
 extern vector<pair<string, int> >getFileList(const string& path, function<int(const char*)>);
 
