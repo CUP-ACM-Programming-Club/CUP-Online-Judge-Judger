@@ -955,7 +955,7 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
 
 string getFileContent(const string& file) {
     string content, tmp;
-    fstream fileStream("ce.txt");
+    fstream fileStream(file.c_str());
     while (getline(fileStream, tmp)) {
         content += tmp + "\n";
     }
@@ -1034,4 +1034,51 @@ void print_runtimeerror(const char *err) {
     FILE *ferr = fopen("error.out", "a+");
     fprintf(ferr, "Runtime Error:%s\n", err);
     fclose(ferr);
+}
+
+
+void getProblemInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, double& time_lmt, int& mem_lmt, int& isspj) {
+    time_lmt = submissionInfo.getTimeLimit();
+    mem_lmt = int(submissionInfo.getMemoryLimit());
+    isspj = int(submissionInfo.getSpecialJudge());
+    if (time_lmt <= 0) {
+        time_lmt = 1;
+    }
+}
+
+
+void getCustomInputFromSubmissionInfo(SubmissionInfo& submissionInfo) {
+    char src_pth[BUFFER_SIZE];
+    sprintf(src_pth, "data.in");
+    FILE *fp_src = fopen(src_pth, "w");
+    fprintf(fp_src, "%s", submissionInfo.getCustomInput().c_str());
+    fclose(fp_src);
+}
+
+
+void getSolutionFromSubmissionInfo(SubmissionInfo& submissionInfo, char* usercode) {
+    char src_pth[BUFFER_SIZE];
+    sprintf(usercode, "%s", submissionInfo.getSource().c_str());
+    sprintf(src_pth, "Main.%s", lang_ext[submissionInfo.getLanguage()]);
+    if (DEBUG) {
+        printf("Main=%s", src_pth);
+        cout << usercode << endl;
+    }
+    FILE *fp_src = fopen(src_pth, "we");
+    fprintf(fp_src, "%s", usercode);
+    fclose(fp_src);
+}
+
+
+string getRuntimeInfoContents(const string& filename) {
+    char buffer[4096];
+    string runtimeInfo;
+    FILE *fp = fopen(filename.c_str(), "re");
+    while (fgets(buffer, 1024, fp)) {
+        runtimeInfo += buffer;
+        if (runtimeInfo.length() > 4096) {
+            break;
+        }
+    }
+    return runtimeInfo;
 }

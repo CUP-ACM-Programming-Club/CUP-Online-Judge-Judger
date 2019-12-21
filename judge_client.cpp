@@ -450,19 +450,6 @@ int compare(const char *file1, const char *file2) {
 #endif
 }
 
-string getRuntimeInfoContents(const string& filename) {
-    char buffer[4096];
-    string runtimeInfo;
-    FILE *fp = fopen(filename.c_str(), "re");
-    while (fgets(buffer, 1024, fp)) {
-        runtimeInfo += buffer;
-        if (runtimeInfo.length() > 4096) {
-            break;
-        }
-    }
-    return runtimeInfo;
-}
-
 int compile(int lang, char *work_dir) {
     int pid;
     //webSocket << ws_send(solution_id, 2, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE);
@@ -616,20 +603,6 @@ void get_solution(int solution_id, char *work_dir, int lang, char *usercode) {
     fclose(fp_src);
 }
 
-void getSolutionFromSubmissionInfo(SubmissionInfo& submissionInfo, char* usercode) {
-    char src_pth[BUFFER_SIZE];
-    sprintf(usercode, "%s", submissionInfo.getSource().c_str());
-    sprintf(src_pth, "Main.%s", lang_ext[submissionInfo.getLanguage()]);
-    if (DEBUG) {
-        printf("Main=%s", src_pth);
-        cout << usercode << endl;
-    }
-    FILE *fp_src = fopen(src_pth, "we");
-    fprintf(fp_src, "%s", usercode);
-    fclose(fp_src);
-}
-
-
 void get_custominput(int solution_id, char *work_dir) {
     char sql[BUFFER_SIZE], src_pth[BUFFER_SIZE];
     // get the source code
@@ -652,14 +625,6 @@ void get_custominput(int solution_id, char *work_dir) {
     mysql_free_result(res);
 }
 
-void getCustomInputFromSubmissionInfo(SubmissionInfo& submissionInfo) {
-    char src_pth[BUFFER_SIZE];
-    sprintf(src_pth, "data.in");
-    FILE *fp_src = fopen(src_pth, "w");
-    fprintf(fp_src, "%s", submissionInfo.getCustomInput().c_str());
-    fclose(fp_src);
-}
-
 void get_problem_info(int p_id, double &time_lmt, int &mem_lmt, int &isspj) {
     char sql[BUFFER_SIZE];
     MYSQL_RES *res;
@@ -677,15 +642,6 @@ void get_problem_info(int p_id, double &time_lmt, int &mem_lmt, int &isspj) {
     if (time_lmt <= 0)
         time_lmt = 1;
 
-}
-
-void getProblemInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, double& time_lmt, int& mem_lmt, int& isspj) {
-    time_lmt = submissionInfo.getTimeLimit();
-    mem_lmt = int(submissionInfo.getMemoryLimit());
-    isspj = int(submissionInfo.getSpecialJudge());
-    if (time_lmt <= 0) {
-        time_lmt = 1;
-    }
 }
 
 void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
@@ -1504,15 +1460,7 @@ int main(int argc, char **argv) {
         }
         string test_run_out;
         if (ACflg == ACCEPT) {
-            char reinfo[(1u << 16)];
-            FILE *fp = fopen("user.out", "re");
-            while (fgets(reinfo, 1u << 16, fp)) {
-                string tmp(reinfo);
-                test_run_out += tmp;
-                if (test_run_out.length() > 4096)
-                    break;
-            }
-            fclose(fp);
+            test_run_out = getRuntimeInfoContents("user.out");
         } else {
             test_run_out = error_message;
         }
@@ -1592,7 +1540,6 @@ int main(int argc, char **argv) {
                     max_case_time = max(usedtime, max_case_time);
                     usedtime = ZERO_TIME;
                 }
-                //clean_session(pidApp);
             }
 
             if (usedtime > timeLimit * 1000 || ACflg == TIME_LIMIT_EXCEEDED) {
@@ -1649,8 +1596,6 @@ int main(int argc, char **argv) {
         runtimeInfo = getRuntimeInfoContents("diff.out");
         if (DEBUG)
             printf("add diff info of %d..... \n", solution_id);
-        // if (!SPECIAL_JUDGE)
-//        add_reinfo_mysql_by_string(solution_id, runtimeInfo);
     }
     bundle.setResult(ALL_TEST_MODE ? finalACflg : ACflg);
     bundle.setFinished(FINISHED);
@@ -1662,9 +1607,6 @@ int main(int argc, char **argv) {
     bundle.setSim(sim);
     bundle.setSimSource(sim_s_id);
     webSocket << bundle.toJSONString();
-//    string sql = "UPDATE solution set pass_point=" + to_string(pass_point) + " WHERE solution_id=" +
-//                 to_string(solution_id);
-//    conn.query(conn, sql, sql.length());
 
     if (ALL_TEST_MODE) {
         if (num_of_test > 0) {
@@ -1673,20 +1615,15 @@ int main(int argc, char **argv) {
         if (DEBUG) {
             cout << "Write Usedtime: " << usedtime << endl;
         }
-        // update_solution(solution_id, finalACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
-        //                sim_s_id, pass_rate);
     } else {
-        // update_solution(solution_id, ACflg, usedtime, topmemory / ONE_KILOBYTE, sim,
-        //                sim_s_id, ZERO_PASSRATE);
+
     }
 
-    // update_user(user_id);
-    // update_problem(p_id);
     clean_workdir(work_dir);
     removeSubmissionInfo(solution_id);
-    if (DEBUG)
+    if (DEBUG) {
         write_log(oj_home, "result=%d", ALL_TEST_MODE ? finalACflg : ACflg);
-    //mysql_close(conn);
+    }
     if (record_call) {
         print_call_array();
     }

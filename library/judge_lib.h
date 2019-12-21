@@ -164,4 +164,12 @@ void fix_python_syntax_error_response(int &ACflg, int lang);
 
 void print_runtimeerror(const char *err);
 
+void getProblemInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, double& time_lmt, int& mem_lmt, int& isspj);
+
+void getCustomInputFromSubmissionInfo(SubmissionInfo& submissionInfo);
+
+void getSolutionFromSubmissionInfo(SubmissionInfo& submissionInfo, char* usercode);
+
+string getRuntimeInfoContents(const string& filename);
+
 #endif //JUDGE_CLIENT_JUDGE_LIB_H
