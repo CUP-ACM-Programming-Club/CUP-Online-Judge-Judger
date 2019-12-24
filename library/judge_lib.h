@@ -12,6 +12,8 @@
 #include <deque>
 #include "json.hpp"
 #include "../model/SubmissionInfo.h"
+#include "../model/judge/language/Language.h"
+#include "../model/judge/language/C11.h"
 #include <cstdarg>
 #include <future>
 
@@ -143,33 +145,34 @@ extern void getSolutionInfoFromSubmissionInfo(SubmissionInfo&, int&, char*, int&
 
 extern void buildSubmissionInfo(SubmissionInfo&, int);
 
-void removeSubmissionInfo(int);
+extern void removeSubmissionInfo(int);
 
 extern vector<pair<string, int> >getFileList(const string& path, function<int(const char*)>);
 
 extern vector<pair<string, int> >getFileList(const string& path);
 
-int get_sim(int solution_id, int lang, int pid, int &sim_s_id);
+extern int get_sim(int solution_id, int lang, int pid, int &sim_s_id);
 
-string getFileContent(const string& file);
+extern string getFileContent(const string& file);
 
-void mk_shm_workdir(char *work_dir);
+extern void mk_shm_workdir(char *work_dir);
 
-int get_proc_status(int pid, const char *mark);
+extern int get_proc_status(int pid, const char *mark);
 
-void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
+extern void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
                    char *work_dir, char *outfile, char *userfile, int runner_id);
 
-void fix_python_syntax_error_response(int &ACflg, int lang);
+extern void fix_python_syntax_error_response(int &ACflg, int lang);
 
-void print_runtimeerror(const char *err);
+extern void print_runtimeerror(const char *err);
 
-void getProblemInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, double& time_lmt, int& mem_lmt, int& isspj);
+extern void getProblemInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, double& time_lmt, int& mem_lmt, int& isspj);
 
-void getCustomInputFromSubmissionInfo(SubmissionInfo& submissionInfo);
+extern void getCustomInputFromSubmissionInfo(SubmissionInfo& submissionInfo);
 
-void getSolutionFromSubmissionInfo(SubmissionInfo& submissionInfo, char* usercode);
+extern void getSolutionFromSubmissionInfo(SubmissionInfo& submissionInfo, char* usercode);
 
-string getRuntimeInfoContents(const string& filename);
+extern string getRuntimeInfoContents(const string& filename);
 
+extern Language getLanguageModel(int language);
 #endif //JUDGE_CLIENT_JUDGE_LIB_H

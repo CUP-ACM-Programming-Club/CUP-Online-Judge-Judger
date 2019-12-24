@@ -153,14 +153,14 @@ void init_syscalls_limits(int lang) {
     } else if (lang == JAVASCRIPT) { //nodejs
         for (i = 0; i == 0 || LANG_JSV[i]; i++)
             call_counter[LANG_JSV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == GO) { //go
+    } else if (lang == L_GO) { //go
         for (i = 0; i == 0 || LANG_GOV[i]; i++)
             call_counter[LANG_GOV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == PyPy) {
+    } else if (lang == PYPY) {
         for (i = 0; i == 0 || LANG_PYPYV[i]; ++i) {
             call_counter[LANG_PYPYV[i]] = HOJ_MAX_LIMIT;
         }
-    } else if (lang == PyPy3) {
+    } else if (lang == PYPY3) {
         for (i = 0; i == 0 || LANG_PYPY3V[i]; ++i) {
             call_counter[LANG_PYPY3V[i]] = HOJ_MAX_LIMIT;
         }
@@ -471,7 +471,7 @@ int compile(int lang, char *work_dir) {
         LIM.rlim_cur = static_cast<rlim_t>(10 * COMPILE_STD_MB);
         setrlimit(RLIMIT_FSIZE, &LIM);
 
-        if (isJava(lang) || lang == GO) {
+        if (isJava(lang) || lang == L_GO) {
             LIM.rlim_max = static_cast<rlim_t>(COMPILE_STD_MB << 11);
             LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB << 11);
         } else {
@@ -664,6 +664,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     if (!isJava(lang)) {
         chroot(work_dir);
     }
+    Language languageModel = getLanguageModel(lang);
 
     while (setgid(1536) != 0)
         sleep(1);
@@ -693,28 +694,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     LIM.rlim_cur = (STD_F_LIM << 2);
     setrlimit(RLIMIT_FSIZE, &LIM);
     // proc limit
-    switch (lang) {
-        case GO:
-            LIM.rlim_cur = LIM.rlim_max = 280;
-            break;
-        case JAVA:  //java
-        case RUBY:  //ruby
-        case CSHARP: //C#
-        case SCHEMA:
-        case JAVASCRIPT:
-        case JAVA7:
-        case JAVA8:
-        case JAVA6:
-            LIM.rlim_cur = LIM.rlim_max = 80;
-            break;
-        case BASH: //bash
-            LIM.rlim_cur = LIM.rlim_max = 3;
-            break;
-        default:
-            LIM.rlim_cur = LIM.rlim_max = 1;
-    }
-
-    setrlimit(RLIMIT_NPROC, &LIM);
+    languageModel.setProcessLimit();
 
     // set the stack
     LIM.rlim_cur = static_cast<rlim_t>(STD_MB << 7);
@@ -726,92 +706,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     if (lang < JAVA || isCOrCPP(lang)) {
         setrlimit(RLIMIT_AS, &LIM);
     }
-
-    switch (lang) {
-        case C11:
-        case CPP17:
-        case PASCAL:
-        case OBJC:
-        case FREEBASIC:
-        case CLANG:
-        case CLANGPP:
-        case CLANG11:
-        case CLANGPP17:
-        case GO:
-        case CPP11:
-        case CPP98:
-        case C99:
-            execl("./Main", "./Main", (char *) nullptr);
-            break;
-        case JAVA:
-            sprintf(java_xms, "-Xmx%dM", mem_lmt);
-            sprintf(java_xmx, "-XX:MaxMetaspaceSize=%dM", mem_lmt);
-            execl("/usr/bin/java", "/usr/bin/java", java_xms, java_xmx,
-                  "-Djava.security.manager",
-                  "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
-            break;
-        case JAVA7:
-            sprintf(java_xms, "-Xmx%dM", mem_lmt);
-            sprintf(java_xmx, "-XX:MaxPermSize=%dM", mem_lmt);
-            execl("/usr/bin/java-7", "/usr/bin/java-7", java_xms, java_xmx,
-                  "-Djava.security.manager",
-                  "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
-            break;
-        case JAVA8:
-            sprintf(java_xms, "-Xmx%dM", mem_lmt);
-            sprintf(java_xmx, "-XX:MaxMetaspaceSize=%dM", mem_lmt);
-            execl("/usr/bin/java-8", "/usr/bin/java-8", java_xms, java_xmx,
-                  "-Djava.security.manager",
-                  "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
-            break;
-        case JAVA6:
-            sprintf(java_xms, "-Xmx%dM", mem_lmt);
-            sprintf(java_xmx, "-XX:MaxPermSize=%dM", mem_lmt);
-            execl("/usr/bin/java-6", "/usr/bin/java-6", java_xms, java_xmx,
-                  "-Djava.security.manager",
-                  "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
-            break;
-        case RUBY:
-            //system("/ruby Main.rb<data.in");
-            execl("/ruby", "/ruby", "Main.rb", (char *) nullptr);
-            break;
-        case BASH: //bash
-            execl("/bin/bash", "/bin/bash", "Main.sh", (char *) nullptr);
-            break;
-        case PYTHON2: //Python
-            execl("/python2", "/python2", "Main.py", (char *) nullptr);
-            break;
-        case PHP: //php
-            execl("/php", "/php", "Main.php", (char *) nullptr);
-            break;
-        case PERL: //perl
-            execl("/perl", "/perl", "Main.pl", (char *) nullptr);
-            break;
-        case CSHARP: //Mono C#
-            execl("/mono", "/mono", "--debug", "Main.exe", (char *) nullptr);
-            break;
-        case SCHEMA: //guile
-            execl("/guile", "/guile", "Main.scm", (char *) nullptr);
-            break;
-        case LUA: //guile
-            execl("/lua", "/lua", "Main", (char *) nullptr);
-            break;
-        case JAVASCRIPT: //SpiderMonkey
-            execl("/node", "/node", "Main.js", (char *) nullptr);
-            break;
-        case PYTHON3://python 3
-            //system("./python3 Main.py<data.in>>user.out");
-            execl("/python3", "/python3", "Main.py", (char *) nullptr);
-            break;
-        case PyPy:
-            execl("/pypy/bin/pypy", "/pypy/bin/pypy", "Main.py", (char *) nullptr);
-            break;
-        case PyPy3:
-            execl("/pypy3/bin/pypy3", "/pypy3/bin/pypy3", "Main.py", (char *) nullptr);
-            break;
-        default:
-            break;
-    }
+    languageModel.run(mem_lmt);
     //sleep(1);
     fflush(stderr);
     exit(0);
@@ -966,7 +861,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
     if (isJava(lang)) {
         fix_java_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
     }
-    if (lang == PYTHON2 || lang == PYTHON3 || lang == PyPy || lang == PyPy3) {
+    if (lang == PYTHON2 || lang == PYTHON3 || lang == PYPY || lang == PYPY3) {
         fix_python_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
     }
 }
@@ -1010,7 +905,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         //jvm gc ask VM before need,so used kernel page fault times and page size
         if (isJava(lang) || lang == PHP ||
             lang == JAVASCRIPT || lang == CSHARP ||
-            lang == GO  || isCOrCPP(lang)) {
+            lang == L_GO || isCOrCPP(lang)) {
             tempmemory = get_page_fault_mem(ruse, pidApp);
         } else {        //other use VmPeak
             tempmemory = get_proc_status(pidApp, "VmPeak:") << 10;
@@ -1382,10 +1277,10 @@ int main(int argc, char **argv) {
         case PYTHON3:
             copy_python_runtime(work_dir);
             break;
-        case PyPy:
+        case PYPY:
             copy_pypy_runtime(work_dir);
             break;
-        case PyPy3:
+        case PYPY3:
             copy_pypy3_runtime(work_dir);
             break;
         case PHP:

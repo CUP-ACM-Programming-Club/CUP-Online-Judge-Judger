@@ -6,6 +6,34 @@
 #include "judge_lib.h"
 #include "../header/static_var.h"
 #include "../model/SubmissionInfo.h"
+#include "../model/judge/language/Cpp17.h"
+#include "../model/judge/language/Pascal.h"
+#include "../model/judge/language/Java.h"
+#include "../model/judge/language/Ruby.h"
+#include "../model/judge/language/Bash.h"
+#include "../model/judge/language/Python2.h"
+#include "../model/judge/language/Php.h"
+#include "../model/judge/language/Perl.h"
+#include "../model/judge/language/Csharp.h"
+#include "../model/judge/language/Objc.h"
+#include "../model/judge/language/FreeBasic.h"
+#include "../model/judge/language/Schema.h"
+#include "../model/judge/language/Clang.h"
+#include "../model/judge/language/Clangpp.h"
+#include "../model/judge/language/Lua.h"
+#include "../model/judge/language/JavaScript.h"
+#include "../model/judge/language/Go.h"
+#include "../model/judge/language/Python3.h"
+#include "../model/judge/language/Cpp11.h"
+#include "../model/judge/language/Cpp98.h"
+#include "../model/judge/language/C99.h"
+#include "../model/judge/language/Java8.h"
+#include "../model/judge/language/Java7.h"
+#include "../model/judge/language/PyPy.h"
+#include "../model/judge/language/PyPy3.h"
+#include "../model/judge/language/Java6.h"
+#include "../model/judge/language/Clang11.h"
+#include "../model/judge/language/Clangpp17.h"
 
 using namespace std;
 using json = nlohmann::json;
@@ -182,8 +210,8 @@ bool isJava(const int lang) {
 
 bool isC(const int lang) {
     switch (lang) {
-        case C11:
-        case C99:
+        case L_C11:
+        case L_C99:
         case CLANG:
         case CLANG11:
             return true;
@@ -195,7 +223,7 @@ bool isC(const int lang) {
 bool isCPP(const int lang) {
     switch (lang) {
         case CPP11:
-        case CPP17:
+        case L_CPP17:
         case CPP98:
         case CLANGPP:
         case CLANGPP17:
@@ -1013,7 +1041,7 @@ void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
 
 void fix_python_syntax_error_response(int &ACflg, int lang) {
     if (ACflg != ACCEPT) return;
-    if (lang == PYTHON2 || lang == PYTHON3 || lang == PyPy || lang == PyPy3) {
+    if (lang == PYTHON2 || lang == PYTHON3 || lang == PYPY || lang == PYPY3) {
         cerr << "Try to get sizeof error.out" << endl;
         auto error_size = get_file_size("error.out");
         cerr << "Error size:" << error_size << endl;
@@ -1048,6 +1076,9 @@ void getProblemInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, double& ti
 
 
 void getCustomInputFromSubmissionInfo(SubmissionInfo& submissionInfo) {
+    if (DEBUG) {
+        cout << submissionInfo.getCustomInput() << endl;
+    }
     char src_pth[BUFFER_SIZE];
     sprintf(src_pth, "data.in");
     FILE *fp_src = fopen(src_pth, "w");
@@ -1081,4 +1112,72 @@ string getRuntimeInfoContents(const string& filename) {
         }
     }
     return runtimeInfo;
+}
+
+Language getLanguageModel(int language) {
+    switch (language) {
+        case L_C11:
+            return C11();
+        case L_CPP17:
+            return Cpp17();
+        case PASCAL:
+            return Pascal();
+        case JAVA:
+            return Java();
+        case RUBY:
+            return Ruby();
+        case BASH:
+            return Bash();
+        case PYTHON2:
+            return Python2();
+        case PHP:
+            return Php();
+        case PERL:
+            return Perl();
+        case CSHARP:
+            return Csharp();
+        case OBJC:
+            return Objc();
+        case FREEBASIC:
+            return FreeBasic();
+        case SCHEMA:
+            return Schema();
+        case CLANG:
+            return Clang();
+        case CLANGPP:
+            return Clangpp();
+        case LUA:
+            return Lua();
+        case JAVASCRIPT:
+            return JavaScript();
+        case L_GO:
+            return Go();
+        case PYTHON3:
+            return Python3();
+        case CPP11:
+            return Cpp11();
+        case CPP98:
+            return Cpp98();
+        case L_C99:
+            return C99();
+        case KOTLIN:
+            break;
+        case JAVA8:
+            return Java8();
+        case JAVA7:
+            return Java7();
+        case PYPY:
+            return PyPy();
+        case PYPY3:
+            return PyPy3();
+        case JAVA6:
+            return Java6();
+        case CLANG11:
+            return Clang11();
+        case CLANGPP17:
+            return Clangpp17();
+        default:
+            break;
+    }
+    throw "No such language!";
 }
