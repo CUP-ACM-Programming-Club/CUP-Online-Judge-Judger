@@ -664,7 +664,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     if (!isJava(lang)) {
         chroot(work_dir);
     }
-    Language languageModel = getLanguageModel(lang);
+    shared_ptr<Language> languageModel(getLanguageModel(lang));
 
     while (setgid(1536) != 0)
         sleep(1);
@@ -694,7 +694,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     LIM.rlim_cur = (STD_F_LIM << 2);
     setrlimit(RLIMIT_FSIZE, &LIM);
     // proc limit
-    languageModel.setProcessLimit();
+    languageModel->setProcessLimit();
 
     // set the stack
     LIM.rlim_cur = static_cast<rlim_t>(STD_MB << 7);
@@ -706,7 +706,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     if (lang < JAVA || isCOrCPP(lang)) {
         setrlimit(RLIMIT_AS, &LIM);
     }
-    languageModel.run(mem_lmt);
+    languageModel->run(mem_lmt);
     //sleep(1);
     fflush(stderr);
     exit(0);

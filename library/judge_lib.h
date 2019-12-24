@@ -174,5 +174,5 @@ extern void getSolutionFromSubmissionInfo(SubmissionInfo& submissionInfo, char* 
 
 extern string getRuntimeInfoContents(const string& filename);
 
-extern Language getLanguageModel(int language);
+extern Language* getLanguageModel(int language);
 #endif //JUDGE_CLIENT_JUDGE_LIB_H

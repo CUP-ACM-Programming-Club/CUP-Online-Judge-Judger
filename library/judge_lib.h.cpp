@@ -1114,68 +1114,68 @@ string getRuntimeInfoContents(const string& filename) {
     return runtimeInfo;
 }
 
-Language getLanguageModel(int language) {
+Language* getLanguageModel(int language) {
     switch (language) {
         case L_C11:
-            return C11();
+            return new C11();
         case L_CPP17:
-            return Cpp17();
+            return new Cpp17();
         case PASCAL:
-            return Pascal();
+            return new Pascal();
         case JAVA:
-            return Java();
+            return new Java();
         case RUBY:
-            return Ruby();
+            return new Ruby();
         case BASH:
-            return Bash();
+            return new Bash();
         case PYTHON2:
-            return Python2();
+            return new Python2();
         case PHP:
-            return Php();
+            return new Php();
         case PERL:
-            return Perl();
+            return new Perl();
         case CSHARP:
-            return Csharp();
+            return new Csharp();
         case OBJC:
-            return Objc();
+            return new Objc();
         case FREEBASIC:
-            return FreeBasic();
+            return new FreeBasic();
         case SCHEMA:
-            return Schema();
+            return new Schema();
         case CLANG:
-            return Clang();
+            return new Clang();
         case CLANGPP:
-            return Clangpp();
+            return new Clangpp();
         case LUA:
-            return Lua();
+            return new Lua();
         case JAVASCRIPT:
-            return JavaScript();
+            return new JavaScript();
         case L_GO:
-            return Go();
+            return new Go();
         case PYTHON3:
-            return Python3();
+            return new Python3();
         case CPP11:
-            return Cpp11();
+            return new Cpp11();
         case CPP98:
-            return Cpp98();
+            return new Cpp98();
         case L_C99:
-            return C99();
+            return new C99();
         case KOTLIN:
             break;
         case JAVA8:
-            return Java8();
+            return new Java8();
         case JAVA7:
-            return Java7();
+            return new Java7();
         case PYPY:
-            return PyPy();
+            return new PyPy();
         case PYPY3:
-            return PyPy3();
+            return new PyPy3();
         case JAVA6:
-            return Java6();
+            return new Java6();
         case CLANG11:
-            return Clang11();
+            return new Clang11();
         case CLANGPP17:
-            return Clangpp17();
+            return new Clangpp17();
         default:
             break;
     }

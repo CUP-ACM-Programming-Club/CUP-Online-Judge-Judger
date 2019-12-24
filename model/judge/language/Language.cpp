@@ -11,6 +11,3 @@ void Language::setProcessLimit() {
     setrlimit(RLIMIT_NPROC, &LIM);
 }
 
-void Language::run(int memory) {
-
-}

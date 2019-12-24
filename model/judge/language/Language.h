@@ -7,8 +7,8 @@
 
 class Language {
 public:
-    void run(int memory);
-    void setProcessLimit();
+    virtual void run(int memory) = 0;
+    virtual void setProcessLimit();
 };
 
 
