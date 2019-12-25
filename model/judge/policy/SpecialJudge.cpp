@@ -8,6 +8,7 @@
 #include "unistd.h"
 #include "../../../header/static_var.h"
 #include <sys/resource.h>
+#include <sys/wait.h>
 
 using std::cout;
 using std::endl;
