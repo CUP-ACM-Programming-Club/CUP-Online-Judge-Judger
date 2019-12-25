@@ -7,6 +7,7 @@
 #include <fstream>
 #include "unistd.h"
 #include "../../../header/static_var.h"
+#include <sys/resource.h>
 
 using std::cout;
 using std::endl;
