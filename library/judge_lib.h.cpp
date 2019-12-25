@@ -1181,3 +1181,17 @@ Language* getLanguageModel(int language) {
     }
     throw "No such language!";
 }
+
+bool isPython(int language) {
+    switch (language) {
+        case PYTHON2:
+        case PYTHON3:
+        case PYPY:
+        case PYPY3:
+            return true;
+        default:
+            return false;
+    }
+    return false;
+}
+

@@ -175,4 +175,6 @@ extern void getSolutionFromSubmissionInfo(SubmissionInfo& submissionInfo, char* 
 extern string getRuntimeInfoContents(const string& filename);
 
 extern Language* getLanguageModel(int language);
+
+extern bool isPython(int language);
 #endif //JUDGE_CLIENT_JUDGE_LIB_H

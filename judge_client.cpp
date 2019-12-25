@@ -64,6 +64,8 @@
 #include "library/judge_lib.h"
 #include "model/base/MySQLAutoPointer.h"
 #include "model/SubmissionInfo.h"
+#include "model/judge/policy/SpecialJudge.h"
+
 using namespace std;
 using json = nlohmann::json;
 using CompilerArgsReader = JSONVectorReader;
@@ -712,106 +714,6 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     exit(0);
 }
 
-
-int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
-                  char *userfile, char *usercode, string& global_work_dir) {
-    pid_t pid;
-    printf("pid=%d\n", problem_id);
-    printf("%s\n", usercode);
-    string outfiled(global_work_dir);
-    outfiled += "usercode.code";
-    ofstream userout(outfiled);
-    userout << usercode;
-    userout.close();
-    fstream users(userfile);
-    string tmp;
-    freopen("/dev/tty", "w", stdout);
-    if (DEBUG) {
-        while (getline(users, tmp))
-            cout << tmp << endl;
-    }
-    pid = fork();
-    int ret = 0;
-    if (pid == CHILD_PROCESS) {
-        /*
-        if (false && !isWindowsSpecialJudge) {
-            while (setgid(1536) != 0)
-                sleep(1);
-            while (setuid(1536) != 0)
-                sleep(1);
-            while (setresuid(1536, 1536, 1536) != 0)
-                sleep(1);
-        }
-         */
-        freopen("diff.out", "a", stdout);
-
-        struct rlimit LIM{}; // time limit, file limit& memory limit
-
-        LIM.rlim_cur = FIVE;
-        LIM.rlim_max = LIM.rlim_cur;
-        setrlimit(RLIMIT_CPU, &LIM);
-        alarm(ZERO);
-        alarm(10);
-
-        // file limit
-        LIM.rlim_max = static_cast<rlim_t>(STD_F_LIM + STD_MB);
-        LIM.rlim_cur = static_cast<rlim_t>(STD_F_LIM);
-        setrlimit(RLIMIT_FSIZE, &LIM);
-        LIM.rlim_cur = LIM.rlim_max = 50 * STD_MB;
-        setrlimit(RLIMIT_FSIZE, &LIM);
-        LIM.rlim_cur = LIM.rlim_max = 1024 * STD_MB;
-        setrlimit(RLIMIT_AS, &LIM);
-        string dir = oj_home;
-        dir += "/data/" + to_string(problem_id) + "/";
-        if (~access((dir + "spj").c_str(), 0)) {
-            LIM.rlim_max = LIM.rlim_cur = 1;
-            setrlimit(RLIMIT_NPROC, &LIM);
-            ret = execute_cmd((dir + "spj %s %s %s %s").c_str(),
-                              infile, outfile, userfile, outfiled.c_str());
-        } else if (~access((dir + "spj.js").c_str(), 0)) {
-            LIM.rlim_cur = LIM.rlim_max = 80;
-            setrlimit(RLIMIT_NPROC, &LIM);
-            ret = execute_cmd(("node " + dir + "spj.js %s %s %s %s").c_str(),
-                              infile, outfile, userfile, outfiled.c_str());
-        } else if (~access((dir + "spj.py").c_str(), 0)) {
-            LIM.rlim_max = LIM.rlim_cur = 1;
-            ret = execute_cmd(("python3 " + dir + "spj.py %s %s %s %s").c_str(),
-                              infile, outfile, userfile, outfiled.c_str());
-        }
-        freopen("/dev/tty", "w", stdout);
-        if (DEBUG) {
-            if (get_file_size("diff.out")) {
-                ifstream spjout("diff.out");
-                string s;
-                while (getline(spjout, s)) {
-                    cout << s << endl;
-                }
-            }
-        }
-        //cout << "Debug return code:" << ret << endl;
-        if (WIFEXITED(ret)) {
-            cout << "WIFEXITED:" << WIFEXITED(ret) << endl;
-        } else {
-            cout << "ERROR WIFEXITED:" << WIFEXITED(ret) << endl;
-        }
-        cout << "spj1=" << ret << endl;
-        if (ret)
-            ret = WEXITSTATUS(ret);
-        if (ret && ret < ACCEPT) {
-            ret = WRONG_ANSWER;
-        }
-        exit(ret);
-    } else {
-        int status;
-        cout << "fork pid: " << pid << endl;
-        waitpid(pid, &status, 0);
-        cout << "status:" << status << endl;
-        ret = WEXITSTATUS(status);
-        cout << "spj2=" << ret << endl;
-    }
-    return ret;
-}
-
 void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
                     int p_id, char *infile, char *outfile, char *userfile, char *usercode, int &PEflg,
                     int lang, char *work_dir, int &topmemory, int mem_lmt,
@@ -835,17 +737,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
     // compare
     if (ACflg == ACCEPT) {
         if (isspj) {
-            comp_res = special_judge(oj_home, p_id, infile, outfile, userfile, usercode, global_work_dir);
-            if (comp_res < 4) {
-                if (comp_res == 0)
-                    comp_res = ACCEPT;
-                else {
-                    if (DEBUG) {
-                        cout << "Fail test " << infile << endl;
-                    }
-                    comp_res = WRONG_ANSWER;
-                }
-            }
+            comp_res = SpecialJudge::newInstance().setDebug(DEBUG).run(oj_home, p_id, infile, outfile, userfile, usercode, global_work_dir);
         } else {
             comp_res = compare(outfile, userfile);
         }
@@ -861,7 +753,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
     if (isJava(lang)) {
         fix_java_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
     }
-    if (lang == PYTHON2 || lang == PYTHON3 || lang == PYPY || lang == PYPY3) {
+    else if (isPython(lang)) {
         fix_python_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
     }
 }
