@@ -113,6 +113,7 @@ int SpecialJudge::run(char *oj_home, int problem_id, char *infile, char *outfile
 
 SpecialJudge& SpecialJudge::setDebug(bool debug) {
     this->DEBUG = debug;
+    return *this;
 }
 
 int SpecialJudge::compatibleParse(int ret) {
