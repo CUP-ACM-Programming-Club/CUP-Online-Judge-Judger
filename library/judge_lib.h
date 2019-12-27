@@ -143,9 +143,9 @@ extern void get_solution_info_from_mysql(int, int&, char*, int&);
 
 extern void getSolutionInfoFromSubmissionInfo(SubmissionInfo&, int&, char*, int&);
 
-extern void buildSubmissionInfo(SubmissionInfo&, int);
+extern void buildSubmissionInfo(SubmissionInfo&, string&);
 
-extern void removeSubmissionInfo(int);
+extern void removeSubmissionInfo(string&);
 
 extern vector<pair<string, int> >getFileList(const string& path, function<int(const char*)>);
 

@@ -89,6 +89,15 @@ SubmissionInfo &SubmissionInfo::readFromFile(string &file) {
     this->memoryLimit = reader.GetDouble("memory_limit");
     this->timeLimit = reader.GetDouble("time_limit");
     this->source = reader.GetString("source");
+    this->solutionId = reader.GetInt("solution_id");
     return *this;
+}
+
+int SubmissionInfo::getSolutionId() {
+    return solutionId;
+}
+
+SubmissionInfo &SubmissionInfo::setSolutionId(int solutionId) {
+    this->solutionId = solutionId;
 }
 

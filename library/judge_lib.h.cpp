@@ -823,6 +823,8 @@ int detectArgType(const char *argument) {
             return _NO_SIM;
         } else if (!strcmp(argument + 1, "no-mysql")) {
             return _NO_MYSQL;
+        } else if (!strcmp(argument + 1, "judger_id")) {
+            return _JUDGER_ID;
         }
         else {
             return _ERROR;
@@ -901,13 +903,13 @@ void getSolutionInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, int& p_id
     lang = submissionInfo.getLanguage();
 }
 
-void buildSubmissionInfo(SubmissionInfo& submissionInfo, int solution_id) {
-    string filePath = string(oj_home) + "/submission/" + to_string(solution_id) + ".json";
+void buildSubmissionInfo(SubmissionInfo& submissionInfo, string& judgerId) {
+    string filePath = string(oj_home) + "/submission/" + judgerId + ".json";
     submissionInfo.readFromFile(filePath);
 }
 
-void removeSubmissionInfo(int solution_id) {
-    execute_cmd("/bin/rm -rf %s/submission/%d.json", oj_home, solution_id);
+void removeSubmissionInfo(string& uuid) {
+    execute_cmd("/bin/rm -rf %s/submission/%s.json", oj_home, uuid.c_str());
 }
 
 vector<pair<string, int> >getFileList(const string& path, function<int(const char*)> func) {

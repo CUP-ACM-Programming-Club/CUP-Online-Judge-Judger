@@ -17,6 +17,7 @@ private:
     int problemId;
     string userId;
     int language;
+    int solutionId;
 
 public:
     SubmissionInfo& setSource(string&);
@@ -27,6 +28,7 @@ public:
     SubmissionInfo& setProblemId(int);
     SubmissionInfo& setUserId(string&);
     SubmissionInfo& setLanguage(int);
+    SubmissionInfo& setSolutionId(int);
     SubmissionInfo& readFromFile(string&);
 
     string& getSource();
@@ -35,6 +37,7 @@ public:
     double getMemoryLimit();
     bool getSpecialJudge();
     int getProblemId();
+    int getSolutionId();
     string& getUserId();
     int getLanguage();
 };

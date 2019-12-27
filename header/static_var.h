@@ -133,7 +133,8 @@ enum ArgsType {
     _RUNNER_ID = 6,
     _ADMIN = 7,
     _NO_SIM = 8,
-    _NO_MYSQL = 9
+    _NO_MYSQL = 9,
+    _JUDGER_ID = 10
 };
 
 const int CODESIZE = 64 * ONE_KILOBYTE;

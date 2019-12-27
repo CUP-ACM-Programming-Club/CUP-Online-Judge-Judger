@@ -954,7 +954,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
 
 
 void init_parameters(int argc, char **argv, int &solution_id,
-                     int &runner_id) {
+                     int &runner_id, string& judgerId) {
     if (argc < 3) {
         fprintf(stderr, "Usage:%s solution_id runner_id.\n", argv[0]);
         fprintf(stderr, "Multi:%s solution_id runner_id judge_base_path.\n",
@@ -1001,6 +1001,9 @@ void init_parameters(int argc, char **argv, int &solution_id,
                     break;
                 case _RUNNER_ID:
                     judger_number = runner_id = atoi(argv[i]);
+                    break;
+                case _JUDGER_ID:
+                    judgerId = string(argv[i]);
                     break;
                 default:
                     error = true;
@@ -1056,6 +1059,7 @@ void print_call_array() {
 
 
 int main(int argc, char **argv) {
+    string judgerId;
     char work_dir[BUFFER_SIZE];
     char usercode[CODESIZE];
     char user_id[BUFFER_SIZE];
@@ -1065,7 +1069,7 @@ int main(int argc, char **argv) {
     int p_id, memoryLimit, lang, SPECIAL_JUDGE, sim, sim_s_id = ZERO_SIM;
     double max_case_time = ZERO_TIME;
     double timeLimit;
-    init_parameters(argc, argv, solution_id, runner_id);
+    init_parameters(argc, argv, solution_id, runner_id, judgerId);
     init_mysql_conf();
     initWebSocketConnection("localhost", 5100);
     if (!conn.start()) {
@@ -1086,7 +1090,7 @@ int main(int argc, char **argv) {
         get_solution(solution_id, work_dir, lang, usercode);
     }
     else {
-        buildSubmissionInfo(submissionInfo, solution_id);
+        buildSubmissionInfo(submissionInfo, judgerId);
         getSolutionInfoFromSubmissionInfo(submissionInfo, p_id, user_id, lang);
         getProblemInfoFromSubmissionInfo(submissionInfo, timeLimit, memoryLimit, SPECIAL_JUDGE);
         getSolutionFromSubmissionInfo(submissionInfo, usercode);
@@ -1141,7 +1145,7 @@ int main(int argc, char **argv) {
         bundle.setCompileInfo(_compile_info);
         webSocket << bundle.toJSONString();
         clean_workdir(work_dir);
-        removeSubmissionInfo(solution_id);
+        removeSubmissionInfo(judgerId);
         write_log(oj_home, "compile error");
         exit(0);
     } else {
@@ -1276,7 +1280,7 @@ int main(int argc, char **argv) {
         bundle.setTestRunResult(test_run_out);
         webSocket << bundle.toJSONString();
         clean_workdir(work_dir);
-        removeSubmissionInfo(solution_id);
+        removeSubmissionInfo(judgerId);
         //mysql_close(conn);
         exit(0);
     }
@@ -1407,7 +1411,7 @@ int main(int argc, char **argv) {
     }
 
     clean_workdir(work_dir);
-    removeSubmissionInfo(solution_id);
+    removeSubmissionInfo(judgerId);
     if (DEBUG) {
         write_log(oj_home, "result=%d", ALL_TEST_MODE ? finalACflg : ACflg);
     }
