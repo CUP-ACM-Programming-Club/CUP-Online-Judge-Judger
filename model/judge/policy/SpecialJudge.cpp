@@ -96,7 +96,6 @@ int SpecialJudge::run(char *oj_home, int problem_id, char *infile, char *outfile
                 }
             }
         }
-        //cout << "Debug return code:" << ret << endl;
         if (WIFEXITED(ret)) {
             cout << "WIFEXITED:" << WIFEXITED(ret) << endl;
         } else {
@@ -112,6 +111,7 @@ int SpecialJudge::run(char *oj_home, int problem_id, char *infile, char *outfile
         }
         sprintf(buffer, "%d", ret);
         write(*write_fd, buffer, strlen(buffer));
+        close(*write_fd);
         exit(0);
     } else {
         close(*write_fd);
@@ -123,6 +123,7 @@ int SpecialJudge::run(char *oj_home, int problem_id, char *infile, char *outfile
         waitpid(pid, &status, 0);
         cout << "status:" << status << '\n';
         cout << "spj2=" << ret << '\n';
+        close(*read_fd);
     }
     return compatibleParse(ret);
 }
