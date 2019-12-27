@@ -93,9 +93,11 @@ int SpecialJudge::run(char *oj_home, int problem_id, char *infile, char *outfile
         } else {
             cout << "ERROR WIFEXITED:" << WIFEXITED(ret) << endl;
         }
-        cout << "spj1=" << ret << endl;
-        if (ret)
+        cout << "spj1=" << ret << '\n';
+        if (ret) {
             ret = WEXITSTATUS(ret);
+            cout << "ret = " << ret << endl;
+        }
         if (ret && ret < ACCEPT) {
             ret = WRONG_ANSWER;
         }
