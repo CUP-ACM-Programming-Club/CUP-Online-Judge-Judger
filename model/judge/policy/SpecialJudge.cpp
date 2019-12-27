@@ -103,11 +103,19 @@ int SpecialJudge::run(char *oj_home, int problem_id, char *infile, char *outfile
         }
         exit(ret);
     } else {
-        int status;
+        int status = 15;
         cout << "fork pid: " << pid << endl;
         waitpid(pid, &status, 0);
         cout << "status:" << status << '\n';
-        ret = WEXITSTATUS(status);
+        if (WIFEXITED(status)) {
+            ret = WEXITSTATUS(status);
+        }
+        else if (WIFSIGNALED(status)) {
+            ret = WIFSIGNALED(status);
+        }
+        else if (WIFSTOPPED(status)) {
+            ret = WSTOPSIG(status);
+        }
         cout << "spj2=" << ret << '\n';
     }
     return compatibleParse(ret);
