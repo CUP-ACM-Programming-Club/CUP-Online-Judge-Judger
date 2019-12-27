@@ -18,6 +18,14 @@ using std::fstream;
 
 int SpecialJudge::run(char *oj_home, int problem_id, char *infile, char *outfile, char *userfile, char *usercode, string &global_work_dir) {
     pid_t pid;
+    int fd[2];
+    int *write_fd = &fd[1];
+    int *read_fd = &fd[0];
+    char buffer[1 << 7];
+    if (pipe(fd) == -1) {
+        perror("pipe");
+        return 16;
+    }
     printf("pid=%d\n", problem_id);
     printf("%s\n", usercode);
     string outfiled(global_work_dir);
@@ -35,6 +43,7 @@ int SpecialJudge::run(char *oj_home, int problem_id, char *infile, char *outfile
     pid = fork();
     int ret = 0;
     if (pid == CHILD_PROCESS) {
+        close(*read_fd);
         /*
         if (false && !isWindowsSpecialJudge) {
             while (setgid(1536) != 0)
@@ -101,21 +110,18 @@ int SpecialJudge::run(char *oj_home, int problem_id, char *infile, char *outfile
         if (ret && ret < ACCEPT) {
             ret = WRONG_ANSWER;
         }
-        exit(ret);
+        sprintf(buffer, "%d", ret);
+        write(*write_fd, buffer, strlen(buffer));
+        exit(0);
     } else {
-        int status = 15;
+        close(*write_fd);
+        read(*read_fd, buffer, sizeof(buffer) - 1);
+        cout << "read buffer: " << buffer << endl;
+        sscanf(buffer, "%d", &ret);
+        int status;
         cout << "fork pid: " << pid << endl;
         waitpid(pid, &status, 0);
         cout << "status:" << status << '\n';
-        if (WIFEXITED(status)) {
-            ret = WEXITSTATUS(status);
-        }
-        else if (WIFSIGNALED(status)) {
-            ret = WIFSIGNALED(status);
-        }
-        else if (WIFSTOPPED(status)) {
-            ret = WSTOPSIG(status);
-        }
         cout << "spj2=" << ret << '\n';
     }
     return compatibleParse(ret);
