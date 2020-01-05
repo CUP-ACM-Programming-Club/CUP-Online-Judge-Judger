@@ -65,6 +65,7 @@
 #include "model/base/MySQLAutoPointer.h"
 #include "model/SubmissionInfo.h"
 #include "model/judge/policy/SpecialJudge.h"
+#include "manager/syscall/InitManager.h"
 
 using namespace std;
 using json = nlohmann::json;
@@ -99,76 +100,6 @@ using ConfigReader = JSONVectorReader;
 const int call_array_size = 512;
 int call_counter[call_array_size];
 static char LANG_NAME[BUFFER_SIZE];
-
-void init_syscalls_limits(int lang) {
-    int i;
-    memset(call_counter, 0, sizeof(call_counter));
-    if (DEBUG)
-        write_log(oj_home, "init_call_counter:%d", lang);
-    if (record_call) { // C & C++
-        for (i = 0; i < call_array_size; i++) {
-            call_counter[i] = 0;
-        }
-    } else if (isCOrCPP(lang)) { // C & C++
-        for (i = 0; i == 0 || LANG_CV[i]; i++) {
-            call_counter[LANG_CV[i]] = HOJ_MAX_LIMIT;
-        }
-    } else if (lang == PASCAL) { // Pascal
-        for (i = 0; i == 0 || LANG_PV[i]; i++)
-            call_counter[LANG_PV[i]] = HOJ_MAX_LIMIT;
-    } else if (isJava(lang)) { // Java
-        for (i = 0; i == 0 || LANG_JV[i]; i++)
-            call_counter[LANG_JV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == RUBY) { // Ruby
-        for (i = 0; i == 0 || LANG_RV[i]; i++)
-            call_counter[LANG_RV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == BASH) { // Bash
-        for (i = 0; i == 0 || LANG_BV[i]; i++)
-            call_counter[LANG_BV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == PYTHON2) { // Python
-        for (i = 0; i == 0 || LANG_YV[i]; i++)
-            call_counter[LANG_YV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == PYTHON3) {
-        for (i = 0; i == 0 || LANG_PY3V[i]; i++)
-            call_counter[LANG_PY3V[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == PHP) { // php
-        for (i = 0; i == 0 || LANG_PHV[i]; i++)
-            call_counter[LANG_PHV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == PERL) { // perl
-        for (i = 0; i == 0 || LANG_PLV[i]; i++)
-            call_counter[LANG_PLV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == CSHARP) { // mono c#
-        for (i = 0; i == 0 || LANG_CSV[i]; i++)
-            call_counter[LANG_CSV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == OBJC) { //objective c
-        for (i = 0; i == 0 || LANG_OV[i]; i++)
-            call_counter[LANG_OV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == FREEBASIC) { //free basic
-        for (i = 0; i == 0 || LANG_BASICV[i]; i++)
-            call_counter[LANG_BASICV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == SCHEMA) { //scheme guile
-        for (i = 0; i == 0 || LANG_SV[i]; i++)
-            call_counter[LANG_SV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == LUA) { //lua
-        for (i = 0; i == 0 || LANG_LUAV[i]; i++)
-            call_counter[LANG_LUAV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == JAVASCRIPT) { //nodejs
-        for (i = 0; i == 0 || LANG_JSV[i]; i++)
-            call_counter[LANG_JSV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == L_GO) { //go
-        for (i = 0; i == 0 || LANG_GOV[i]; i++)
-            call_counter[LANG_GOV[i]] = HOJ_MAX_LIMIT;
-    } else if (lang == PYPY) {
-        for (i = 0; i == 0 || LANG_PYPYV[i]; ++i) {
-            call_counter[LANG_PYPYV[i]] = HOJ_MAX_LIMIT;
-        }
-    } else if (lang == PYPY3) {
-        for (i = 0; i == 0 || LANG_PYPY3V[i]; ++i) {
-            call_counter[LANG_PYPY3V[i]] = HOJ_MAX_LIMIT;
-        }
-    }
-}
-
 
 // read the configue file
 void init_mysql_conf() {
@@ -1217,13 +1148,11 @@ int main(int argc, char **argv) {
         else {
             getCustomInputFromSubmissionInfo(submissionInfo);
         }
-        init_syscalls_limits(lang);
+        InitManager::initSyscallLimits(lang, call_counter, record_call, call_array_size);
         bundle.setJudger(http_username);
         bundle.setSolutionID(solution_id);
         bundle.setResult(RUNNING_JUDGING);
         webSocket << bundle.toJSONString();
-        //        webSocket << ws_send(solution_id, RUNNING_JUDGING, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT,
-        //                            ZERO_PASSRATE);
         pid_t pidApp = fork();
 
         if (pidApp == CHILD_PROCESS) {
@@ -1239,15 +1168,12 @@ int main(int argc, char **argv) {
         if (ACflg == TIME_LIMIT_EXCEEDED) {
             usedtime = timeLimit * 1000;
             error_message = "Time Limit Exceeded.Kill Process.\n";
-            //add_reinfo_mysql_by_string(solution_id, error_message);
         } else if (ACflg == RUNTIME_ERROR) {
             if (DEBUG)
                 printf("add RE info of %d..... \n", solution_id);
             error_message = "Runtime Error. Kill Process.\n";
-            // addreinfo(solution_id);
         } else if (ACflg == MEMORY_LIMIT_EXCEEDED) {
             error_message = "Memory Limit Exceeded.Kill Process.\n";
-            //add_reinfo_mysql_by_string(solution_id, error_message);
         }
         string test_run_out;
         if (ACflg == ACCEPT) {
@@ -1281,7 +1207,6 @@ int main(int argc, char **argv) {
         webSocket << bundle.toJSONString();
         clean_workdir(work_dir);
         removeSubmissionInfo(judgerId);
-        //mysql_close(conn);
         exit(0);
     }
     int total_point = 0;
@@ -1305,8 +1230,7 @@ int main(int argc, char **argv) {
             ++num_of_test;
             prepare_files(infilePair.first.c_str(), infilePair.second, infile, p_id, work_dir, outfile,
                           userfile, runner_id);
-            init_syscalls_limits(lang);
-
+            InitManager::initSyscallLimits(lang, call_counter, record_call, call_array_size);
             pid_t pidApp = fork();
 
             if (pidApp == CHILD_PROCESS) {
@@ -1398,18 +1322,6 @@ int main(int argc, char **argv) {
     bundle.setSim(sim);
     bundle.setSimSource(sim_s_id);
     webSocket << bundle.toJSONString();
-
-    if (ALL_TEST_MODE) {
-        if (num_of_test > 0) {
-            pass_rate /= num_of_test;
-        }
-        if (DEBUG) {
-            cout << "Write Usedtime: " << usedtime << endl;
-        }
-    } else {
-
-    }
-
     clean_workdir(work_dir);
     removeSubmissionInfo(judgerId);
     if (DEBUG) {
