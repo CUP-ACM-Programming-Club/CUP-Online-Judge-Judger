@@ -54,7 +54,6 @@
 #endif
 #endif
 
-#include "header/okcalls.h"
 #include "model/websocket/WebSocketSender.h"
 #include "header/static_var.h"
 
