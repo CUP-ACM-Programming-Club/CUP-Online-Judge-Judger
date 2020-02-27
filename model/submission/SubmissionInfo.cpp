@@ -3,7 +3,7 @@
 //
 
 #include "SubmissionInfo.h"
-#include "./base/JSONVectorReader.h"
+#include "../base/JSONVectorReader.h"
 
 SubmissionInfo &SubmissionInfo::setSource(string &source) {
     this->source = source;

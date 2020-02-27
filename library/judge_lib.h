@@ -11,7 +11,7 @@
 #include <fstream>
 #include <deque>
 #include "json.hpp"
-#include "../model/SubmissionInfo.h"
+#include "../model/submission/SubmissionInfo.h"
 #include "../model/judge/language/Language.h"
 #include "../model/judge/language/C11.h"
 #include <cstdarg>

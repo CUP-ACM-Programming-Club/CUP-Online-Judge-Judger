@@ -5,7 +5,7 @@
 #include <dirent.h>
 #include "judge_lib.h"
 #include "../header/static_var.h"
-#include "../model/SubmissionInfo.h"
+#include "../model/submission/SubmissionInfo.h"
 #include "../model/judge/language/Cpp17.h"
 #include "../model/judge/language/Pascal.h"
 #include "../model/judge/language/Java.h"

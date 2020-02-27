@@ -63,7 +63,7 @@
 
 #include "library/judge_lib.h"
 #include "model/base/MySQLAutoPointer.h"
-#include "model/SubmissionInfo.h"
+#include "model/submission/SubmissionInfo.h"
 #include "model/judge/policy/SpecialJudge.h"
 #include "manager/syscall/InitManager.h"
 
