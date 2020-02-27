@@ -16,10 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with HUSTOJ. if not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef OKCALL_DEFINE
+#define OKCALL_DEFINE
 #include <sys/syscall.h>
 #define HOJ_MAX_LIMIT (-1)
 #ifdef __i386
    #include "okcalls32.h"
 #else
    #include "okcalls64.h"
+#endif
 #endif
