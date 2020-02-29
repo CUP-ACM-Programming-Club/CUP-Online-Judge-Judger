@@ -1,3 +1,4 @@
+apt install build-essential cmake clang fp-compiler
 cmake ./ && make && chmod a+x judge_client && mv ./judge_client /usr/bin
 mkdir /home/judge
 mkdir /home/judge/etc
