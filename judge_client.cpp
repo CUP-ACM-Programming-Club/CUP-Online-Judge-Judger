@@ -1012,6 +1012,9 @@ int main(int argc, char **argv) {
     clean_workdir(work_dir);
     if (SHARE_MEMORY_RUN)
         mk_shm_workdir(work_dir);
+    else {
+        make_workdir(work_dir);
+    }
 
     chdir(work_dir);
     if (MYSQL_MODE) {

@@ -1004,6 +1004,16 @@ void mk_shm_workdir(char *work_dir) {
     execute_cmd("/bin/ln -s %s/data %s", oj_home, shm_path);
 }
 
+void make_workdir(char* work_dir) {
+    char work_path[BUFFER_SIZE];
+    char shm_path[BUFFER_SIZE];
+    execute_cmd("/bin/mkdir -p %s", work_dir);
+    execute_cmd("/bin/chown -R judge %s ", work_path);
+    execute_cmd("/bin/chmod 755 %s", work_path);
+    sprintf(shm_path, "/dev/shm/hustoj/%s/", oj_home);
+    execute_cmd("/bin/ln -s %s/data %s", oj_home, shm_path);
+}
+
 int get_proc_status(int pid, const char *mark) {
     FILE *pf;
     char fn[BUFFER_SIZE], buf[BUFFER_SIZE];

@@ -157,6 +157,8 @@ extern string getFileContent(const string& file);
 
 extern void mk_shm_workdir(char *work_dir);
 
+extern void make_workdir(char* work_dir);
+
 extern int get_proc_status(int pid, const char *mark);
 
 extern void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
