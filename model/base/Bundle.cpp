@@ -67,6 +67,11 @@ Bundle& Bundle::setJudger(string& str) {
     return *this;
 }
 
+Bundle& Bundle::setJudgerId(string &str) {
+    setValue("judgerId", Pack(string(str)));
+    return *this;
+}
+
 
 Bundle& Bundle::setTestRunResult(string &test_run_result) {
     setValue("test_run_result", Pack(checkUTF8Valid(test_run_result)));

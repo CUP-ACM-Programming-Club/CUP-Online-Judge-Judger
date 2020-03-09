@@ -39,6 +39,8 @@ public:
 
     Bundle& setJudger(string &);
 
+    Bundle& setJudgerId(string &);
+
     Bundle& setTestRunResult(string &);
 
     Bundle& setCompileInfo(string &);

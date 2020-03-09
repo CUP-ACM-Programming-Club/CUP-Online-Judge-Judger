@@ -1002,6 +1002,7 @@ int main(int argc, char **argv) {
     init_parameters(argc, argv, solution_id, runner_id, judgerId);
     init_mysql_conf();
     initWebSocketConnection("localhost", 5100);
+    bundle.setJudgerId(judgerId);
     if (!conn.start()) {
         cerr << "Failed to create a MYSQL connection." << endl;
         exit(0); //exit if mysql is down
