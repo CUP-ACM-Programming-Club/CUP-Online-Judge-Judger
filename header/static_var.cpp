@@ -43,4 +43,6 @@ WebSocketSender webSocket;
 
 Bundle bundle;
 
+extern JSONVectorReader languageNameReader;
+
 ThreadPool threadPool(std::thread::hardware_concurrency());

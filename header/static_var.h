@@ -10,6 +10,7 @@
 #include "../model/websocket/WebSocketSender.h"
 #include "../model/base/Bundle.h"
 #include "../model/base/ThreadPool.h"
+#include "../model/base/JSONVectorReader.h"
 
 enum count {
     ZERO = 0,
@@ -181,5 +182,6 @@ extern int solution_id;
 extern MySQLAutoPointer conn;
 extern WebSocketSender webSocket;
 extern Bundle bundle;
+extern JSONVectorReader languageNameReader;
 extern ThreadPool threadPool;
 #endif //JUDGE_CLIENT_STATIC_VAR_H

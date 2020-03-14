@@ -1016,7 +1016,7 @@ int main(int argc, char **argv) {
     else {
         make_workdir(work_dir);
     }
-
+    languageNameReader.loadFile(string(oj_home) + "/etc/language.json");
     chdir(work_dir);
     if (MYSQL_MODE) {
         get_solution_info(solution_id, p_id, user_id, lang);

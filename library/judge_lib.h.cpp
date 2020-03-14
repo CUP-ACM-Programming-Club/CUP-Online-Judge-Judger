@@ -1128,8 +1128,7 @@ string getRuntimeInfoContents(const string& filename) {
 }
 
 Language* getLanguageModel(int language) {
-    JSONVectorReader reader(string(oj_home) + "/etc/language.json");
-    string languageName = reader.GetString(to_string(language));
+    string languageName = languageNameReader.GetString(to_string(language));
     void* languageHandler = dlopen(("/usr/lib/cupjudge/lib" + languageName + ".so").c_str(), RTLD_LAZY);
     if (!languageHandler) {
         cerr << "Cannot load library: " << dlerror() << endl;
