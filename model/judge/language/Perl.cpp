@@ -7,3 +7,10 @@
 void Perl::run(int memory) {
     execl("/perl", "/perl", "Main.pl", (char *) nullptr);
 }
+extlang createInstanceperl () {
+    return new Perl;
+}
+
+deslang destroyInstanceperl (Language* language) {
+    delete language;
+}

@@ -3,3 +3,10 @@
 //
 
 #include "Pascal.h"
+extlang createInstancepascal() {
+    return new Pascal;
+}
+
+deslang destroyInstancepascal(Language* language) {
+    delete language;
+}

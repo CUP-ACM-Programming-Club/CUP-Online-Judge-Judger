@@ -3,6 +3,7 @@
 //
 
 #include <dirent.h>
+#include <dlfcn.h>
 #include "judge_lib.h"
 #include "../header/static_var.h"
 #include "../model/submission/SubmissionInfo.h"
@@ -34,6 +35,7 @@
 #include "../model/judge/language/Java6.h"
 #include "../model/judge/language/Clang11.h"
 #include "../model/judge/language/Clangpp17.h"
+#include "../model/base/JSONVectorReader.h"
 
 using namespace std;
 using json = nlohmann::json;
@@ -1126,71 +1128,29 @@ string getRuntimeInfoContents(const string& filename) {
 }
 
 Language* getLanguageModel(int language) {
-    switch (language) {
-        case L_C11:
-            return new C11();
-        case L_CPP17:
-            return new Cpp17();
-        case PASCAL:
-            return new Pascal();
-        case JAVA:
-            return new Java();
-        case RUBY:
-            return new Ruby();
-        case BASH:
-            return new Bash();
-        case PYTHON2:
-            return new Python2();
-        case PHP:
-            return new Php();
-        case PERL:
-            return new Perl();
-        case CSHARP:
-            return new Csharp();
-        case OBJC:
-            return new Objc();
-        case FREEBASIC:
-            return new FreeBasic();
-        case SCHEMA:
-            return new Schema();
-        case CLANG:
-            return new Clang();
-        case CLANGPP:
-            return new Clangpp();
-        case LUA:
-            return new Lua();
-        case JAVASCRIPT:
-            return new JavaScript();
-        case L_GO:
-            return new Go();
-        case PYTHON3:
-            return new Python3();
-        case CPP11:
-            return new Cpp11();
-        case CPP98:
-            return new Cpp98();
-        case L_C99:
-            return new C99();
-        case KOTLIN:
-            break;
-        case JAVA8:
-            return new Java8();
-        case JAVA7:
-            return new Java7();
-        case PYPY:
-            return new PyPy();
-        case PYPY3:
-            return new PyPy3();
-        case JAVA6:
-            return new Java6();
-        case CLANG11:
-            return new Clang11();
-        case CLANGPP17:
-            return new Clangpp17();
-        default:
-            break;
+    JSONVectorReader reader(string(oj_home) + "/etc/language.json");
+    string languageName = reader.GetString(to_string(language));
+    void* languageHandler = dlopen((languageName + ".so").c_str(), RTLD_LAZY);
+    if (!languageHandler) {
+        cerr << "Cannot load library: " << dlerror() << endl;
+        exit(1);
     }
-    throw "No such language!";
+    dlerror();
+    createLanguageInstance* createInstance = (createLanguageInstance*) dlsym(languageHandler, (string("createInstance") + languageName).c_str());
+    const char* dlsym_error = dlerror();
+    if (dlsym_error) {
+        cerr << "Cannot load symbol create: " << dlsym_error << endl;
+        exit(1);
+    }
+//    destroyLanguageInstance* destroyInstance = (destroyLanguageInstance*) dlsym(languageHandler, (string("destroyInstance") + languageName).c_str());
+//    dlsym_error = dlerror();
+//    if (dlsym_error) {
+//        cerr << "Cannot load symbol create: " << dlsym_error << endl;
+//        exit(1);
+//    }
+
+    Language* languageInstance = createInstance();
+    return languageInstance;
 }
 
 bool isPython(int language) {

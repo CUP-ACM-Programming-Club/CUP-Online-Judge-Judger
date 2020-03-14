@@ -15,3 +15,10 @@ void Csharp::setProcessLimit() {
     LIM.rlim_cur = LIM.rlim_max = 80;
     setrlimit(RLIMIT_NPROC, &LIM);
 }
+extlang createInstancecsharp () {
+    return new Csharp;
+}
+
+deslang destroyInstancecsharp (Language* language) {
+    delete language;
+}

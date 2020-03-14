@@ -24,3 +24,10 @@ void Java::setProcessLimit() {
     LIM.rlim_cur = LIM.rlim_max = 80;
     setrlimit(RLIMIT_NPROC, &LIM);
 }
+extlang createInstancejava () {
+    return new Java;
+}
+
+deslang destroyInstanceJava (Language* language) {
+    delete language;
+}

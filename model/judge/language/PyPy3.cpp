@@ -7,3 +7,11 @@
 void PyPy3::run(int memory) {
     execl("/pypy3/bin/pypy3", "/pypy3/bin/pypy3", "Main.py", (char *) nullptr);
 }
+
+extlang createInstancepypy3() {
+    return new PyPy3;
+}
+
+deslang destroyInstancepypy3(Language* language) {
+    delete language;
+}

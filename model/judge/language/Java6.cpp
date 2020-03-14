@@ -16,3 +16,10 @@ void Java6::run(int memory) {
           "-Djava.security.manager",
           "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
 }
+extlang createInstancejava6 () {
+    return new Java6;
+}
+
+deslang destroyInstancejava6 (Language* language) {
+    delete language;
+}

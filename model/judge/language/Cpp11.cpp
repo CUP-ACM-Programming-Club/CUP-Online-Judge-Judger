@@ -3,3 +3,11 @@
 //
 
 #include "Cpp11.h"
+
+extlang createInstancecpp11 () {
+    return new Cpp11;
+}
+
+deslang destroyInstancecpp11 (Language* language) {
+    delete language;
+}

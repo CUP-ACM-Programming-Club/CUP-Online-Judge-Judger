@@ -15,3 +15,10 @@ void Ruby::setProcessLimit() {
     LIM.rlim_cur = LIM.rlim_max = 80;
     setrlimit(RLIMIT_NPROC, &LIM);
 }
+extlang createInstanceruby() {
+    return new Ruby;
+}
+
+deslang destroyInstanceruby (Language* language) {
+    delete language;
+}

@@ -14,3 +14,11 @@ void Schema::setProcessLimit() {
     LIM.rlim_cur = LIM.rlim_max = 80;
     setrlimit(RLIMIT_NPROC, &LIM);
 }
+
+extlang createInstanceschema () {
+    return new Schema;
+}
+
+deslang destroyInstanceschema (Language* language) {
+    delete language;
+}

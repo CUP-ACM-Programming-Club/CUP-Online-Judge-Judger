@@ -10,3 +10,10 @@ void Go::setProcessLimit() {
     LIM.rlim_max = LIM.rlim_cur = 280;
     setrlimit(RLIMIT_NPROC, &LIM);
 }
+extlang createInstancego () {
+    return new Go;
+}
+
+deslang destroyInstancego (Language* language) {
+    delete language;
+}

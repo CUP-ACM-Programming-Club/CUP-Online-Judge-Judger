@@ -14,3 +14,10 @@ void JavaScript::setProcessLimit() {
     LIM.rlim_cur = LIM.rlim_max = 80;
     setrlimit(RLIMIT_NPROC, &LIM);
 }
+extlang createInstancejavascript() {
+    return new JavaScript;
+}
+
+deslang destroyInstancejavascript(Language* language) {
+    delete language;
+}

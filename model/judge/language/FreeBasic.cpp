@@ -3,3 +3,10 @@
 //
 
 #include "FreeBasic.h"
+extlang createInstancefreebasic () {
+    return new FreeBasic;
+}
+
+deslang destroyInstancefreebasic (Language* language) {
+    delete language;
+}

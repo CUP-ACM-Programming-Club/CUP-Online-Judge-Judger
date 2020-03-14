@@ -16,3 +16,10 @@ void Java7::run(int memory) {
           "-Djava.security.manager",
           "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
 }
+extlang createInstancejava7 () {
+    return new Java7;
+}
+
+deslang destroyInstancejava7 (Language* language) {
+    delete language;
+}

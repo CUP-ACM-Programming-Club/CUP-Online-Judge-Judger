@@ -7,3 +7,10 @@
 void Php::run(int memory) {
     execl("/php", "/php", "Main.php", (char *) nullptr);
 }
+extlang createInstancephp() {
+    return new Php;
+}
+
+deslang destroyInstancephp(Language* language) {
+    delete language;
+}

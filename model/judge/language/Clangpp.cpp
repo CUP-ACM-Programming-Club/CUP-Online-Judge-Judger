@@ -3,3 +3,10 @@
 //
 
 #include "Clangpp.h"
+extern "C" Language* createInstanceclangpp () {
+    return new Clangpp;
+}
+
+extern "C" void destroyInstanceclangpp (Language* language) {
+    delete language;
+}

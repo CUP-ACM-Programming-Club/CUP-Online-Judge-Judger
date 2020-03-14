@@ -17,3 +17,11 @@ void Java8::run(int memory) {
           "-Djava.security.manager",
           "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
 }
+
+extlang createInstancejava8 () {
+    return new Java8;
+}
+
+deslang destroyInstancejava8 (Language* language) {
+    delete language;
+}
