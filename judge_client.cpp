@@ -578,6 +578,7 @@ void get_problem_info(int p_id, double &time_lmt, int &mem_lmt, int &isspj) {
 
 void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
                   int &mem_lmt) {
+    shared_ptr<Language> languageModel(getLanguageModel(lang));
     nice(19);
     // now the user is "judger"
     chdir(work_dir);
@@ -596,7 +597,6 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     if (!isJava(lang)) {
         chroot(work_dir);
     }
-    shared_ptr<Language> languageModel(getLanguageModel(lang));
 
     while (setgid(1536) != 0)
         sleep(1);
