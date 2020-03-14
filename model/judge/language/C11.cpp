@@ -10,7 +10,6 @@ void C11::run(int memory) {
 }
 
 extern "C" Language* createInstancec11() {
-    std::cout << "Get C11 Instance" << std::endl;
     return new C11;
 }
 
