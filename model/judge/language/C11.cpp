@@ -4,12 +4,13 @@
 
 #include "C11.h"
 #include <unistd.h>
-
+#include <iostream>
 void C11::run(int memory) {
     execl("./Main", "./Main", (char *) nullptr);
 }
 
 extern "C" Language* createInstancec11() {
+    std::cout << "Get C11 Instance" << std::endl;
     return new C11;
 }
 
