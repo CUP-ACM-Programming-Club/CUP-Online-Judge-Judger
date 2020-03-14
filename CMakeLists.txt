@@ -91,3 +91,4 @@ add_executable(judge_client header/okcalls.h header/ncalls.h header/okcalls32.h 
 add_executable(wsjudged wsjudged.cpp)
 target_link_libraries(judge_client ${MYSQL_LIBRARIES})
 target_link_libraries(judge_client ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(judge_client ${CMAKE_DL_LIBS})
