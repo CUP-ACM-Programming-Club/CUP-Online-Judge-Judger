@@ -1,4 +1,4 @@
-#include <bits/stdc++.h>
+#include <iostream>
 #include <unistd.h>
 #include <sys/resource.h>
 using namespace std;
