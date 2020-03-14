@@ -11,6 +11,9 @@
 class Go : public C11 {
 public:
     void setProcessLimit();
+    void setCompileProcessLimit();
+private:
+    void setASLimit();
 };
 
 

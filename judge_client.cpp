@@ -390,29 +390,8 @@ int compile(int lang, char *work_dir) {
     CompilerArgsReader compilerArgsReader(configJSONDir);
     pid = fork();
     if (pid == CHILD_PROCESS) {
-        struct rlimit LIM{};
-        LIM.rlim_max = 60;
-        LIM.rlim_cur = 60;
-        setrlimit(RLIMIT_CPU, &LIM);
-        int cpu_alarm_limit = 10;
-        if (isJava(lang)) {
-            cpu_alarm_limit = 30;
-        }
-        alarm(static_cast<unsigned int>(cpu_alarm_limit));
-        LIM.rlim_max = static_cast<rlim_t>(10 * COMPILE_STD_MB);
-        LIM.rlim_cur = static_cast<rlim_t>(10 * COMPILE_STD_MB);
-        setrlimit(RLIMIT_FSIZE, &LIM);
-
-        if (isJava(lang) || lang == L_GO) {
-            LIM.rlim_max = static_cast<rlim_t>(COMPILE_STD_MB << 11);
-            LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB << 11);
-        } else {
-            LIM.rlim_max = static_cast<rlim_t>(COMPILE_STD_MB * 256);
-            LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB * 256);
-        }
-        if (!isJava(lang)) {
-            setrlimit(RLIMIT_AS, &LIM);
-        }
+        shared_ptr<Language> languageModel(getLanguageModel(lang));
+        languageModel->setCompileProcessLimit();
         if (lang != PASCAL && lang != FREEBASIC) {
             freopen("ce.txt", "w", stderr);
             //freopen("/dev/null", "w", stdout);
@@ -444,41 +423,8 @@ int compile(int lang, char *work_dir) {
             sleep(1);
         if (DEBUG)
             cout << "Lang:" << lang << endl;
-        if (isJava(lang)) {
-            auto _args = compilerArgsReader.GetArray(to_string(lang));
-            int len = _args.size();
-            char *java_arg[len + 5];
-            char java_buffer[len + 5][30];
-            for (int i = 0; i < len; ++i) {
-                memset(java_buffer[i], 0, sizeof(java_buffer[i]));
-                memcpy(java_buffer[i], _args[i].c_str(), _args[i].length());
-                java_arg[i] = java_buffer[i];
-            }
-            java_arg[len] = nullptr;
-            sprintf(java_buffer[1], "-J%s", java_xms);
-            sprintf(java_buffer[2], "-J%s", java_xmx);
-            execvp(java_arg[0], (char *const *) java_arg);
-        } else {
-            vector<string> _args = compilerArgsReader.GetArray(to_string(lang));
-            if (_args.empty()) {
-                cout << "Nothing to do" << endl;
-                exit(0);
-            }
-            int len = static_cast<int>(_args.size());
-            const char *args[len + 5];
-            for (int i = 0; i < len; ++i) {
-                args[i] = _args[i].c_str();
-            }
-            args[len] = nullptr;
-            if (DEBUG) {
-                cout << args[0] << endl;
-                for (int i = 1; i < len; ++i) {
-                    cout << args[i] << " ";
-                }
-                cout << endl;
-            }
-            execvp(args[0], (char *const *) args);
-        }
+        auto args = compilerArgsReader.GetArray(to_string(lang));
+        languageModel->compile(args, java_xms, java_xmx);
         if (DEBUG) {
             cout << "Copilation end!\n" << endl;
         }

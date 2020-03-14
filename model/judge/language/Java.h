@@ -12,6 +12,11 @@ class Java : public Language{
 public:
     void run(int memory);
     void setProcessLimit();
+    void setCompileProcessLimit();
+    void compile(std::vector<std::string>&, const char*, const char*);
+private:
+    void setAlarm();
+    void setASLimit();
 };
 
 
