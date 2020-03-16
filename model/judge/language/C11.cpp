@@ -9,6 +9,10 @@ void C11::run(int memory) {
     execl("./Main", "./Main", (char *) nullptr);
 }
 
+void C11::buildRuntime(const char *work_dir) {
+    // do nothing
+}
+
 extern "C" Language* createInstancec11() {
     return new C11;
 }

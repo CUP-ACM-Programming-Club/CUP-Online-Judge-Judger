@@ -10,3 +10,7 @@ extlang createInstancepascal() {
 deslang destroyInstancepascal(Language* language) {
     delete language;
 }
+
+void Pascal::buildRuntime(const char *work_dir) {
+    // do nothing
+}

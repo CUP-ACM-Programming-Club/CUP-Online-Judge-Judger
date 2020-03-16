@@ -12,6 +12,7 @@ class Schema : public Language {
 public:
     void run(int memory);
     void setProcessLimit();
+    void buildRuntime(const char* work_dir);
 };
 
 

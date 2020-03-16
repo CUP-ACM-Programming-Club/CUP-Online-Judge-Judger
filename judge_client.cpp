@@ -1042,49 +1042,8 @@ int main(int argc, char **argv) {
     double usedtime = ZERO_TIME;
 
     //create chroot for ruby bash python
-    switch (lang) {
-        case RUBY:
-            copy_ruby_runtime(work_dir);
-            break;
-        case BASH:
-            copy_bash_runtime(work_dir);
-            break;
-        case PYTHON2:
-        case PYTHON3:
-            copy_python_runtime(work_dir);
-            break;
-        case PYPY:
-            copy_pypy_runtime(work_dir);
-            break;
-        case PYPY3:
-            copy_pypy3_runtime(work_dir);
-            break;
-        case PHP:
-            copy_php_runtime(work_dir);
-            break;
-        case PERL:
-            copy_perl_runtime(work_dir);
-            break;
-        case CSHARP:
-            copy_mono_runtime(work_dir);
-            break;
-        case OBJC:
-            copy_objc_runtime(work_dir);
-            break;
-        case FREEBASIC:
-            copy_freebasic_runtime(work_dir);
-            break;
-        case SCHEMA:
-            copy_guile_runtime(work_dir);
-            break;
-        case LUA:
-            copy_lua_runtime(work_dir);
-            break;
-        case JAVASCRIPT:
-            copy_js_runtime(work_dir);
-        default:
-            break;
-    }
+    shared_ptr<Language> languageModel(getLanguageModel(lang));
+    languageModel->buildRuntime(work_dir);
     // read files and run
     double pass_rate = ZERO_PASSRATE;
     int num_of_test = 0;

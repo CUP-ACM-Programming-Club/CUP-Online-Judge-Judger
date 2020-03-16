@@ -5,6 +5,8 @@
 #include <sys/resource.h>
 #include "Schema.h"
 #include "unistd.h"
+#include "util/util.h"
+
 void Schema::run(int memory) {
     execl("/guile", "/guile", "Main.scm", (char *) nullptr);
 }
@@ -13,6 +15,26 @@ void Schema::setProcessLimit() {
     struct rlimit LIM;
     LIM.rlim_cur = LIM.rlim_max = 80;
     setrlimit(RLIMIT_NPROC, &LIM);
+}
+
+void Schema::buildRuntime(const char *work_dir) {
+    Language::buildRuntime(work_dir);
+    execute_cmd("/bin/mkdir -p %s/proc", work_dir);
+    execute_cmd("/bin/mount -o bind /proc %s/proc", work_dir);
+    execute_cmd("/bin/mkdir -p %s/usr/lib", work_dir);
+    execute_cmd("/bin/mkdir -p %s/usr/share", work_dir);
+    execute_cmd("/bin/cp -a /usr/share/guile %s/usr/share/", work_dir);
+    execute_cmd("/bin/cp /usr/lib/libguile* %s/usr/lib/", work_dir);
+    execute_cmd("/bin/cp /usr/lib/libgc* %s/usr/lib/", work_dir);
+    execute_cmd("/bin/cp /usr/lib/i386-linux-gnu/libffi* %s/usr/lib/",
+                work_dir);
+    execute_cmd("/bin/cp /usr/lib/i386-linux-gnu/libunistring* %s/usr/lib/",
+                work_dir);
+    execute_cmd("/bin/cp /usr/lib/*/libgmp* %s/usr/lib/", work_dir);
+    execute_cmd("/bin/cp /usr/lib/libgmp* %s/usr/lib/", work_dir);
+    execute_cmd("/bin/cp /usr/lib/*/libltdl* %s/usr/lib/", work_dir);
+    execute_cmd("/bin/cp /usr/lib/libltdl* %s/usr/lib/", work_dir);
+    execute_cmd("/bin/cp /usr/bin/guile* %s/", work_dir);
 }
 
 extlang createInstanceschema () {

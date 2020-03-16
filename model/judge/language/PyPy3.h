@@ -11,6 +11,7 @@
 class PyPy3 : public Language{
 public:
     void run(int memory);
+    void buildRuntime(const char* work_dir);
 };
 
 

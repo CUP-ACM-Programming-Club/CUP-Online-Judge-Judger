@@ -4,6 +4,7 @@
 
 #include <sys/resource.h>
 #include "Language.h"
+#include "util/util.h"
 #include <iostream>
 #include <unistd.h>
 
@@ -64,5 +65,16 @@ void Language::compile(std::vector<std::string>& _args, const char* java_xms, co
     }
     std::cout << std::endl;
     execvp(args[0], (char *const *) args);
+}
+
+void Language::buildRuntime(const char* work_dir) {
+    execute_cmd("/bin/mkdir %s/lib", work_dir);
+    execute_cmd("/bin/mkdir %s/lib64", work_dir);
+    execute_cmd("/bin/mkdir %s/bin", work_dir);
+    //  execute_cmd("/bin/cp /lib/* %s/lib/", work_dir);
+    //  execute_cmd("/bin/cp -a /lib/i386-linux-gnu %s/lib/", work_dir);
+    //  execute_cmd("/bin/cp -a /usr/lib/i386-linux-gnu %s/lib/", work_dir);
+    execute_cmd("/bin/cp -a /lib/x86_64-linux-gnu %s/lib/", work_dir);
+    execute_cmd("/bin/cp /lib64/* %s/lib64/", work_dir);
 }
 

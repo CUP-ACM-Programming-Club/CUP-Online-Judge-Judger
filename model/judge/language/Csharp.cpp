@@ -5,6 +5,7 @@
 #include <sys/resource.h>
 #include "Csharp.h"
 #include "unistd.h"
+#include "util/util.h"
 
 void Csharp::run(int memory) {
     execl("/mono", "/mono", "--debug", "Main.exe", (char *) nullptr);
@@ -15,6 +16,34 @@ void Csharp::setProcessLimit() {
     LIM.rlim_cur = LIM.rlim_max = 80;
     setrlimit(RLIMIT_NPROC, &LIM);
 }
+
+void Csharp::buildRuntime(const char *work_dir) {
+    Language::buildRuntime(work_dir);
+    execute_cmd("/bin/mkdir %s/usr", work_dir);
+    execute_cmd("/bin/mkdir %s/proc", work_dir);
+    execute_cmd("/bin/mkdir -p %s/usr/lib/mono/2.0", work_dir);
+    execute_cmd("/bin/cp -a /usr/lib/mono %s/usr/lib/", work_dir);
+    execute_cmd("/bin/mkdir -p %s/usr/lib64/mono/2.0", work_dir);
+    execute_cmd("/bin/cp -a /usr/lib64/mono %s/usr/lib64/", work_dir);
+
+    execute_cmd("/bin/cp /usr/lib/libgthread* %s/usr/lib/", work_dir);
+
+    execute_cmd("/bin/mount -o bind /proc %s/proc", work_dir);
+    execute_cmd("/bin/cp /usr/bin/mono* %s/", work_dir);
+
+    execute_cmd("/bin/cp /usr/lib/libgthread* %s/usr/lib/", work_dir);
+    execute_cmd("/bin/cp /lib/libglib* %s/lib/", work_dir);
+    execute_cmd("/bin/cp /lib/tls/i686/cmov/lib* %s/lib/tls/i686/cmov/",
+                work_dir);
+    execute_cmd("/bin/cp /lib/libpcre* %s/lib/", work_dir);
+    execute_cmd("/bin/cp /lib/ld-linux* %s/lib/", work_dir);
+    execute_cmd("/bin/cp /lib64/ld-linux* %s/lib64/", work_dir);
+    execute_cmd("/bin/mkdir -p %s/home/judge", work_dir);
+    execute_cmd("/bin/chown judge %s/home/judge", work_dir);
+    execute_cmd("/bin/mkdir -p %s/etc", work_dir);
+    execute_cmd("/bin/grep judge /etc/passwd>%s/etc/passwd", work_dir);
+}
+
 extlang createInstancecsharp () {
     return new Csharp;
 }

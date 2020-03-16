@@ -9,7 +9,8 @@
 #include "C11.h"
 
 class Pascal : public C11 {
-
+public:
+    void buildRuntime(const char* work_dir) override;
 };
 
 

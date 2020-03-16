@@ -7,10 +7,12 @@
 
 
 #include "Language.h"
+#include "common/CPython.h"
 
-class Python3 : public Language{
+class Python3 : public Language, public CPython{
 public:
     void run(int memory);
+    void buildRuntime(const char* work_dir) override;
 };
 
 

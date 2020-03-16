@@ -7,6 +7,12 @@
 void Python2::run(int memory) {
     execl("/python2", "/python2", "Main.py", (char *) nullptr);
 }
+
+void Python2::buildRuntime(const char *work_dir) {
+    Language::buildRuntime(work_dir);
+    CPython::buildRuntime(work_dir);
+}
+
 extlang createInstancepython2() {
     return new Python2;
 }

@@ -5,6 +5,7 @@
 #include <sys/resource.h>
 #include "Ruby.h"
 #include "unistd.h"
+#include "util/util.h"
 
 void Ruby::run(int memory) {
     execl("/ruby", "/ruby", "Main.rb", (char *) nullptr);
@@ -21,4 +22,16 @@ extlang createInstanceruby() {
 
 deslang destroyInstanceruby (Language* language) {
     delete language;
+}
+
+void Ruby::buildRuntime(const char *work_dir) {
+    Language::buildRuntime(work_dir);
+    execute_cmd("mkdir -p %s/usr", work_dir);
+    execute_cmd("mkdir -p %s/usr/lib", work_dir);
+    execute_cmd("mkdir -p %s/usr/lib64", work_dir);
+    execute_cmd("cp -a /usr/lib/libruby* %s/usr/lib/", work_dir);
+    execute_cmd("cp -a /usr/lib/ruby* %s/usr/lib/", work_dir);
+    execute_cmd("cp -a /usr/lib64/ruby* %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/lib64/libruby* %s/usr/lib64/", work_dir);
+    execute_cmd("cp -a /usr/bin/ruby* %s/", work_dir);
 }

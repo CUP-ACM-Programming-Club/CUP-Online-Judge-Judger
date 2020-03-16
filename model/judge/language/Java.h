@@ -14,6 +14,7 @@ public:
     void setProcessLimit();
     void setCompileProcessLimit();
     void compile(std::vector<std::string>&, const char*, const char*);
+    void buildRuntime(const char* work_dir);
 private:
     void setAlarm();
     void setASLimit();

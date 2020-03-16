@@ -14,6 +14,7 @@ public:
     virtual void setProcessLimit();
     virtual void setCompileProcessLimit();
     virtual void compile(std::vector<std::string>&, const char*, const char*);
+    virtual void buildRuntime(const char* work_dir);
 protected:
     virtual void setCPULimit();
     virtual void setFSizeLimit();

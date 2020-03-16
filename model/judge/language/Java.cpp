@@ -65,3 +65,7 @@ void Java::compile(std::vector<std::string> &_args, const char * java_xms, const
     sprintf(java_buffer[2], "-J%s", java_xmx);
     execvp(java_arg[0], (char *const *) java_arg);
 }
+
+void Java::buildRuntime(const char *work_dir) {
+    // do nothing
+}
