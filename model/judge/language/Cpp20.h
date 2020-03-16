@@ -5,10 +5,9 @@
 #ifndef JUDGE_LIBRARY_CPP20_H
 #define JUDGE_LIBRARY_CPP20_H
 
+#include "C11.h"
 
-#include "Language.h"
-
-class Cpp20: public Language {
+class Cpp20: public C11 {
 
 };
 

@@ -3,3 +3,11 @@
 //
 
 #include "Cpp20.h"
+
+extlang createInstancecpp20 () {
+    return new Cpp20;
+}
+
+deslang destroyInstancecpp20 (Language* language) {
+    delete language;
+}
