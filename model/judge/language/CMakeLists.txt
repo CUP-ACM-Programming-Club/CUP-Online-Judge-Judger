@@ -29,6 +29,7 @@ add_library(clangpp SHARED Clangpp.h Clangpp.cpp C11.h C11.cpp Language.h Langua
 add_library(clangpp17 SHARED Clangpp17.h Clangpp17.cpp C11.h C11.cpp Language.h Language.cpp util/util.h util/util.cpp syscall/c11/syscall32.h syscall/c11/syscall64.h)
 add_library(cpp11 SHARED Cpp11.cpp Cpp11.h C11.h C11.cpp Language.h Language.cpp util/util.h util/util.cpp syscall/c11/syscall32.h syscall/c11/syscall64.h)
 add_library(cpp17 SHARED Cpp17.cpp Cpp17.h C11.h C11.cpp Language.h Language.cpp util/util.h util/util.cpp syscall/c11/syscall32.h syscall/c11/syscall64.h)
+add_library(cpp20 SHARED Cpp20.cpp Cpp20.h C11.h C11.cpp Language.h Language.cpp util/util.h util/util.cpp syscall/c11/syscall32.h syscall/c11/syscall64.h)
 add_library(cpp98 SHARED Cpp98.cpp Cpp98.h C11.h C11.cpp Language.h Language.cpp util/util.h util/util.cpp syscall/c11/syscall32.h syscall/c11/syscall64.h)
 add_library(csharp SHARED Csharp.cpp Csharp.h Language.h Language.cpp util/util.h util/util.cpp common/BonusLimit.cpp common/BonusLimit.h syscall/csharp/syscall32.h syscall/csharp/syscall64.h)
 add_library(freebasic SHARED FreeBasic.cpp FreeBasic.h C11.h C11.cpp Language.h Language.cpp util/util.h util/util.cpp common/BonusLimit.cpp common/BonusLimit.h syscall/freebasic/syscall32.h syscall/freebasic/syscall64.h)
