@@ -11,4 +11,6 @@ make && \
 cd build/out && \
 mkdir -p /usr/lib/cupjudge && \
 cp * /usr/lib/cupjudge/ && \
+chgrp -R judge /usr/lib/cupjudge && \
+chown -R judge /usr/lib/cupjudge && \
 cd ../../../../../
