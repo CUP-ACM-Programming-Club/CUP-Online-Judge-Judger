@@ -6,4 +6,5 @@
 #define JUDGE_CLIENT_UTIL_H
 
 extern int execute_cmd(const char *fmt, ...);
+extern long get_file_size(const char *filename);
 #endif //JUDGE_CLIENT_UTIL_H

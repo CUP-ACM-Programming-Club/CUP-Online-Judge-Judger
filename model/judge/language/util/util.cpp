@@ -16,3 +16,13 @@ int execute_cmd(const char *fmt, ...) {
     va_end(ap);
     return ret;
 }
+
+long get_file_size(const char *filename) {
+    struct stat f_stat{};
+
+    if (stat(filename, &f_stat) == -1) {
+        return 0;
+    }
+
+    return (long) f_stat.st_size;
+}
