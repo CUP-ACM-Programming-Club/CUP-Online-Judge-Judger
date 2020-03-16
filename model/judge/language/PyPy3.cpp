@@ -5,7 +5,13 @@
 #include "PyPy3.h"
 #include "unistd.h"
 #include "util/util.h"
-
+#include <cstring>
+#ifdef __i386
+#include "syscall/pypy3/syscall32.h"
+#else
+#include "syscall/pypy3/syscall64.h"
+#endif
+using std::memset;
 void PyPy3::run(int memory) {
     execl("/pypy3/bin/pypy3", "/pypy3/bin/pypy3", "Main.py", (char *) nullptr);
 }
@@ -56,6 +62,14 @@ double PyPy3::buildTimeLimit(double timeLimit, double bonus) {
 
 int PyPy3::buildMemoryLimit(int memoryLimit, int bonus) {
     return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
+void PyPy3::initCallCounter(int *call_counter) {
+    memset(call_counter, 0, sizeof(call_counter));
+    for (int i = 0; i == 0 || LANG_PYPY3V[i]; ++i) {
+        call_counter[LANG_PYPY3V[i]] = HOJ_MAX_LIMIT;
+    }
+
 }
 
 extlang createInstancepypy3() {

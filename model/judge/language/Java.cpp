@@ -9,6 +9,11 @@
 #include <cstring>
 #include <string>
 #include <sys/resource.h>
+#ifdef __i386
+#include "syscall/java/syscall32.h"
+#else
+#include "syscall/java/syscall64.h"
+#endif
 
 using std::sprintf;
 using std::memcpy;
@@ -83,4 +88,10 @@ void Java::setExtraPolicy(const char* oj_home, const char* work_dir) {
     execute_cmd("/bin/cp %s/etc/java0.policy %s/java.policy", oj_home, work_dir);
     execute_cmd("chmod 755 %s/java.policy", work_dir);
     execute_cmd("chown judge %s/java.policy", work_dir);
+}
+
+void Java::initCallCounter(int *call_counter) {
+    memset(call_counter, 0, sizeof(call_counter));
+    for (int i = 0; i == 0 || LANG_JV[i]; i++)
+        call_counter[LANG_JV[i]] = HOJ_MAX_LIMIT;
 }

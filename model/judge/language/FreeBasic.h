@@ -14,6 +14,7 @@ public:
     void buildRuntime(const char* work_dir);
     double buildTimeLimit(double timeLimit, double bonus) override;
     int buildMemoryLimit(int timeLimit, int bonus) override;
+    void initCallCounter(int* call_counter) override;
 };
 
 

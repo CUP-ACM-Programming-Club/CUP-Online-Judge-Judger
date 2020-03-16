@@ -5,6 +5,13 @@
 #include "PyPy.h"
 #include "unistd.h"
 #include "util/util.h"
+#include <cstring>
+#ifdef __i386
+#include "syscall/pypy/syscall32.h"
+#else
+#include "syscall/pypy/syscall64.h"
+#endif
+using std::memset;
 
 void PyPy::run(int memory) {
     execl("/pypy/bin/pypy", "/pypy/bin/pypy", "Main.py", (char *) nullptr);
@@ -44,6 +51,13 @@ double PyPy::buildTimeLimit(double timeLimit, double bonus) {
 
 int PyPy::buildMemoryLimit(int memoryLimit, int bonus) {
     return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
+void PyPy::initCallCounter(int *call_counter) {
+    memset(call_counter, 0, sizeof(call_counter));
+    for (int i = 0; i == 0 || LANG_PYPYV[i]; ++i) {
+        call_counter[LANG_PYPYV[i]] = HOJ_MAX_LIMIT;
+    }
 }
 
 extlang createInstancepypy () {

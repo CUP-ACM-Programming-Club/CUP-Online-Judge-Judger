@@ -6,7 +6,13 @@
 #include "Ruby.h"
 #include "unistd.h"
 #include "util/util.h"
-
+#include <cstring>
+#ifdef __i386
+#include "syscall/ruby/syscall32.h"
+#else
+#include "syscall/ruby/syscall64.h"
+#endif
+using std::memset;
 void Ruby::run(int memory) {
     execl("/ruby", "/ruby", "Main.rb", (char *) nullptr);
 }
@@ -42,4 +48,11 @@ double Ruby::buildTimeLimit(double timeLimit, double bonus) {
 
 int Ruby::buildMemoryLimit(int memoryLimit, int bonus) {
     return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
+void Ruby::initCallCounter(int *call_counter) {
+    memset(call_counter, 0, sizeof(call_counter));
+    for (int i = 0; i == 0 || LANG_RV[i]; ++i) {
+        call_counter[LANG_RV[i]] = HOJ_MAX_LIMIT;
+    }
 }

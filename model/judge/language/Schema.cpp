@@ -6,7 +6,13 @@
 #include "Schema.h"
 #include "unistd.h"
 #include "util/util.h"
-
+#include <cstring>
+#ifdef __i386
+#include "syscall/schema/syscall32.h"
+#else
+#include "syscall/schema/syscall64.h"
+#endif
+using std::memset;
 void Schema::run(int memory) {
     execl("/guile", "/guile", "Main.scm", (char *) nullptr);
 }
@@ -43,6 +49,13 @@ double Schema::buildTimeLimit(double timeLimit, double bonus) {
 
 int Schema::buildMemoryLimit(int memoryLimit, int bonus) {
     return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
+void Schema::initCallCounter(int *call_counter) {
+    memset(call_counter, 0, sizeof(call_counter));
+    for (int i = 0; i == 0 || LANG_SV[i]; ++i) {
+        call_counter[LANG_SV[i]] = HOJ_MAX_LIMIT;
+    }
 }
 
 extlang createInstanceschema () {

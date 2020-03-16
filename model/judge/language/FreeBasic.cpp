@@ -4,6 +4,12 @@
 
 #include "FreeBasic.h"
 #include "util/util.h"
+#include <cstring>
+#ifdef __i386
+#include "syscall/freebasic/syscall32.h"
+#else
+#include "syscall/freebasic/syscall64.h"
+#endif
 
 extlang createInstancefreebasic () {
     return new FreeBasic;
@@ -28,4 +34,10 @@ double FreeBasic::buildTimeLimit(double timeLimit, double bonus) {
 
 int FreeBasic::buildMemoryLimit(int timeLimit, int bonus) {
     return BonusLimit::buildBonusMemoryLimit(timeLimit, bonus);
+}
+
+void FreeBasic::initCallCounter(int *call_counter) {
+    memset(call_counter, 0, sizeof(call_counter));
+    for (int i = 0; i == 0 || LANG_BASICV[i]; i++)
+        call_counter[LANG_BASICV[i]] = HOJ_MAX_LIMIT;
 }

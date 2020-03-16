@@ -5,6 +5,13 @@
 #include "Php.h"
 #include "unistd.h"
 #include "util/util.h"
+#include <cstring>
+#ifdef __i386
+#include "syscall/php/syscall32.h"
+#else
+#include "syscall/php/syscall64.h"
+#endif
+using std::memset;
 
 void Php::run(int memory) {
     execl("/php", "/php", "Main.php", (char *) nullptr);
@@ -37,6 +44,12 @@ double Php::buildTimeLimit(double timeLimit, double bonus) {
 
 int Php::buildMemoryLimit(int memoryLimit, int bonus) {
     return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
+void Php::initCallCounter(int *call_counter) {
+    memset(call_counter, 0, sizeof(call_counter));
+    for (int i = 0; i == 0 || LANG_PHV[i]; i++)
+        call_counter[LANG_PHV[i]] = HOJ_MAX_LIMIT;
 }
 
 extlang createInstancephp() {

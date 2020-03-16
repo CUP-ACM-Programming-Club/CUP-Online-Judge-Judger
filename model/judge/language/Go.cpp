@@ -4,6 +4,13 @@
 
 #include <sys/resource.h>
 #include "Go.h"
+#include <cstring>
+using std::memset;
+#ifdef __i386
+#include "syscall/go/syscall32.h"
+#else
+#include "syscall/go/syscall64.h"
+#endif
 
 const int COMPILE_STD_MB = 1 << 20;
 
@@ -40,4 +47,10 @@ double Go::buildTimeLimit(double timeLimit, double bonus) {
 
 int Go::buildMemoryLimit(int memoryLimit, int bonus) {
     return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
+void Go::initCallCounter(int *call_counter) {
+    memset(call_counter, 0, sizeof(call_counter));
+    for (int i = 0; i == 0 || LANG_GOV[i]; i++)
+        call_counter[LANG_GOV[i]] = HOJ_MAX_LIMIT;
 }

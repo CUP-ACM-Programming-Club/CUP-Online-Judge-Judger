@@ -6,6 +6,8 @@
 #define JUDGE_CLIENT_LANGUAGE_H
 #define extlang extern "C" Language*
 #define deslang extern "C" void
+#define HOJ_MAX_LIMIT (-1)
+
 #include <vector>
 #include <string>
 class Language {
@@ -18,6 +20,7 @@ public:
     virtual double buildTimeLimit(double timeLimit, double bonus);
     virtual int buildMemoryLimit(int memoryLimit, int bonus);
     virtual void setExtraPolicy(const char* oj_home, const char* work_dir);
+    virtual void initCallCounter(int* call_counter) = 0;
     virtual ~Language();
 protected:
     virtual void setCPULimit();

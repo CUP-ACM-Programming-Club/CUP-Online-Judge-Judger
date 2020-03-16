@@ -4,6 +4,13 @@
 
 #include "Objc.h"
 #include "util/util.h"
+#include <cstring>
+#ifdef __i386
+#include "syscall/objectivec/syscall32.h"
+#else
+#include "syscall/objectivec/syscall64.h"
+#endif
+using std::memset;
 
 extlang createInstanceobjectivec() {
     return new Objc;
@@ -81,4 +88,10 @@ void Objc::buildRuntime(const char *work_dir) {
     execute_cmd(
             "/bin/cp -aL /usr/lib/libxslt.so.1                        %s/lib/ ",
             work_dir);
+}
+
+void Objc::initCallCounter(int *call_counter) {
+    memset(call_counter, 0, sizeof(call_counter));
+    for (int i = 0; i == 0 || LANG_OV[i]; i++)
+        call_counter[LANG_OV[i]] = HOJ_MAX_LIMIT;
 }

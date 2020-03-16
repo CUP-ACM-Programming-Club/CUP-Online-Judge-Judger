@@ -6,7 +6,13 @@
 #include "Bash.h"
 #include "unistd.h"
 #include "util/util.h"
-
+#include <cstring>
+#ifdef __i386
+#include "syscall/bash/syscall32.h"
+#else
+#include "syscall/bash/syscall64.h"
+#endif
+using std::memset;
 void Bash::run(int memory) {
     execl("/bin/bash", "/bin/bash", "Main.sh", (char *) nullptr);
 }
@@ -44,4 +50,11 @@ double Bash::buildTimeLimit(double timeLimit, double bonus) {
 
 int Bash::buildMemoryLimit(int memoryLimit, int bonus) {
     return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
+void Bash::initCallCounter(int *call_counter) {
+    memset(call_counter,0, sizeof(call_counter));
+    for(int i = 0; i == 0 || LANG_BV[i]; ++i) {
+        call_counter[LANG_BV[i]] = HOJ_MAX_LIMIT;
+    }
 }

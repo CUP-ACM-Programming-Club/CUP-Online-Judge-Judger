@@ -4,13 +4,25 @@
 
 #include "C11.h"
 #include <unistd.h>
-#include <iostream>
+#include <cstring>
+#ifdef __i386
+#include "syscall/c11/syscall32.h"
+#else
+#include "syscall/c11/syscall64.h"
+#endif
+using std::memset;
 void C11::run(int memory) {
     execl("./Main", "./Main", (char *) nullptr);
 }
 
 void C11::buildRuntime(const char *work_dir) {
     // do nothing
+}
+
+void C11::initCallCounter(int *call_counter) {
+    for (int i = 0; i == 0 || LANG_CV[i]; i++) {
+        call_counter[LANG_CV[i]] = HOJ_MAX_LIMIT;
+    }
 }
 
 extern "C" Language* createInstancec11() {

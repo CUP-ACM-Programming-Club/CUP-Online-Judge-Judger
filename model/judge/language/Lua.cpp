@@ -5,6 +5,13 @@
 #include "Lua.h"
 #include "unistd.h"
 #include "util/util.h"
+#include <cstring>
+#ifdef __i386
+#include "syscall/lua/syscall32.h"
+#else
+#include "syscall/lua/syscall64.h"
+#endif
+using std::memset;
 
 void Lua::run(int memory) {
     execl("/lua", "/lua", "Main", (char *) nullptr);
@@ -23,6 +30,12 @@ double Lua::buildTimeLimit(double timeLimit, double bonus) {
 
 int Lua::buildMemoryLimit(int memoryLimit, int bonus) {
     return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
+void Lua::initCallCounter(int *call_counter) {
+    memset(call_counter, 0, sizeof(call_counter));
+    for (int i = 0; i == 0 || LANG_LUAV[i]; i++)
+        call_counter[LANG_LUAV[i]] = HOJ_MAX_LIMIT;
 }
 
 

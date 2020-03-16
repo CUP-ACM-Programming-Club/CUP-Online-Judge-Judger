@@ -5,6 +5,13 @@
 #include "Perl.h"
 #include "unistd.h"
 #include "util/util.h"
+#include <cstring>
+#ifdef __i386
+#include "syscall/perl/syscall32.h"
+#else
+#include "syscall/perl/syscall64.h"
+#endif
+using std::memset;
 
 void Perl::run(int memory) {
     execl("/perl", "/perl", "Main.pl", (char *) nullptr);
@@ -24,6 +31,12 @@ double Perl::buildTimeLimit(double timeLimit, double bonus) {
 
 int Perl::buildMemoryLimit(int memoryLimit, int bonus) {
     return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
+void Perl::initCallCounter(int *call_counter) {
+    memset(call_counter, 0, sizeof(call_counter));
+    for (int i = 0; i == 0 || LANG_PLV[i]; i++)
+        call_counter[LANG_PLV[i]] = HOJ_MAX_LIMIT;
 }
 
 extlang createInstanceperl () {
