@@ -149,7 +149,7 @@ const int DEFAULT_SOLUTION_ID = 1000;
 extern int DEBUG;
 extern int NO_RECORD;
 extern bool MYSQL_MODE;
-extern char lang_ext[30][8];
+extern char lang_ext[31][8];
 extern char host_name[BUFFER_SIZE];
 extern char user_name[BUFFER_SIZE];
 extern char password[BUFFER_SIZE];
