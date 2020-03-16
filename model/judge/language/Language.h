@@ -15,6 +15,10 @@ public:
     virtual void setCompileProcessLimit();
     virtual void compile(std::vector<std::string>&, const char*, const char*);
     virtual void buildRuntime(const char* work_dir);
+    virtual double buildTimeLimit(double timeLimit, double bonus);
+    virtual int buildMemoryLimit(int memoryLimit, int bonus);
+    virtual void setExtraPolicy(const char* oj_home, const char* work_dir);
+    virtual ~Language();
 protected:
     virtual void setCPULimit();
     virtual void setFSizeLimit();

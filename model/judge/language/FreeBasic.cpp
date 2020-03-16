@@ -21,3 +21,11 @@ void FreeBasic::buildRuntime(const char *work_dir) {
     execute_cmd("/bin/cp /usr/local/bin/fbc %s/", work_dir);
     execute_cmd("/bin/cp -a /lib32/* %s/lib/", work_dir);
 }
+
+double FreeBasic::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int FreeBasic::buildMemoryLimit(int timeLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(timeLimit, bonus);
+}

@@ -63,6 +63,14 @@ void JavaScript::buildRuntime(const char *work_dir) {
     execute_cmd("/bin/cp /usr/local/bin/node %s/", work_dir);
 }
 
+double JavaScript::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int JavaScript::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
 extlang createInstancejavascript() {
     return new JavaScript;
 }

@@ -44,6 +44,14 @@ void Csharp::buildRuntime(const char *work_dir) {
     execute_cmd("/bin/grep judge /etc/passwd>%s/etc/passwd", work_dir);
 }
 
+double Csharp::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int Csharp::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
 extlang createInstancecsharp () {
     return new Csharp;
 }

@@ -33,3 +33,11 @@ void Go::setASLimit() {
     LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB << 11);
     setrlimit(RLIMIT_AS, &LIM);
 }
+
+double Go::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int Go::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}

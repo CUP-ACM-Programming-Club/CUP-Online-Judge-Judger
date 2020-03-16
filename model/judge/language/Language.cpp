@@ -78,3 +78,19 @@ void Language::buildRuntime(const char* work_dir) {
     execute_cmd("/bin/cp /lib64/* %s/lib64/", work_dir);
 }
 
+double Language::buildTimeLimit(double timeLimit, double bonus) {
+    return timeLimit;
+}
+
+int Language::buildMemoryLimit(int memoryLimit, int bonus) {
+    return memoryLimit;
+}
+
+void Language::setExtraPolicy(const char* oj_home, const char* work_dir) {
+    // do nothing
+}
+
+Language::~Language() {
+
+}
+

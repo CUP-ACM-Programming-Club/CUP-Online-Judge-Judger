@@ -37,6 +37,14 @@ void Schema::buildRuntime(const char *work_dir) {
     execute_cmd("/bin/cp /usr/bin/guile* %s/", work_dir);
 }
 
+double Schema::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int Schema::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
 extlang createInstanceschema () {
     return new Schema;
 }

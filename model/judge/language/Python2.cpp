@@ -13,6 +13,14 @@ void Python2::buildRuntime(const char *work_dir) {
     CPython::buildRuntime(work_dir);
 }
 
+double Python2::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int Python2::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
 extlang createInstancepython2() {
     return new Python2;
 }

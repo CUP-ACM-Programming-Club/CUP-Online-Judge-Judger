@@ -7,12 +7,15 @@
 
 
 #include "Language.h"
+#include "common/BonusLimit.h"
 
-class Ruby : public Language{
+class Ruby : public Language, protected BonusLimit {
 public:
     void run(int memory);
     void setProcessLimit();
     void buildRuntime(const char* work_dir);
+    double buildTimeLimit(double timeLimit, double bonus) override;
+    int buildMemoryLimit(int memoryLimit, int bonus) override;
 };
 
 

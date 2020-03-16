@@ -31,6 +31,14 @@ void Php::buildRuntime(const char *work_dir) {
     execute_cmd("chmod +rx %s/Main.php", work_dir);
 }
 
+double Php::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int Php::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
 extlang createInstancephp() {
     return new Php;
 }

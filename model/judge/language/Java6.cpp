@@ -4,7 +4,7 @@
 
 #include "Java6.h"
 #include <cstdio>
-#include "unistd.h";
+#include "unistd.h"
 using std::sprintf;
 
 void Java6::run(int memory) {

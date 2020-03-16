@@ -975,6 +975,10 @@ int main(int argc, char **argv) {
         getProblemInfoFromSubmissionInfo(submissionInfo, timeLimit, memoryLimit, SPECIAL_JUDGE);
         getSolutionFromSubmissionInfo(submissionInfo, usercode);
     }
+    shared_ptr<Language> languageModel(getLanguageModel(lang));
+    timeLimit = languageModel->buildTimeLimit(timeLimit, javaTimeBonus);
+    memoryLimit = languageModel->buildMemoryLimit(memoryLimit, java_memory_bonus);
+    languageModel->setExtraPolicy(oj_home, work_dir);
 /*
 */
     //get the limit
@@ -983,17 +987,6 @@ int main(int argc, char **argv) {
     }
     //copy source file
     //java is lucky
-    if (lang != OBJC && !isCOrCPP(lang) && lang != PASCAL) {  // Clang Clang++ not VM or Script
-        // the limit for java
-        timeLimit = timeLimit * javaTimeBonus + javaTimeBonus;
-        memoryLimit = memoryLimit + java_memory_bonus;
-        // copy java.policy
-        if (isJava(lang)) {
-            execute_cmd("/bin/cp %s/etc/java0.policy %s/java.policy", oj_home, work_dir);
-            execute_cmd("chmod 755 %s/java.policy", work_dir);
-            execute_cmd("chown judge %s/java.policy", work_dir);
-        }
-    }
 
     //never bigger than judged set value;
     if (timeLimit > 300 * SECOND || timeLimit < ZERO) {
@@ -1042,7 +1035,6 @@ int main(int argc, char **argv) {
     double usedtime = ZERO_TIME;
 
     //create chroot for ruby bash python
-    shared_ptr<Language> languageModel(getLanguageModel(lang));
     languageModel->buildRuntime(work_dir);
     // read files and run
     double pass_rate = ZERO_PASSRATE;

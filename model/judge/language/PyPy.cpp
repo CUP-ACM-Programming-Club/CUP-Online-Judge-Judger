@@ -38,6 +38,14 @@ void PyPy::buildRuntime(const char *work_dir) {
     execute_cmd("/bin/mount -o bind /dev %s/dev", work_dir);
 }
 
+double PyPy::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int PyPy::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
 extlang createInstancepypy () {
     return new PyPy;
 }

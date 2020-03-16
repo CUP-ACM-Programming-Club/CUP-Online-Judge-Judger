@@ -17,6 +17,14 @@ void Lua::buildRuntime(const char *work_dir) {
     execute_cmd("/bin/cp /usr/bin/lua %s/", work_dir);
 }
 
+double Lua::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int Lua::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
 
 extlang createInstancelua() {
     return new Lua;

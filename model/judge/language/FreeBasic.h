@@ -7,10 +7,13 @@
 
 
 #include "C11.h"
+#include "common/BonusLimit.h"
 
-class FreeBasic : public C11 {
+class FreeBasic : public C11, protected BonusLimit {
 public:
     void buildRuntime(const char* work_dir);
+    double buildTimeLimit(double timeLimit, double bonus) override;
+    int buildMemoryLimit(int timeLimit, int bonus) override;
 };
 
 

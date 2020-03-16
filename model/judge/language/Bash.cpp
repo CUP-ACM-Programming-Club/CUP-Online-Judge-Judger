@@ -37,3 +37,11 @@ void Bash::buildRuntime(const char *work_dir) {
     execute_cmd("/bin/ln -s /bin/busybox %s/bin/xargs", work_dir);
     execute_cmd("chmod +rx %s/Main.sh", work_dir);
 }
+
+double Bash::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int Bash::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}

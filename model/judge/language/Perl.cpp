@@ -18,6 +18,14 @@ void Perl::buildRuntime(const char *work_dir) {
     execute_cmd("/bin/cp /usr/bin/perl* %s/", work_dir);
 }
 
+double Perl::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int Perl::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
 extlang createInstanceperl () {
     return new Perl;
 }

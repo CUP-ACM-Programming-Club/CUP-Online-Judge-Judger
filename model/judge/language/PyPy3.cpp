@@ -50,6 +50,14 @@ void PyPy3::buildRuntime(const char *work_dir) {
     execute_cmd("/bin/mount -o bind /dev %s/dev", work_dir);
 }
 
+double PyPy3::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int PyPy3::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
 extlang createInstancepypy3() {
     return new PyPy3;
 }

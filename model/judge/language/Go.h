@@ -7,11 +7,14 @@
 
 
 #include "C11.h"
+#include "common/BonusLimit.h"
 
-class Go : public C11 {
+class Go : public C11, protected BonusLimit {
 public:
     void setProcessLimit();
     void setCompileProcessLimit();
+    double buildTimeLimit(double timeLimit, double bonus) override;
+    int buildMemoryLimit(int memoryLimit, int bonus) override;
 private:
     void setASLimit();
 };

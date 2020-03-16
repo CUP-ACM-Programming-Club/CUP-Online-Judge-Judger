@@ -35,3 +35,11 @@ void Ruby::buildRuntime(const char *work_dir) {
     execute_cmd("cp -a /usr/lib64/libruby* %s/usr/lib64/", work_dir);
     execute_cmd("cp -a /usr/bin/ruby* %s/", work_dir);
 }
+
+double Ruby::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int Ruby::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}

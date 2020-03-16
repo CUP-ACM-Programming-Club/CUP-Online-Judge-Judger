@@ -4,6 +4,7 @@
 
 #include "Java.h"
 #include "unistd.h"
+#include "util/util.h"
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -68,4 +69,18 @@ void Java::compile(std::vector<std::string> &_args, const char * java_xms, const
 
 void Java::buildRuntime(const char *work_dir) {
     // do nothing
+}
+
+double Java::buildTimeLimit(double timeLimit, double bonus) {
+    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
+}
+
+int Java::buildMemoryLimit(int memoryLimit, int bonus) {
+    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
+}
+
+void Java::setExtraPolicy(const char* oj_home, const char* work_dir) {
+    execute_cmd("/bin/cp %s/etc/java0.policy %s/java.policy", oj_home, work_dir);
+    execute_cmd("chmod 755 %s/java.policy", work_dir);
+    execute_cmd("chown judge %s/java.policy", work_dir);
 }
