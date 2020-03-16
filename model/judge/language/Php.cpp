@@ -47,7 +47,7 @@ int Php::buildMemoryLimit(int memoryLimit, int bonus) {
 }
 
 void Php::initCallCounter(int *call_counter) {
-    memset(call_counter, 0, sizeof(call_counter));
+    memset(call_counter, 0, call_array_size);
     for (int i = 0; i == 0 || LANG_PHV[i]; i++)
         call_counter[LANG_PHV[i]] = HOJ_MAX_LIMIT;
 }

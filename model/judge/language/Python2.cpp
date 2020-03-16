@@ -9,6 +9,8 @@
 #include "syscall/python2/syscall32.h"
 #else
 #include "syscall/python2/syscall64.h"
+#include "util/util.h"
+
 #endif
 using std::memset;
 void Python2::run(int memory) {
@@ -29,10 +31,14 @@ int Python2::buildMemoryLimit(int memoryLimit, int bonus) {
 }
 
 void Python2::initCallCounter(int *call_counter) {
-    memset(call_counter, 0, sizeof(call_counter));
+    memset(call_counter, 0, call_array_size);
     for (int i = 0; i == 0 || LANG_YV[i]; ++i) {
         call_counter[LANG_YV[i]] = HOJ_MAX_LIMIT;
     }
+}
+
+int Python2::getCompileResult(int status) {
+    return static_cast<int>(get_file_size("ce.txt"));
 }
 
 extlang createInstancepython2() {

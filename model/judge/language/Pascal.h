@@ -12,6 +12,7 @@ class Pascal : public C11 {
 public:
     void buildRuntime(const char* work_dir) override;
     void initCallCounter(int* call_counter) override;
+    void setCompileExtraConfig();
 };
 
 

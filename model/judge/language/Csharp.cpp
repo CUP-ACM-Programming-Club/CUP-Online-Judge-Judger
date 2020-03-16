@@ -59,7 +59,7 @@ int Csharp::buildMemoryLimit(int memoryLimit, int bonus) {
 }
 
 void Csharp::initCallCounter(int *call_counter) {
-    memset(call_counter, 0, sizeof(call_counter));
+    memset(call_counter, 0, call_array_size);
     for (int i = 0; i == 0 || LANG_CSV[i]; i++)
         call_counter[LANG_CSV[i]] = HOJ_MAX_LIMIT;
 }

@@ -20,6 +20,7 @@ public:
     int buildMemoryLimit(int memoryLimit, int bonus) override;
     void setExtraPolicy(const char* oj_home, const char* work_dir) override;
     void initCallCounter(int* call_counter) override;
+    void setCompileMount(const char* work_dir) override;
 private:
     void setAlarm();
     void setASLimit();

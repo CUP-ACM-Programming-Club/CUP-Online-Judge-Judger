@@ -92,11 +92,6 @@ using ConfigReader = JSONVectorReader;
 //static int sleep_tmp;
 #define ZOJ_COM
 
-
-
-
-
-const int call_array_size = 512;
 int call_counter[call_array_size];
 static char LANG_NAME[BUFFER_SIZE];
 
@@ -388,33 +383,12 @@ int compile(int lang, char *work_dir) {
     string configJSONDir = oj_home;
     configJSONDir += "/etc/compile.json";
     CompilerArgsReader compilerArgsReader(configJSONDir);
+    shared_ptr<Language> languageModel(getLanguageModel(lang));
     pid = fork();
     if (pid == CHILD_PROCESS) {
-        shared_ptr<Language> languageModel(getLanguageModel(lang));
         languageModel->setCompileProcessLimit();
-        if (lang != PASCAL && lang != FREEBASIC) {
-            freopen("ce.txt", "w", stderr);
-            //freopen("/dev/null", "w", stdout);
-        } else {
-            freopen("ce.txt", "w", stdout);
-        }
-        if (!isCOrCPP(lang) && lang != FREEBASIC
-            && !isJava(lang)) {
-            execute_cmd("mkdir -p bin usr lib lib64 etc/alternatives proc tmp dev");
-            execute_cmd("chown judge *");
-            execute_cmd("mount -o bind /bin bin");
-            execute_cmd("mount -o bind /usr usr");
-            execute_cmd("mount -o bind /lib lib");
-#ifndef __i386
-            execute_cmd("mount -o bind /lib64 lib64");
-#endif
-            execute_cmd("mount -o bind /etc/alternatives etc/alternatives");
-            execute_cmd("mount -o bind /proc proc");
-            if (lang > PASCAL && lang != OBJC && !isCOrCPP(lang))
-                execute_cmd("mount -o bind /dev dev");
-            chroot(work_dir);
-            //chroot(work_dir);
-        }
+        languageModel->setCompileExtraConfig();
+        languageModel->setCompileMount(work_dir);
         while (setgid(1536) != 0)
             sleep(1);
         while (setuid(1536) != 0)
@@ -433,8 +407,7 @@ int compile(int lang, char *work_dir) {
     } else {
         int status = 0;
         waitpid(pid, &status, 0);
-        if (lang > JAVA && lang < PHP)
-            status = static_cast<int>(get_file_size("ce.txt"));
+        status = languageModel->getCompileResult(status);
         if (DEBUG)
             printf("status=%d\n", status);
         execute_cmd("/bin/umount -f bin usr lib lib64 etc/alternatives proc dev 2>&1 >/dev/null");

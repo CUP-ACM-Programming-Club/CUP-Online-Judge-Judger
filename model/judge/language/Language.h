@@ -7,7 +7,7 @@
 #define extlang extern "C" Language*
 #define deslang extern "C" void
 #define HOJ_MAX_LIMIT (-1)
-
+const int call_array_size = 512;
 #include <vector>
 #include <string>
 class Language {
@@ -21,6 +21,9 @@ public:
     virtual int buildMemoryLimit(int memoryLimit, int bonus);
     virtual void setExtraPolicy(const char* oj_home, const char* work_dir);
     virtual void initCallCounter(int* call_counter) = 0;
+    virtual void setCompileExtraConfig();
+    virtual void setCompileMount(const char* work_dir);
+    virtual int getCompileResult(int status);
     virtual ~Language();
 protected:
     virtual void setCPULimit();

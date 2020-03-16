@@ -51,8 +51,12 @@ int Ruby::buildMemoryLimit(int memoryLimit, int bonus) {
 }
 
 void Ruby::initCallCounter(int *call_counter) {
-    memset(call_counter, 0, sizeof(call_counter));
+    memset(call_counter, 0, call_array_size);
     for (int i = 0; i == 0 || LANG_RV[i]; ++i) {
         call_counter[LANG_RV[i]] = HOJ_MAX_LIMIT;
     }
+}
+
+int Ruby::getCompileResult(int status) {
+    return static_cast<int>(get_file_size("ce.txt"));
 }

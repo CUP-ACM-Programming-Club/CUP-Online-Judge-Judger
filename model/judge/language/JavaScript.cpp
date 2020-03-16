@@ -80,7 +80,7 @@ int JavaScript::buildMemoryLimit(int memoryLimit, int bonus) {
 }
 
 void JavaScript::initCallCounter(int *call_counter) {
-    memset(call_counter, 0, sizeof(call_counter));
+    memset(call_counter, 0, call_array_size);
     for (int i = 0; i == 0 || LANG_JSV[i]; i++)
         call_counter[LANG_JSV[i]] = HOJ_MAX_LIMIT;
 }

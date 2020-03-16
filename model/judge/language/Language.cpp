@@ -94,3 +94,26 @@ Language::~Language() {
 
 }
 
+void Language::setCompileExtraConfig() {
+    freopen("ce.txt", "w", stderr);
+}
+
+void Language::setCompileMount(const char* work_dir) {
+    execute_cmd("mkdir -p bin usr lib lib64 etc/alternatives proc tmp dev");
+    execute_cmd("chown judge *");
+    execute_cmd("mount -o bind /bin bin");
+    execute_cmd("mount -o bind /usr usr");
+    execute_cmd("mount -o bind /lib lib");
+#ifndef __i386
+    execute_cmd("mount -o bind /lib64 lib64");
+#endif
+    execute_cmd("mount -o bind /etc/alternatives etc/alternatives");
+    execute_cmd("mount -o bind /proc proc");
+    execute_cmd("mount -o bind /dev dev");
+    chroot(work_dir);
+}
+
+int Language::getCompileResult(int status) {
+    return status;
+}
+

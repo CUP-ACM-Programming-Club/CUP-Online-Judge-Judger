@@ -15,6 +15,8 @@ public:
     double buildTimeLimit(double timeLimit, double bonus) override;
     int buildMemoryLimit(int timeLimit, int bonus) override;
     void initCallCounter(int* call_counter) override;
+    void setCompileExtraConfig() override;
+    void setCompileMount(const char* work_dir) override;
 };
 
 

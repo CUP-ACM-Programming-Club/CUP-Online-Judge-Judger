@@ -91,7 +91,11 @@ void Java::setExtraPolicy(const char* oj_home, const char* work_dir) {
 }
 
 void Java::initCallCounter(int *call_counter) {
-    memset(call_counter, 0, sizeof(call_counter));
+    memset(call_counter, 0, call_array_size);
     for (int i = 0; i == 0 || LANG_JV[i]; i++)
         call_counter[LANG_JV[i]] = HOJ_MAX_LIMIT;
+}
+
+void Java::setCompileMount(const char *work_dir) {
+    // do nothing
 }

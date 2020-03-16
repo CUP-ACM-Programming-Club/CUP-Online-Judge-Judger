@@ -25,6 +25,10 @@ void C11::initCallCounter(int *call_counter) {
     }
 }
 
+void C11::setCompileMount(const char *work_dir) {
+    // do nothing
+}
+
 extern "C" Language* createInstancec11() {
     return new C11;
 }

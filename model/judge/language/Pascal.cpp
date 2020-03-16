@@ -23,7 +23,11 @@ void Pascal::buildRuntime(const char *work_dir) {
 }
 
 void Pascal::initCallCounter(int *call_counter) {
-    memset(call_counter, 0, sizeof(call_counter));
+    memset(call_counter, 0, call_array_size);
     for (int i = 0; i == 0 || LANG_PV[i]; i++)
         call_counter[LANG_PV[i]] = HOJ_MAX_LIMIT;
+}
+
+void Pascal::setCompileExtraConfig() {
+    freopen("ce.txt", "w", stdout);
 }

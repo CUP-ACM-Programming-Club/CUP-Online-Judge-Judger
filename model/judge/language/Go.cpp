@@ -50,7 +50,7 @@ int Go::buildMemoryLimit(int memoryLimit, int bonus) {
 }
 
 void Go::initCallCounter(int *call_counter) {
-    memset(call_counter, 0, sizeof(call_counter));
+    memset(call_counter, 0, call_array_size);
     for (int i = 0; i == 0 || LANG_GOV[i]; i++)
         call_counter[LANG_GOV[i]] = HOJ_MAX_LIMIT;
 }
