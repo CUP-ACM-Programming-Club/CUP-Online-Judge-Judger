@@ -13,4 +13,9 @@ mkdir -p /usr/lib/cupjudge && \
 cp * /usr/lib/cupjudge/ && \
 chgrp -R judge /usr/lib/cupjudge && \
 chown -R judge /usr/lib/cupjudge && \
-cd ../../../../../
+cd ../../../../../ && \
+cd external/mysql && \
+cmake ./ && \
+make && \
+cp -r build/out/* /usr/lib/cupjudge/ && \
+cd ../../

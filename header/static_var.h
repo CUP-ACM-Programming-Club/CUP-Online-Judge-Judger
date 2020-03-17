@@ -6,7 +6,6 @@
 #define JUDGE_CLIENT_STATIC_VAR_H
 
 #include <thread>
-#include "../model/base/MySQLAutoPointer.h"
 #include "../model/websocket/WebSocketSender.h"
 #include "../model/base/Bundle.h"
 #include "../model/base/ThreadPool.h"
@@ -149,6 +148,7 @@ const int DEFAULT_SOLUTION_ID = 1000;
 extern int DEBUG;
 extern int NO_RECORD;
 extern bool MYSQL_MODE;
+extern int database_port;
 extern char host_name[BUFFER_SIZE];
 extern char user_name[BUFFER_SIZE];
 extern char password[BUFFER_SIZE];
@@ -178,7 +178,6 @@ extern int judger_number;
 extern bool admin;
 extern bool no_sim;
 extern int solution_id;
-extern MySQLAutoPointer conn;
 extern WebSocketSender webSocket;
 extern Bundle bundle;
 extern JSONVectorReader languageNameReader;

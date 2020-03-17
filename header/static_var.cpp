@@ -2,6 +2,7 @@
 // Created by Ryan Lee on 2019-07-02.
 //
 #include "static_var.h"
+int database_port;
 char host_name[BUFFER_SIZE];
 char user_name[BUFFER_SIZE];
 char password[BUFFER_SIZE];
@@ -35,7 +36,6 @@ bool admin = false;
 bool no_sim = false;
 int solution_id;
 //static int sleep_tmp;
-MySQLAutoPointer conn;
 
 WebSocketSender webSocket;
 

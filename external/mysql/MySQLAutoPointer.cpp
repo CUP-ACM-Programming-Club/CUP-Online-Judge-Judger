@@ -5,7 +5,7 @@
 //
 
 #include "MySQLAutoPointer.h"
-#include "../../library/judge_lib.h"
+#include <iostream>
 MySQLAutoPointer::~MySQLAutoPointer() {
     if(connected) {
         mysql_close(conn);
@@ -24,7 +24,7 @@ bool MySQLAutoPointer::start() {
 
     if (!mysql_real_connect(conn, host_name.c_str(), user_name.c_str(), password.c_str(), db_name.c_str(),
                             static_cast<unsigned int>(port_number), 0, 0)) {
-        write_log("%s", mysql_error(conn));
+        cerr << mysql_error(conn) << endl;
         if (DEBUG) {
             cerr << "MYSQL daemon service is down." << endl;
             cerr << "MYSQL error log: " << mysql_error(conn) << endl;
@@ -33,7 +33,7 @@ bool MySQLAutoPointer::start() {
     }
     const char *utf8sql = "set names utf8";
     if (mysql_real_query(conn, utf8sql, strlen(utf8sql))) {
-        write_log("%s", mysql_error(conn));
+        cerr << mysql_error(conn) << endl;
         if (DEBUG) {
             cerr << "MYSQL daemon service is down." << endl;
             cerr << "MYSQL error log: " << mysql_error(conn) << endl;

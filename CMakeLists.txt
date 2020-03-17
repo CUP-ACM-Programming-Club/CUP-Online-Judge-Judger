@@ -21,74 +21,11 @@ set(CMAKE_CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 # set(CMAKE_C_COMPILER /usr/local/bin/gcc)
 # set(CMAKE_CXX_COMPILER /usr/local/bin/g++)
-# - Try to find MySQL.
-# Once done this will define:
-# MYSQL_FOUND			- If false, do not try to use MySQL.
-# MYSQL_INCLUDE_DIRS	- Where to find mysql.h, etc.
-# MYSQL_LIBRARIES		- The libraries to link against.
-# MYSQL_VERSION_STRING	- Version in a string of MySQL.
-#
-# Created by RenatoUtsch based on eAthena implementation.
-#
-# Please note that this module only supports Windows and Linux officially, but
-# should work on all UNIX-like operational systems too.
-#
-
-#=============================================================================
-# Copyright 2012 RenatoUtsch
-#
-# Distributed under the OSI-approved BSD License (the "License");
-# see accompanying file Copyright.txt for details.
-#
-# This software is distributed WITHOUT ANY WARRANTY; without even the
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the License for more information.
-#=============================================================================
-# (To distribute this file outside of CMake, substitute the full
-#  License text for the above reference.)
-
-
-find_path(MYSQL_INCLUDE_DIR
-        NAMES "mysql.h"
-        PATHS "/usr/include/mysql"
-        "/usr/local/include/mysql"
-        "/usr/mysql/include/mysql")
-
-find_library(MYSQL_LIBRARY
-        NAMES "mysqlclient" "mysqlclient_r"
-        PATHS "/lib/mysql"
-        "/lib64/mysql"
-        "/usr/lib/mysql"
-        "/usr/lib64/mysql"
-        "/usr/local/lib/mysql"
-        "/usr/local/lib64/mysql"
-        "/usr/mysql/lib/mysql"
-        "/usr/mysql/lib64/mysql")
-
-
-if (MYSQL_INCLUDE_DIR AND EXISTS "${MYSQL_INCLUDE_DIRS}/mysql_version.h")
-    file(STRINGS "${MYSQL_INCLUDE_DIRS}/mysql_version.h"
-            MYSQL_VERSION_H REGEX "^#define[ \t]+MYSQL_SERVER_VERSION[ \t]+\"[^\"]+\".*$")
-    string(REGEX REPLACE
-            "^.*MYSQL_SERVER_VERSION[ \t]+\"([^\"]+)\".*$" "\\1" MYSQL_VERSION_STRING
-            "${MYSQL_VERSION_H}")
-endif ()
 
 # handle the QUIETLY and REQUIRED arguments and set MYSQL_FOUND to TRUE if
 # all listed variables are TRUE
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(MYSQL DEFAULT_MSG
-        REQUIRED_VARS MYSQL_LIBRARY MYSQL_INCLUDE_DIR
-        VERSION_VAR MYSQL_VERSION_STRING)
 find_package(Threads)
-
-set(MYSQL_INCLUDE_DIRS ${MYSQL_INCLUDE_DIR})
-set(MYSQL_LIBRARIES ${MYSQL_LIBRARY})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/out)
-mark_as_advanced(MYSQL_INCLUDE_DIR MYSQL_LIBRARY)
-include_directories(${MYSQL_INCLUDE_DIR})
-add_executable(judge_client header/okcalls.h header/ncalls.h header/okcalls32.h header/okcalls64.h library/json.hpp library/easywsclient.cpp library/easywsclient.hpp judge_client.cpp model/websocket/WebSocketSender.cpp model/websocket/WebSocketSender.h library/judge_lib.h header/static_var.h model/base/JSONVectorReader.h model/base/JSONVectorReader.cpp model/base/Bundle.cpp model/base/Bundle.h library/judge_lib.h.cpp model/base/MySQLAutoPointer.cpp model/base/MySQLAutoPointer.h header/static_var.cpp model/base/Pack.cpp model/base/Pack.h model/wrapper/CompilerConfigReader.cpp model/wrapper/CompilerConfigReader.h model/base/ThreadPool.h model/submission/SubmissionInfo.cpp model/submission/SubmissionInfo.h model/judge/language/Language.cpp model/judge/language/Language.h model/judge/policy/SpecialJudge.cpp model/judge/policy/SpecialJudge.h model/config/ConfigInfo.cpp model/config/ConfigInfo.h manager/syscall/InitManager.cpp manager/syscall/InitManager.h)
+add_executable(judge_client header/okcalls.h header/ncalls.h header/okcalls32.h header/okcalls64.h library/json.hpp library/easywsclient.cpp library/easywsclient.hpp judge_client.cpp model/websocket/WebSocketSender.cpp model/websocket/WebSocketSender.h library/judge_lib.h header/static_var.h model/base/JSONVectorReader.h model/base/JSONVectorReader.cpp model/base/Bundle.cpp model/base/Bundle.h library/judge_lib.h.cpp header/static_var.cpp model/base/Pack.cpp model/base/Pack.h model/wrapper/CompilerConfigReader.cpp model/wrapper/CompilerConfigReader.h model/base/ThreadPool.h model/submission/SubmissionInfo.cpp model/submission/SubmissionInfo.h model/judge/language/Language.cpp model/judge/language/Language.h model/judge/policy/SpecialJudge.cpp model/judge/policy/SpecialJudge.h model/config/ConfigInfo.cpp model/config/ConfigInfo.h manager/syscall/InitManager.cpp manager/syscall/InitManager.h external/mysql/MySQLSubmissionAdapter.cpp external/mysql/MySQLSubmissionAdapter.h)
 add_executable(wsjudged wsjudged.cpp)
-target_link_libraries(judge_client ${MYSQL_LIBRARIES})
 target_link_libraries(judge_client ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(judge_client ${CMAKE_DL_LIBS})

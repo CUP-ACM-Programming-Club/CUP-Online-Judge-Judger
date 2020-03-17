@@ -13,6 +13,7 @@
 #include "json.hpp"
 #include "../model/submission/SubmissionInfo.h"
 #include "../model/judge/language/Language.h"
+#include "../external/mysql/MySQLSubmissionAdapter.h"
 #include <cstdarg>
 #include <future>
 
@@ -74,39 +75,6 @@ extern void make_diff_out_simple(FILE *f1, FILE *f2, int c1, int c2, const char 
 
 extern void delnextline(char s[]);
 
-
-extern FILE *read_cmd_output(const char *fmt, ...);
-
-
-extern void copy_shell_runtime(char *work_dir);
-
-extern void copy_objc_runtime(char *work_dir);
-
-extern void copy_bash_runtime(char *work_dir);
-
-extern void copy_ruby_runtime(char *work_dir);
-
-extern void copy_guile_runtime(char *work_dir);
-
-extern void copy_python_runtime(char *work_dir);
-
-
-extern void copy_pypy_runtime(char *work_dir);
-
-
-extern void copy_pypy3_runtime(char *work_dir);
-
-extern void copy_php_runtime(char *work_dir);
-
-extern void copy_perl_runtime(char *work_dir);
-
-extern void copy_freebasic_runtime(char *work_dir);
-
-extern void copy_mono_runtime(char *work_dir);
-
-extern void copy_lua_runtime(char *work_dir);
-
-extern void copy_js_runtime(char *work_dir);
 extern int isInFile(const char fname[]);
 
 extern void move_to_next_nonspace_character(int &c, FILE *&f, int &ret);
@@ -135,8 +103,6 @@ extern void write_log(const char* oj_home, const char *_fmt, ...);
 extern bool initWebSocketConnection(string&& ip, int port);
 
 extern bool initWebSocketConnection(string& ip, int port);
-
-extern void get_solution_info(int, int&, char*, int&);
 
 extern void get_solution_info_from_mysql(int, int&, char*, int&);
 
@@ -176,6 +142,8 @@ extern void getSolutionFromSubmissionInfo(SubmissionInfo& submissionInfo, char* 
 extern string getRuntimeInfoContents(const string& filename);
 
 extern Language* getLanguageModel(int language);
+
+extern MySQLSubmissionAdapter* getAdapter();
 
 extern bool isPython(int language);
 #endif //JUDGE_CLIENT_JUDGE_LIB_H

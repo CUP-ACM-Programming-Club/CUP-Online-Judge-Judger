@@ -45,14 +45,6 @@
 #include <sys/user.h>
 #include <sys/resource.h>
 //#include <sys/types.h>
-#ifndef _NO_MYSQL
-#ifdef __APPLE_CC__
-#include <mysql.h>
-
-#else
-#include <mysql/mysql.h>
-#endif
-#endif
 
 #include "model/websocket/WebSocketSender.h"
 #include "header/static_var.h"
@@ -61,10 +53,10 @@
 #include "model/base/Bundle.h"
 
 #include "library/judge_lib.h"
-#include "model/base/MySQLAutoPointer.h"
 #include "model/submission/SubmissionInfo.h"
 #include "model/judge/policy/SpecialJudge.h"
 #include "manager/syscall/InitManager.h"
+#include "external/mysql/MySQLSubmissionAdapter.h"
 
 using namespace std;
 using json = nlohmann::json;
@@ -107,7 +99,8 @@ void init_mysql_conf() {
     user_name[0] = 0;
     password[0] = 0;
     db_name[0] = 0;
-    auto port_number = 3306;
+    database_port = 3306;
+    auto temp_port = 3306;
     strcpy(java_xms, "-Xms32m");
     strcpy(java_xmx, "-Xmx256m");
     sprintf(buf, "%s/etc/judge.conf", oj_home);
@@ -118,7 +111,7 @@ void init_mysql_conf() {
             read_buf(buf, "OJ_USER_NAME", user_name);
             read_buf(buf, "OJ_PASSWORD", password);
             read_buf(buf, "OJ_DB_NAME", db_name);
-            read_int(buf, "OJ_PORT_NUMBER", port_number);
+            read_int(buf, "OJ_PORT_NUMBER", temp_port);
             read_int(buf, "OJ_JAVA_TIME_BONUS", javaTimeBonus);
             read_int(buf, "OJ_JAVA_MEMORY_BONUS", java_memory_bonus);
             read_int(buf, "OJ_SIM_ENABLE", sim_enable);
@@ -135,16 +128,12 @@ void init_mysql_conf() {
             read_int(buf, "OJ_USE_PTRACE", use_ptrace);
 
         }
+        database_port = temp_port;
         //fclose(fp);
     }
     else {
         throw "Failed to parse judge.conf";
     }
-    conn.setPort(port_number);
-    conn.setDBName(db_name);
-    conn.setUserName(user_name);
-    conn.setPassword(password);
-    conn.setHostName(host_name);
     //  fclose(fp);
 }
 
@@ -431,71 +420,6 @@ int compile(int lang, char *work_dir) {
  }
  */
 
-void get_solution(int solution_id, char *work_dir, int lang, char *usercode) {
-    char sql[BUFFER_SIZE], src_pth[BUFFER_SIZE];
-    shared_ptr<Language> languageModel(getLanguageModel(lang));
-    // get the source code
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    sprintf(sql, "SELECT source FROM source_code WHERE solution_id=%d",
-            solution_id);
-    conn.query(conn, sql, strlen(sql));
-    res = mysql_store_result(conn);
-    row = mysql_fetch_row(res);
-    sprintf(usercode, "%s", row[0]);
-    // create the src file
-    sprintf(src_pth, "Main.%s", languageModel->getFileSuffix().c_str());
-    if (DEBUG) {
-        printf("Main=%s", src_pth);
-        cout << usercode << endl;
-    }
-    FILE *fp_src = fopen(src_pth, "we");
-    fprintf(fp_src, "%s", row[0]);
-    mysql_free_result(res);
-    fclose(fp_src);
-}
-
-void get_custominput(int solution_id, char *work_dir) {
-    char sql[BUFFER_SIZE], src_pth[BUFFER_SIZE];
-    // get the source code
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    sprintf(sql, "SELECT input_text FROM custominput WHERE solution_id=%d",
-            solution_id);
-    conn.query(conn, sql, strlen(sql));
-    res = mysql_store_result(conn);
-    row = mysql_fetch_row(res);
-    if (row != nullptr) {
-
-        // create the src file
-        sprintf(src_pth, "data.in");
-        FILE *fp_src = fopen(src_pth, "w");
-        fprintf(fp_src, "%s", row[0]);
-        fclose(fp_src);
-
-    }
-    mysql_free_result(res);
-}
-
-void get_problem_info(int p_id, double &time_lmt, int &mem_lmt, int &isspj) {
-    char sql[BUFFER_SIZE];
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    sprintf(sql,
-            "SELECT time_limit,memory_limit,spj FROM problem where problem_id=%d",
-            p_id);
-    conn.query(conn, sql, strlen(sql));
-    res = mysql_store_result(conn);
-    row = mysql_fetch_row(res);
-    time_lmt = atof(row[0]);
-    mem_lmt = atoi(row[1]);
-    isspj = (row[2][0] == '1');
-    mysql_free_result(res);
-    if (time_lmt <= 0)
-        time_lmt = 1;
-
-}
-
 void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
                   int &mem_lmt) {
     shared_ptr<Language> languageModel(getLanguageModel(lang));
@@ -630,7 +554,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
                     int &PEflg, char *work_dir) {
     // parent
     int tempmemory;
-
+    shared_ptr<Language> languageModel(getLanguageModel(lang));
     if (DEBUG)
         printf("pid=%d judging %s\n", pidApp, infile);
 
@@ -645,13 +569,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         wait4(pidApp, &status, 0, &ruse);
 
         //jvm gc ask VM before need,so used kernel page fault times and page size
-        if (isJava(lang) || lang == PHP ||
-            lang == JAVASCRIPT || lang == CSHARP ||
-            lang == L_GO || isCOrCPP(lang)) {
-            tempmemory = get_page_fault_mem(ruse, pidApp);
-        } else {        //other use VmPeak
-            tempmemory = get_proc_status(pidApp, "VmPeak:") << 10;
-        }
+        tempmemory = languageModel->getMemory(ruse, pidApp);
         topmemory = max(tempmemory, topmemory);
         if (topmemory > mem_lmt * STD_MB) {
             if (DEBUG)
@@ -914,6 +832,7 @@ int main(int argc, char **argv) {
     char usercode[CODESIZE];
     char user_id[BUFFER_SIZE];
     SubmissionInfo submissionInfo;
+    shared_ptr<MySQLSubmissionAdapter> adapter;
     solution_id = DEFAULT_SOLUTION_ID;
     int runner_id = 0;
     int p_id, memoryLimit, lang, SPECIAL_JUDGE, sim, sim_s_id = ZERO_SIM;
@@ -923,10 +842,6 @@ int main(int argc, char **argv) {
     init_mysql_conf();
     initWebSocketConnection("localhost", 5100);
     bundle.setJudgerId(judgerId);
-    if (!conn.start()) {
-        cerr << "Failed to create a MYSQL connection." << endl;
-        exit(0); //exit if mysql is down
-    }
     //set work directory to start running & judging
     sprintf(work_dir, "%s/run%d/", oj_home, runner_id);
     string global_work_dir = string(work_dir);
@@ -938,18 +853,31 @@ int main(int argc, char **argv) {
     }
     languageNameReader.loadFile(string(oj_home) + "/etc/language.json");
     chdir(work_dir);
+    shared_ptr<Language> languageModel;
+
     if (MYSQL_MODE) {
-        get_solution_info(solution_id, p_id, user_id, lang);
-        get_problem_info(abs(p_id), timeLimit, memoryLimit, SPECIAL_JUDGE);
-        get_solution(solution_id, work_dir, lang, usercode);
+        adapter = shared_ptr<MySQLSubmissionAdapter>(getAdapter());
+        adapter->setPort(database_port)
+        .setDBName(db_name)
+        .setUserName(user_name)
+        .setHostName(host_name)
+        .setPassword(password);
+        if (!adapter->start()) {
+            cerr << "Failed to create a MYSQL connection." << endl;
+            exit(1); //exit if mysql is down
+        }
+        adapter->getSolutionInfo(solution_id, p_id, user_id, lang);
+        languageModel = shared_ptr<Language>(getLanguageModel(lang));
+        adapter->getProblemInfo(abs(p_id), timeLimit, memoryLimit, SPECIAL_JUDGE);
+        adapter->getSolution(solution_id, work_dir, lang, usercode, languageModel->getFileSuffix().c_str(), DEBUG);
     }
     else {
         buildSubmissionInfo(submissionInfo, judgerId);
         getSolutionInfoFromSubmissionInfo(submissionInfo, p_id, user_id, lang);
+        languageModel = shared_ptr<Language>(getLanguageModel(lang));
         getProblemInfoFromSubmissionInfo(submissionInfo, timeLimit, memoryLimit, SPECIAL_JUDGE);
         getSolutionFromSubmissionInfo(submissionInfo, usercode);
     }
-    shared_ptr<Language> languageModel(getLanguageModel(lang));
     timeLimit = languageModel->buildTimeLimit(timeLimit, javaTimeBonus);
     memoryLimit = languageModel->buildMemoryLimit(memoryLimit, java_memory_bonus);
     languageModel->setExtraPolicy(oj_home, work_dir);
@@ -1017,7 +945,7 @@ int main(int argc, char **argv) {
     if (p_id <= TEST_RUN_PROBLEM) {  //custom input running
         printf("running a custom input...\n");
         if (MYSQL_MODE) {
-            get_custominput(solution_id, work_dir);
+            adapter->getCustomInput(solution_id, work_dir);
         }
         else {
             getCustomInputFromSubmissionInfo(submissionInfo);
@@ -1037,7 +965,7 @@ int main(int argc, char **argv) {
                            p_id, PEflg, work_dir);
 
         }
-        fix_python_syntax_error_response(ACflg, lang);
+        ACflg = languageModel->fixACStatus(ACflg);
         string error_message;
         if (ACflg == TIME_LIMIT_EXCEEDED) {
             usedtime = timeLimit * 1000;

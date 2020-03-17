@@ -1,12 +1,12 @@
 //
 // Created by Ryan Lee on 2018/7/17.
 //
-
-#include <dirent.h>
-#include <dlfcn.h>
 #include "judge_lib.h"
 #include "../header/static_var.h"
 #include "../model/submission/SubmissionInfo.h"
+#include "../external/mysql/MySQLSubmissionAdapter.h"
+#include <dirent.h>
+#include <dlfcn.h>
 
 using namespace std;
 using json = nlohmann::json;
@@ -470,30 +470,6 @@ bool initWebSocketConnection(string &&ip, int port) {
     return webSocket.isConnected();
 }
 
-void get_solution_info(int solution_id, int &p_id, char *user_id,
-                       int &lang) {
-    get_solution_info_from_mysql(solution_id, p_id, user_id, lang);
-}
-
-void get_solution_info_from_mysql(int solution_id, int& p_id, char *user_id, int& lang) {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-
-    char sql[BUFFER_SIZE];
-    // get the problem id and user id from Table:solution
-    sprintf(sql,
-            "SELECT problem_id, user_id, language FROM solution where solution_id=%d",
-            solution_id);
-    //printf("%s\n",sql);
-    conn.query(conn, sql, strlen(sql));
-    res = mysql_store_result(conn);
-    row = mysql_fetch_row(res);
-    p_id = atoi(row[0]);
-    strcpy(user_id, row[1]);
-    lang = atoi(row[2]);
-    mysql_free_result(res);
-}
-
 void getSolutionInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, int& p_id, char* user_id, int& lang) {
     p_id = submissionInfo.getProblemId();
     sprintf(user_id, "%s", submissionInfo.getUserId().c_str());
@@ -748,6 +724,24 @@ Language* getLanguageModel(int language) {
 
     Language* languageInstance = createInstance();
     return languageInstance;
+}
+
+MySQLSubmissionAdapter* getAdapter() {
+    void* adapterHandler = dlopen("/usr/lib/cupjudge/libmysql.so", RTLD_LAZY);
+    if (!adapterHandler) {
+        cerr << "Cannot load library libmysql.so: " << dlerror() << endl;
+        exit(1);
+    }
+    dlerror();
+    createMySQLAdapterInstance* createInstance = (createMySQLAdapterInstance*) dlsym(adapterHandler, "createInstance");
+    const char* dlsym_error = dlerror();
+    if (dlsym_error) {
+        cerr << "Cannot load symbol create: libmysql: " << dlsym_error << endl;
+        exit(1);
+    }
+
+    MySQLSubmissionAdapter* adapter = createInstance();
+    return adapter;
 }
 
 bool isPython(int language) {
