@@ -117,3 +117,13 @@ int Language::getCompileResult(int status) {
     return status;
 }
 
+int Language::fixACStatus(int acFlag) {
+    return acFlag;
+}
+
+int Language::getMemory(rusage ruse, pid_t pid) {
+    int m_minflt;
+    m_minflt = static_cast<int>(ruse.ru_minflt * getpagesize());
+    return m_minflt;
+}
+

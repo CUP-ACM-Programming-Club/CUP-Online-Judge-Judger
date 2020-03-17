@@ -6,6 +6,8 @@
 #include "unistd.h"
 #include "util/util.h"
 #include <cstring>
+#include <iostream>
+#include <fstream>
 #ifdef __i386
 #include "syscall/pypy3/syscall32.h"
 #else
@@ -74,6 +76,45 @@ void PyPy3::initCallCounter(int *call_counter) {
 
 std::string PyPy3::getFileSuffix() {
     return "py";
+}
+
+int PyPy3::fixACStatus(int acFlag) {
+    std::cerr << "Try to get sizeof error.out" << std::endl;
+    auto error_size = get_file_size("error.out");
+    std::cerr << "Error size:" << error_size << std::endl;
+    if (error_size > 0) {
+        std::fstream ferr("error.out");
+        std::string tmp, content;
+        while (getline(ferr, tmp)) {
+            content += tmp;
+        }
+        if (content.find("SyntaxError") != content.npos) {
+            return RUNTIME_ERROR;
+        }
+        return acFlag;
+    }
+    return acFlag;
+}
+
+int PyPy3::getMemory(rusage ruse, pid_t pid) {
+    const char* mark = "VmPeak:";
+    const unsigned BUFFER_SIZE = 5 * (1 << 10);
+    FILE *pf;
+    char fn[BUFFER_SIZE], buf[BUFFER_SIZE];
+    int ret = 0;
+    sprintf(fn, "/proc/%d/status", pid);
+    pf = fopen(fn, "re");
+    auto m = static_cast<int>(strlen(mark));
+    while (pf && fgets(buf, BUFFER_SIZE - 1, pf)) {
+
+        buf[strlen(buf) - 1] = 0;
+        if (strncmp(buf, mark, m) == 0) {
+            sscanf(buf + m + 1, "%d", &ret);
+        }
+    }
+    if (pf)
+        fclose(pf);
+    return ret << 10;
 }
 
 extlang createInstancepypy3() {

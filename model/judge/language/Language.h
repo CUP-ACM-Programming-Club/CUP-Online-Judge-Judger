@@ -10,6 +10,7 @@
 const int call_array_size = 512;
 #include <vector>
 #include <string>
+#include <sys/resource.h>
 class Language {
 public:
     virtual void run(int memory) = 0;
@@ -24,6 +25,8 @@ public:
     virtual void setCompileExtraConfig();
     virtual void setCompileMount(const char* work_dir);
     virtual int getCompileResult(int status);
+    virtual int fixACStatus(int acFlag);
+    virtual int getMemory(rusage ruse, pid_t pid);
     virtual std::string getFileSuffix() = 0;
     virtual ~Language();
 protected:

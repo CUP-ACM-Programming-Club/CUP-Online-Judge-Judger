@@ -17,6 +17,7 @@ public:
     int buildMemoryLimit(int memoryLimit, int bonus) override;
     void initCallCounter(int* call_counter) override;
     std::string getFileSuffix() override;
+    int getMemory(rusage ruse, pid_t pid) override;
 };
 
 

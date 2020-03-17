@@ -18,6 +18,8 @@ public:
     void setCompileExtraConfig() override;
     void setCompileMount(const char* work_dir) override;
     std::string getFileSuffix() override;
+    int getMemory(rusage ruse, pid_t pid) override;
+
 };
 
 

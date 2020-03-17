@@ -66,3 +66,24 @@ int Bash::getCompileResult(int status) {
 std::string Bash::getFileSuffix() {
     return "sh";
 }
+
+int Bash::getMemory(rusage ruse, pid_t pid) {
+    const char* mark = "VmPeak:";
+    const unsigned BUFFER_SIZE = 5 * (1 << 10);
+    FILE *pf;
+    char fn[BUFFER_SIZE], buf[BUFFER_SIZE];
+    int ret = 0;
+    sprintf(fn, "/proc/%d/status", pid);
+    pf = fopen(fn, "re");
+    auto m = static_cast<int>(strlen(mark));
+    while (pf && fgets(buf, BUFFER_SIZE - 1, pf)) {
+
+        buf[strlen(buf) - 1] = 0;
+        if (strncmp(buf, mark, m) == 0) {
+            sscanf(buf + m + 1, "%d", &ret);
+        }
+    }
+    if (pf)
+        fclose(pf);
+    return ret << 10;
+}

@@ -19,6 +19,7 @@ public:
     void initCallCounter(int* call_counter) override;
     int getCompileResult(int status) override;
     std::string getFileSuffix() override;
+    int getMemory(rusage ruse, pid_t pid) override;
 };
 
 
