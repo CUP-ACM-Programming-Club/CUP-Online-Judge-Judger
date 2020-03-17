@@ -58,6 +58,10 @@ void Schema::initCallCounter(int *call_counter) {
     }
 }
 
+std::string Schema::getFileSuffix() {
+    return "scm";
+}
+
 extlang createInstanceschema () {
     return new Schema;
 }

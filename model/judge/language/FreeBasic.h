@@ -17,6 +17,7 @@ public:
     void initCallCounter(int* call_counter) override;
     void setCompileExtraConfig() override;
     void setCompileMount(const char* work_dir) override;
+    std::string getFileSuffix() override;
 };
 
 

@@ -11,3 +11,7 @@ extlang createInstancecpp17 () {
 deslang destroyInstancecpp17 (Language* language) {
     delete language;
 }
+
+std::string Cpp17::getFileSuffix() {
+    return "cc";
+}

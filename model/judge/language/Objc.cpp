@@ -95,3 +95,7 @@ void Objc::initCallCounter(int *call_counter) {
     for (int i = 0; i == 0 || LANG_OV[i]; i++)
         call_counter[LANG_OV[i]] = HOJ_MAX_LIMIT;
 }
+
+std::string Objc::getFileSuffix() {
+    return "m";
+}

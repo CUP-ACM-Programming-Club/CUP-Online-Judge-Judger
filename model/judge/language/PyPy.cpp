@@ -60,6 +60,10 @@ void PyPy::initCallCounter(int *call_counter) {
     }
 }
 
+std::string PyPy::getFileSuffix() {
+    return "py";
+}
+
 extlang createInstancepypy () {
     return new PyPy;
 }

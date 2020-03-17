@@ -31,3 +31,7 @@ void Pascal::initCallCounter(int *call_counter) {
 void Pascal::setCompileExtraConfig() {
     freopen("ce.txt", "w", stdout);
 }
+
+std::string Pascal::getFileSuffix() {
+    return "pas";
+}

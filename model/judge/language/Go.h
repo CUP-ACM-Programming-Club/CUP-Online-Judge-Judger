@@ -16,8 +16,9 @@ public:
     double buildTimeLimit(double timeLimit, double bonus) override;
     int buildMemoryLimit(int memoryLimit, int bonus) override;
     void initCallCounter(int* call_counter) override;
+    std::string getFileSuffix() override;
 private:
-    void setASLimit();
+    void setASLimit() override;
 };
 
 

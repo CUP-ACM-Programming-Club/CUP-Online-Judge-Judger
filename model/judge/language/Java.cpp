@@ -99,3 +99,7 @@ void Java::initCallCounter(int *call_counter) {
 void Java::setCompileMount(const char *work_dir) {
     // do nothing
 }
+
+std::string Java::getFileSuffix() {
+    return "java";
+}

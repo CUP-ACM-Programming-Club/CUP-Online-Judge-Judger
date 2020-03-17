@@ -536,8 +536,9 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
     if (no_sim) {
         return 0;
     }
+    shared_ptr<Language> languageModel(getLanguageModel(lang));
     char src_pth[BUFFER_SIZE];
-    sprintf(src_pth, "Main.%s", lang_ext[lang]);
+    sprintf(src_pth, "Main.%s", languageModel->getFileSuffix().c_str());
     if (DEBUG) {
         cout << "get sim: " << src_pth << endl;
     }
@@ -552,17 +553,18 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
         execute_cmd("/bin/mkdir ../data/%d/ac/", pid);
 
         execute_cmd("/bin/cp %s ../data/%d/ac/%d.%s", src_pth, pid, solution_id,
-                    lang_ext[lang]);
+                    languageModel->getFileSuffix().c_str());
         //c cpp will
-        if (isC(lang)) {
+        string suffix = languageModel->getFileSuffix();
+        if (suffix == "c") {
             execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
-                        solution_id, lang_ext[0], pid, solution_id,
-                        lang_ext[1]);
+                        solution_id, "c", pid, solution_id,
+                        "cc");
         }
-        else if (isCPP(lang)) {
+        else if (suffix == "cc") {
             execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
-                        solution_id, lang_ext[1], pid, solution_id,
-                        lang_ext[0]);
+                        solution_id, "cc", pid, solution_id,
+                        "c");
         }
 
     } else {
@@ -697,8 +699,9 @@ void getCustomInputFromSubmissionInfo(SubmissionInfo& submissionInfo) {
 
 void getSolutionFromSubmissionInfo(SubmissionInfo& submissionInfo, char* usercode) {
     char src_pth[BUFFER_SIZE];
+    shared_ptr<Language> languageModel(getLanguageModel(submissionInfo.getLanguage()));
     sprintf(usercode, "%s", submissionInfo.getSource().c_str());
-    sprintf(src_pth, "Main.%s", lang_ext[submissionInfo.getLanguage()]);
+    sprintf(src_pth, "Main.%s", languageModel->getFileSuffix().c_str());
     if (DEBUG) {
         printf("Main=%s", src_pth);
         cout << usercode << endl;

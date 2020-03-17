@@ -64,6 +64,10 @@ void Csharp::initCallCounter(int *call_counter) {
         call_counter[LANG_CSV[i]] = HOJ_MAX_LIMIT;
 }
 
+std::string Csharp::getFileSuffix() {
+    return "cs";
+}
+
 extlang createInstancecsharp () {
     return new Csharp;
 }

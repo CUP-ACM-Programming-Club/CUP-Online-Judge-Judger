@@ -9,7 +9,7 @@
 #include "C11.h"
 
 class Cpp11 : public C11{
-
+    std::string getFileSuffix() override;
 };
 
 

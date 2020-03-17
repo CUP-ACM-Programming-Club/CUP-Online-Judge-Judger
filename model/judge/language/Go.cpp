@@ -54,3 +54,7 @@ void Go::initCallCounter(int *call_counter) {
     for (int i = 0; i == 0 || LANG_GOV[i]; i++)
         call_counter[LANG_GOV[i]] = HOJ_MAX_LIMIT;
 }
+
+std::string Go::getFileSuffix() {
+    return "go";
+}

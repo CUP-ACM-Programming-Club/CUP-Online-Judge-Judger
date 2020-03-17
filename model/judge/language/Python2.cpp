@@ -41,6 +41,10 @@ int Python2::getCompileResult(int status) {
     return static_cast<int>(get_file_size("ce.txt"));
 }
 
+std::string Python2::getFileSuffix() {
+    return "py";
+}
+
 extlang createInstancepython2() {
     return new Python2;
 }

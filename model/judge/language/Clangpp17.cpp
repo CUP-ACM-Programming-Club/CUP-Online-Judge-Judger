@@ -11,3 +11,7 @@ extern "C" Language* createInstanceclangpp17() {
 extern "C" void destroyInstanceclangpp17(Language* language) {
     delete language;
 }
+
+std::string Clangpp17::getFileSuffix() {
+    return "cc";
+}

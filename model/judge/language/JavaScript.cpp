@@ -85,6 +85,10 @@ void JavaScript::initCallCounter(int *call_counter) {
         call_counter[LANG_JSV[i]] = HOJ_MAX_LIMIT;
 }
 
+std::string JavaScript::getFileSuffix() {
+    return "js";
+}
+
 extlang createInstancejavascript() {
     return new JavaScript;
 }

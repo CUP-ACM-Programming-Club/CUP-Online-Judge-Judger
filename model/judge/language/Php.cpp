@@ -52,6 +52,10 @@ void Php::initCallCounter(int *call_counter) {
         call_counter[LANG_PHV[i]] = HOJ_MAX_LIMIT;
 }
 
+std::string Php::getFileSuffix() {
+    return "php";
+}
+
 extlang createInstancephp() {
     return new Php;
 }

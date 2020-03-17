@@ -72,6 +72,10 @@ void PyPy3::initCallCounter(int *call_counter) {
 
 }
 
+std::string PyPy3::getFileSuffix() {
+    return "py";
+}
+
 extlang createInstancepypy3() {
     return new PyPy3;
 }

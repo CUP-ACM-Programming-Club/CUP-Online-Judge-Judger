@@ -62,3 +62,7 @@ void Bash::initCallCounter(int *call_counter) {
 int Bash::getCompileResult(int status) {
     return static_cast<int>(get_file_size("ce.txt"));
 }
+
+std::string Bash::getFileSuffix() {
+    return "sh";
+}

@@ -60,3 +60,7 @@ void Ruby::initCallCounter(int *call_counter) {
 int Ruby::getCompileResult(int status) {
     return static_cast<int>(get_file_size("ce.txt"));
 }
+
+std::string Ruby::getFileSuffix() {
+    return "rb";
+}

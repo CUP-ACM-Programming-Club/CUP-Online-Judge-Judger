@@ -49,3 +49,7 @@ void FreeBasic::setCompileExtraConfig() {
 void FreeBasic::setCompileMount(const char* work_dir) {
     // do nothing
 }
+
+std::string FreeBasic::getFileSuffix() {
+    return "bas";
+}

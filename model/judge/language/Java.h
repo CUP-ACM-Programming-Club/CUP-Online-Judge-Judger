@@ -21,6 +21,7 @@ public:
     void setExtraPolicy(const char* oj_home, const char* work_dir) override;
     void initCallCounter(int* call_counter) override;
     void setCompileMount(const char* work_dir) override;
+    std::string getFileSuffix() override;
 private:
     void setAlarm();
     void setASLimit();

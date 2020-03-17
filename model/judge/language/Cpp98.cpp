@@ -11,3 +11,7 @@ extlang createInstancecpp98 () {
 deslang destroyInstancecpp98 (Language* language) {
     delete language;
 }
+
+std::string Cpp98::getFileSuffix() {
+    return "cc";
+}

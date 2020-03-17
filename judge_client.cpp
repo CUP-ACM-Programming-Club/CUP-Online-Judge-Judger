@@ -433,6 +433,7 @@ int compile(int lang, char *work_dir) {
 
 void get_solution(int solution_id, char *work_dir, int lang, char *usercode) {
     char sql[BUFFER_SIZE], src_pth[BUFFER_SIZE];
+    shared_ptr<Language> languageModel(getLanguageModel(lang));
     // get the source code
     MYSQL_RES *res;
     MYSQL_ROW row;
@@ -443,7 +444,7 @@ void get_solution(int solution_id, char *work_dir, int lang, char *usercode) {
     row = mysql_fetch_row(res);
     sprintf(usercode, "%s", row[0]);
     // create the src file
-    sprintf(src_pth, "Main.%s", lang_ext[lang]);
+    sprintf(src_pth, "Main.%s", languageModel->getFileSuffix().c_str());
     if (DEBUG) {
         printf("Main=%s", src_pth);
         cout << usercode << endl;

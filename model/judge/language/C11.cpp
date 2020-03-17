@@ -29,6 +29,10 @@ void C11::setCompileMount(const char *work_dir) {
     // do nothing
 }
 
+std::string C11::getFileSuffix() {
+    return "c";
+}
+
 extern "C" Language* createInstancec11() {
     return new C11;
 }

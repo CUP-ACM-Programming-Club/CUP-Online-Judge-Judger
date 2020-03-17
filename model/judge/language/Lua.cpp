@@ -38,6 +38,10 @@ void Lua::initCallCounter(int *call_counter) {
         call_counter[LANG_LUAV[i]] = HOJ_MAX_LIMIT;
 }
 
+std::string Lua::getFileSuffix() {
+    return "lua";
+}
+
 
 extlang createInstancelua() {
     return new Lua;

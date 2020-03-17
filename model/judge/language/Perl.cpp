@@ -39,6 +39,10 @@ void Perl::initCallCounter(int *call_counter) {
         call_counter[LANG_PLV[i]] = HOJ_MAX_LIMIT;
 }
 
+std::string Perl::getFileSuffix() {
+    return "pl";
+}
+
 extlang createInstanceperl () {
     return new Perl;
 }

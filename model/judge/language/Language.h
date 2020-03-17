@@ -24,6 +24,7 @@ public:
     virtual void setCompileExtraConfig();
     virtual void setCompileMount(const char* work_dir);
     virtual int getCompileResult(int status);
+    virtual std::string getFileSuffix() = 0;
     virtual ~Language();
 protected:
     virtual void setCPULimit();

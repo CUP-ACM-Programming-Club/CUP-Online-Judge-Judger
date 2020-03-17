@@ -41,6 +41,10 @@ int Python3::getCompileResult(int status) {
     return static_cast<int>(get_file_size("ce.txt"));
 }
 
+std::string Python3::getFileSuffix() {
+    return "py";
+}
+
 extlang createInstancepython3() {
     return new Python3;
 }
