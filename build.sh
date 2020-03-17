@@ -14,11 +14,11 @@ make && \
 cd build/out && \
 mkdir -p /usr/lib/cupjudge && \
 cp * /usr/lib/cupjudge/ && \
-chgrp -R judge /usr/lib/cupjudge && \
-chown -R judge /usr/lib/cupjudge && \
 cd ../../../../../ && \
 cd external/mysql && \
 cmake ./ && \
 make && \
 cp -r build/out/* /usr/lib/cupjudge/ && \
-cd ../../
+cd ../../ && \
+chgrp -R judge /usr/lib/cupjudge && \
+chown -R judge /usr/lib/cupjudge
