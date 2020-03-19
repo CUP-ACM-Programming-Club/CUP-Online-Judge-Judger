@@ -5,6 +5,7 @@
 #include "JSONVectorReader.h"
 #include "../../rapidjson/document.h"
 #include "../../rapidjson/prettywriter.h"
+#include "../../rapidjson/pointer.h"
 #include <iostream>
 #include <fstream>
 #define ASSERT_VALID(x) assert(x)
@@ -99,4 +100,13 @@ double JSONVectorReader::GetDouble(const string &key) {
     else {
         return GetInt(key);
     }
+}
+
+Value* JSONVectorReader::GetObject(const string &key) {
+    char BUFFER[1 << 10];
+    documentIsLoaded();
+    auto& val = document[key.c_str()];
+    ASSERT_VALID(val.IsObject());
+    strcpy(BUFFER, ("/" + key).c_str());
+    return rapidjson::GetValueByPointer(document, BUFFER);
 }

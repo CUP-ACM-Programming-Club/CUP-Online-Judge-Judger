@@ -21,7 +21,7 @@ void Lua::buildRuntime(const char *work_dir) {
     Language::buildRuntime(work_dir);
     execute_cmd("/bin/mkdir -p %s/usr/local/lib", work_dir);
     execute_cmd("/bin/mkdir -p %s/usr/local/bin", work_dir);
-    execute_cmd("/bin/cp /usr/bin/lua %s/", work_dir);
+    execute_cmd("/bin/cp /usr/bin/lua* %s/lua", work_dir);
 }
 
 double Lua::buildTimeLimit(double timeLimit, double bonus) {

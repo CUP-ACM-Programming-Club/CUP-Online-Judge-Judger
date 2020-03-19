@@ -89,51 +89,32 @@ static char LANG_NAME[BUFFER_SIZE];
 
 // read the configue file
 void init_mysql_conf() {
-    string configDIR = oj_home;
-    configDIR += "/etc/config.json";
-    ConfigReader configReader(configDIR);
-
-    FILE *fp = nullptr;
-    char buf[BUFFER_SIZE];
+    strcpy(java_xms, "-Xms32m");
+    strcpy(java_xmx, "-Xmx256m");
     host_name[0] = 0;
     user_name[0] = 0;
     password[0] = 0;
     db_name[0] = 0;
     database_port = 3306;
-    auto temp_port = 3306;
-    strcpy(java_xms, "-Xms32m");
-    strcpy(java_xmx, "-Xmx256m");
-    sprintf(buf, "%s/etc/judge.conf", oj_home);
-    fp = fopen("./etc/judge.conf", "re");
-    if (fp != nullptr) {
-        while (fgets(buf, BUFFER_SIZE - 1, fp)) {
-            read_buf(buf, "OJ_HOST_NAME", host_name);
-            read_buf(buf, "OJ_USER_NAME", user_name);
-            read_buf(buf, "OJ_PASSWORD", password);
-            read_buf(buf, "OJ_DB_NAME", db_name);
-            read_int(buf, "OJ_PORT_NUMBER", temp_port);
-            read_int(buf, "OJ_JAVA_TIME_BONUS", javaTimeBonus);
-            read_int(buf, "OJ_JAVA_MEMORY_BONUS", java_memory_bonus);
-            read_int(buf, "OJ_SIM_ENABLE", sim_enable);
-            read_buf(buf, "OJ_JAVA_XMS", java_xms);
-            read_buf(buf, "OJ_JAVA_XMX", java_xmx);
-            read_int(buf, "OJ_HTTP_JUDGE", http_judge);
-            read_buf(buf, "OJ_HTTP_BASEURL", http_baseurl);
-            read_buf(buf, "OJ_HTTP_USERNAME", http_username);
-            read_buf(buf, "OJ_HTTP_PASSWORD", http_password);
-            read_int(buf, "OJ_OI_MODE", ALL_TEST_MODE);
-            read_int(buf, "OJ_FULL_DIFF", full_diff);
-            read_int(buf, "OJ_SHM_RUN", SHARE_MEMORY_RUN);
-            read_int(buf, "OJ_USE_MAX_TIME", use_max_time);
-            read_int(buf, "OJ_USE_PTRACE", use_ptrace);
-
-        }
-        database_port = temp_port;
-        //fclose(fp);
-    }
-    else {
-        throw "Failed to parse judge.conf";
-    }
+    string configDIR = oj_home;
+    configDIR += "/etc/config.json";
+    ConfigReader configReader(configDIR);
+    auto mysqlConf = configReader.GetObject("mysql");
+    strcpy(host_name, (*mysqlConf)["hostname"].GetString());
+    strcpy(user_name, (*mysqlConf)["username"].GetString());
+    strcpy(password, (*mysqlConf)["password"].GetString());
+    strcpy(db_name, (*mysqlConf)["db_name"].GetString());
+    database_port = (*mysqlConf)["port"].GetInt();
+    javaTimeBonus = configReader.GetInt("java_time_bonus");
+    java_memory_bonus = configReader.GetInt("java_memory_bonus");
+    strcpy(java_xms, configReader.GetString("java_xms").c_str());
+    strcpy(java_xmx, configReader.GetString("java_xmx").c_str());
+    sim_enable = configReader.GetInt("sim_enable");
+    full_diff = configReader.GetInt("full_diff");
+    strcpy(http_username, configReader.GetString("judger_name").c_str());
+    SHARE_MEMORY_RUN = configReader.GetInt("shm_run");
+    use_max_time = configReader.GetInt("use_max_time");
+    use_ptrace = configReader.GetInt("use_ptrace");
     //  fclose(fp);
 }
 

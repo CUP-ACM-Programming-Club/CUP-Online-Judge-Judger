@@ -37,6 +37,8 @@ public:
 
     double GetDouble(const string& key);
 
+    rapidjson::Value* GetObject(const string& key);
+
     bool has(const string& key);
 
     void documentIsLoaded();
