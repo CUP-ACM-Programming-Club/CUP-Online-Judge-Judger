@@ -87,3 +87,11 @@ int Bash::getMemory(rusage ruse, pid_t pid) {
         fclose(pf);
     return ret << 10;
 }
+
+extlang createInstancebash() {
+    return new Bash;
+}
+
+deslang destroyIntancebash(Language* language) {
+    delete language;
+}
