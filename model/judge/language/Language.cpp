@@ -76,6 +76,9 @@ void Language::buildRuntime(const char* work_dir) {
     //  execute_cmd("/bin/cp -a /usr/lib/i386-linux-gnu %s/lib/", work_dir);
     execute_cmd("/bin/cp -a /lib/x86_64-linux-gnu %s/lib/", work_dir);
     execute_cmd("/bin/cp /lib64/* %s/lib64/", work_dir);
+    execute_cmd("/bin/cp /bin/busybox %s/bin/", work_dir);
+    execute_cmd("/bin/ln -s /bin/busybox %s/bin/sh", work_dir);
+    execute_cmd("/bin/cp /bin/bash %s/bin/bash", work_dir);
 }
 
 double Language::buildTimeLimit(double timeLimit, double bonus) {
