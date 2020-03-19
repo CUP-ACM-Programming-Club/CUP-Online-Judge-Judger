@@ -21,7 +21,7 @@ cd ../../ && \
 chgrp -R judge /usr/lib/cupjudge && \
 chown -R judge /usr/lib/cupjudge
 
-if [ ! -d /home/judge/etc ]
+if [ ! -d /home/judge/etc ]; then
 mkdir -p /home/judge/etc
 cp -r etc/* /home/judge/etc/
 else
