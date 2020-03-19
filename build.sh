@@ -1,7 +1,7 @@
 #!/bin/bash
 CPU_CORE=$(nproc)
 apt install build-essential cmake clang fp-compiler gcc g++ libgmp-dev libmysqlclient-dev
-cmake ./ && make -j$(CPU_CORE) && chmod a+x judge_client && mv ./judge_client /usr/bin
+cmake ./ && make -j$CPU_CORE && chmod a+x judge_client && mv ./judge_client /usr/bin
 mkdir /home/judge
 mkdir /home/judge/etc
 mkdir /dev/shm/cupoj
@@ -12,14 +12,14 @@ cp -r etc/* /home/judge/etc/ &&
   chgrp -R judge /home/judge &&
   cd model/judge/language &&
   cmake ./ &&
-  make -j$(CPU_CORE) &&
+  make -j$CPU_CORE &&
   cd build/out &&
   mkdir -p /usr/lib/cupjudge &&
   cp * /usr/lib/cupjudge/ &&
   cd ../../../../../ &&
   cd external/mysql &&
   cmake ./ &&
-  make -j$(CPU_CORE) &&
+  make -j$CPU_CORE &&
   cp -r build/out/* /usr/lib/cupjudge/ &&
   cd ../../ &&
   chgrp -R judge /usr/lib/cupjudge &&
