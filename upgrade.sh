@@ -29,19 +29,19 @@ if [ ! -f /home/judge/etc/language.json ]; then
     cp etc/language.json /hone/judge/etc/language.json
 fi
 
-if [ ! -f /home/judge/etc/java0.policy]; then
+if [ ! -f /home/judge/etc/java0.policy ]; then
   cp etc/java0.policy /home/judge/etc/java0.policy
 fi
 
-if [ ! -f /home/judge/etc/judge.conf]; then
+if [ ! -f /home/judge/etc/judge.conf ]; then
   cp etc/judge.conf /home/judge/etc/judge.conf
 fi
 
-if [ ! -f /home/judge/etc/compile.json]; then
+if [ ! -f /home/judge/etc/compile.json ]; then
   cp etc/compile.json /home/judge/etc/compile.json
 fi
 
-if [ ! -f /home/judge/etc/config.json]; then
+if [ ! -f /home/judge/etc/config.json ]; then
   cp etc/config.json /home/judge/etc/config.json
   echo "请自行配置config.json的文件内容，将judge.conf的内容填写到config.json"
 fi
