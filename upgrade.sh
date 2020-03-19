@@ -47,7 +47,7 @@ if [ ! -f /home/judge/etc/config.json ]; then
 fi
 fi
 
-if [ ! -f /usr/bin/sim.sh]; then
+if [ ! -f /usr/bin/sim.sh ]; then
   cd sim && \
   make fresh && \
   make exes && \
