@@ -68,6 +68,10 @@ std::string Csharp::getFileSuffix() {
     return "cs";
 }
 
+bool Csharp::gotErrorWhileRunning(bool error) {
+    return error;
+}
+
 extlang createInstancecsharp () {
     return new Csharp;
 }

@@ -14,6 +14,7 @@
 #include "syscall/pypy/syscall64.h"
 #endif
 using std::memset;
+const int STD_MB = 1 << 20;
 
 void PyPy::run(int memory) {
     execl("/pypy/bin/pypy", "/pypy/bin/pypy", "Main.py", (char *) nullptr);
@@ -103,6 +104,33 @@ int PyPy::getMemory(rusage ruse, pid_t pid) {
     if (pf)
         fclose(pf);
     return ret << 10;
+}
+
+void PyPy::fixACFlag(int &ACflg) {
+    std::cerr << "Try to get sizeof error.out" << std::endl;
+    auto error_size = get_file_size("error.out");
+    std::cerr << "Error size:" << error_size << std::endl;
+    if (error_size > 0) {
+        std::fstream ferr("error.out");
+        std::string tmp, content;
+        while (getline(ferr, tmp)) {
+            content += tmp;
+        }
+        if (content.find("SyntaxError") != content.npos) {
+            ACflg = RUNTIME_ERROR;
+        }
+    }
+}
+
+void PyPy::fixFlagWithVMIssue(char *work_dir, int &ACflg, int &topmemory, int mem_lmt) {
+    int comp_res = execute_cmd(
+            "/bin/grep 'MemoryError'  %s/error.out", work_dir);
+
+    if (!comp_res) {
+        printf("Python need more Memory!");
+        ACflg = MEMORY_LIMIT_EXCEEDED;
+        topmemory = mem_lmt * STD_MB;
+    }
 }
 
 extlang createInstancepypy () {

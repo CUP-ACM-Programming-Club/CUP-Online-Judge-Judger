@@ -10,11 +10,14 @@
 
 class C11 : public Language{
 public:
-    void run(int memory);
+    void run(int memory) override;
     void buildRuntime(const char* work_dir) override;
     void initCallCounter(int* call_counter) override;
     void setCompileMount(const char* work_dir) override;
     std::string getFileSuffix() override;
+    void runMemoryLimit(rlimit& LIM) override;
+    bool enableSim() override;
+    bool gotErrorWhileRunning(bool error) override;
 };
 
 

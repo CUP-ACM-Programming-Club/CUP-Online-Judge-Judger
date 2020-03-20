@@ -27,7 +27,14 @@ public:
     virtual int getCompileResult(int status);
     virtual int fixACStatus(int acFlag);
     virtual int getMemory(rusage ruse, pid_t pid);
+    virtual void buildChrootSandbox(const char* work_dir);
+    virtual void runMemoryLimit(rlimit& LIM);
+    virtual void fixACFlag(int& ACflg);
+    virtual bool enableSim();
+    virtual void fixFlagWithVMIssue(char *work_dir, int &ACflg, int &topmemory,int mem_lmt);
     virtual std::string getFileSuffix() = 0;
+    virtual bool gotErrorWhileRunning(bool error);
+    virtual bool isValidExitCode(int exitcode);
     virtual ~Language();
 protected:
     virtual void setCPULimit();

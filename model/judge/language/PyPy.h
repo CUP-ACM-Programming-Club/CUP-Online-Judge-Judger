@@ -19,6 +19,9 @@ public:
     std::string getFileSuffix() override;
     int fixACStatus(int acFlag) override;
     int getMemory(rusage ruse, pid_t pid) override;
+    void fixACFlag(int& ACflg) override;
+    void fixFlagWithVMIssue(char *work_dir, int &ACflg, int &topmemory,
+                            int mem_lmt) override;
 };
 
 

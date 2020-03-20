@@ -33,6 +33,18 @@ std::string C11::getFileSuffix() {
     return "c";
 }
 
+void C11::runMemoryLimit(rlimit &LIM) {
+    setrlimit(RLIMIT_AS, &LIM);
+}
+
+bool C11::enableSim() {
+    return true;
+}
+
+bool C11::gotErrorWhileRunning(bool error) {
+    return error;
+}
+
 extern "C" Language* createInstancec11() {
     return new C11;
 }

@@ -15,6 +15,8 @@
 #include "syscall/java/syscall64.h"
 #endif
 
+const int STD_MB = 1 << 20;
+
 using std::sprintf;
 using std::memcpy;
 using std::memset;
@@ -103,3 +105,53 @@ void Java::setCompileMount(const char *work_dir) {
 std::string Java::getFileSuffix() {
     return "java";
 }
+
+void Java::buildChrootSandbox(const char *work_dir) {
+    // do nothing
+}
+
+bool Java::enableSim() {
+    return true;
+}
+
+void Java::fixFlagWithVMIssue(char *work_dir, int &ACflg, int &topmemory, int mem_lmt) {
+    int comp_res;
+    execute_cmd("chmod 700 %s/error.out", work_dir);
+    execute_cmd("cat %s/error.out", work_dir);
+    comp_res = execute_cmd("/bin/grep 'Exception'  %s/error.out", work_dir);
+    if (!comp_res) {
+        printf("Exception reported\n");
+        ACflg = RUNTIME_ERROR;
+    }
+    execute_cmd("cat %s/error.out", work_dir);
+
+    comp_res = execute_cmd(
+            "/bin/grep 'java.lang.OutOfMemoryError'  %s/error.out", work_dir);
+
+    if (!comp_res) {
+        printf("JVM need more Memory!");
+        ACflg = MEMORY_LIMIT_EXCEEDED;
+        topmemory = mem_lmt * STD_MB;
+    }
+
+    if (!comp_res) {
+        printf("JVM need more Memory or Threads!");
+        ACflg = MEMORY_LIMIT_EXCEEDED;
+        topmemory = mem_lmt * STD_MB;
+    }
+    comp_res = execute_cmd("/bin/grep 'Could not create'  %s/error.out",
+                           work_dir);
+    if (!comp_res) {
+        printf("jvm need more resource,tweak -Xmx(OJ_JAVA_BONUS) Settings");
+        ACflg = RUNTIME_ERROR;
+    }
+}
+
+bool Java::gotErrorWhileRunning(bool error) {
+    return error;
+}
+
+bool Java::isValidExitCode(int exitcode) {
+    return (exitcode == 17 || Language::isValidExitCode(exitcode));
+}
+

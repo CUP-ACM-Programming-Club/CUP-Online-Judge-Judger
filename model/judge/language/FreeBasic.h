@@ -11,7 +11,7 @@
 
 class FreeBasic : public C11, protected BonusLimit {
 public:
-    void buildRuntime(const char* work_dir);
+    void buildRuntime(const char* work_dir) override;
     double buildTimeLimit(double timeLimit, double bonus) override;
     int buildMemoryLimit(int timeLimit, int bonus) override;
     void initCallCounter(int* call_counter) override;
@@ -19,7 +19,9 @@ public:
     void setCompileMount(const char* work_dir) override;
     std::string getFileSuffix() override;
     int getMemory(rusage ruse, pid_t pid) override;
-
+    void runMemoryLimit(rlimit& LIM) override;
+    bool enableSim() override;
+    bool gotErrorWhileRunning(bool error) override;
 };
 
 

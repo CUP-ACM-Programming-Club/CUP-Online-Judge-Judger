@@ -24,6 +24,7 @@ chown -R judge /usr/lib/cupjudge
 if [ ! -d /home/judge/etc ]; then
 mkdir -p /home/judge/etc
 cp -r etc/* /home/judge/etc/
+./shell/build_config.sh
 else
 if [ ! -f /home/judge/etc/language.json ]; then
     cp etc/language.json /hone/judge/etc/language.json
@@ -42,8 +43,7 @@ if [ ! -f /home/judge/etc/compile.json ]; then
 fi
 
 if [ ! -f /home/judge/etc/config.json ]; then
-  cp etc/config.json /home/judge/etc/config.json
-  echo "请自行配置config.json的文件内容，将judge.conf的内容填写到config.json"
+  ./shell/build_config.sh
 fi
 fi
 

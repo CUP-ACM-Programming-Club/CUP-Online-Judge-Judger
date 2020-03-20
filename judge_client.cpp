@@ -419,9 +419,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     if (use_ptrace)
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     // run me
-    if (!isJava(lang)) {
-        chroot(work_dir);
-    }
+    languageModel->buildChrootSandbox(work_dir);
 
     while (setgid(1536) != 0)
         sleep(1);
@@ -460,9 +458,7 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     // set the memory
     LIM.rlim_cur = static_cast<rlim_t>(STD_MB * mem_lmt / 2 * 3);
     LIM.rlim_max = static_cast<rlim_t>(STD_MB * mem_lmt * 2);
-    if (lang < JAVA || isCOrCPP(lang)) {
-        setrlimit(RLIMIT_AS, &LIM);
-    }
+    languageModel->runMemoryLimit(LIM);
     languageModel->run(mem_lmt);
     //sleep(1);
     fflush(stderr);
@@ -474,6 +470,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
                     int lang, char *work_dir, int &topmemory, int mem_lmt,
                     int solution_id, int num_of_test, string& global_work_dir) {
     //usedtime-=1000;
+    shared_ptr<Language> languageModel(getLanguageModel(lang));
     cout << "Used time" << endl;
     cout << usedtime << endl;
     cout << time_lmt * 1000 * (use_max_time ? 1 : num_of_test) << endl;
@@ -488,7 +485,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
     }
     if (topmemory > mem_lmt * STD_MB)
         ACflg = MEMORY_LIMIT_EXCEEDED; //issues79
-    fix_python_syntax_error_response(ACflg, lang);
+    languageModel->fixACFlag(ACflg);
     // compare
     if (ACflg == ACCEPT) {
         if (isspj) {
@@ -505,28 +502,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
         ACflg = comp_res;
     }
     //jvm popup messages, if don't consider them will get miss-WrongAnswer
-    if (isJava(lang)) {
-        fix_java_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
-    }
-    else if (isPython(lang)) {
-        fix_python_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
-    }
-}
-
-int get_page_fault_mem(struct rusage &ruse, pid_t &pidApp) {
-    //java use pagefault
-    //int m_vmpeak, m_vmdata;
-    int m_minflt;
-    m_minflt = static_cast<int>(ruse.ru_minflt * getpagesize());
-    /*
-    if (0 && DEBUG) {
-        m_vmpeak = get_proc_status(pidApp, "VmPeak:");
-        m_vmdata = get_proc_status(pidApp, "VmData:");
-        printf("VmPeak:%d KB VmData:%d KB minflt:%d KB\n", m_vmpeak, m_vmdata,
-               m_minflt >> 10);
-    }
-     */
-    return m_minflt;
+    languageModel->fixFlagWithVMIssue(work_dir, ACflg, topmemory, mem_lmt);
 }
 
 void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
@@ -586,7 +562,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
                 break;
             }
         }
-        if ((lang < RUBY || lang == CSHARP) && has_error && !ALL_TEST_MODE) {
+        if (languageModel->gotErrorWhileRunning(has_error) && !ALL_TEST_MODE) {
             ACflg = RUNTIME_ERROR;
             //addreinfo(solution_id);
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
@@ -605,7 +581,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         exitcode = WEXITSTATUS(status);
         /*exitcode == 5 waiting for next CPU allocation          * ruby using system to run,exit 17 ok
          *  */
-        if ((lang >= JAVA && exitcode == 17) || exitcode == 0x05 || exitcode == 0)
+        if (languageModel->isValidExitCode(exitcode))
             //go on and on
             ;
         else {
@@ -1072,7 +1048,7 @@ int main(int argc, char **argv) {
         ACflg = PRESENTATION_ERROR;
     }
     if (sim_enable && ACflg == ACCEPT && (!ALL_TEST_MODE || finalACflg == ACCEPT)
-        && (lang < BASH || isCOrCPP(lang) || lang >= CPP11)) { //bash don't supported
+        && (languageModel->enableSim())) { //bash don't supported
         sim = get_sim(solution_id, lang, p_id, sim_s_id);
     } else {
         sim = ZERO_SIM;

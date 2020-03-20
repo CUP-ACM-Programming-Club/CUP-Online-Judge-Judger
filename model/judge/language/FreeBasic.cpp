@@ -74,3 +74,15 @@ int FreeBasic::getMemory(rusage ruse, pid_t pid) {
         fclose(pf);
     return ret << 10;
 }
+
+void FreeBasic::runMemoryLimit(rlimit &LIM) {
+    Language::runMemoryLimit(LIM);
+}
+
+bool FreeBasic::enableSim() {
+    return Language::enableSim();
+}
+
+bool FreeBasic::gotErrorWhileRunning(bool error) {
+    return Language::gotErrorWhileRunning(error);
+}

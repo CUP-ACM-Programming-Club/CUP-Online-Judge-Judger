@@ -11,12 +11,15 @@
 
 class Go : public C11, protected BonusLimit {
 public:
-    void setProcessLimit();
-    void setCompileProcessLimit();
+    void setProcessLimit() override;
+    void setCompileProcessLimit() override;
     double buildTimeLimit(double timeLimit, double bonus) override;
     int buildMemoryLimit(int memoryLimit, int bonus) override;
     void initCallCounter(int* call_counter) override;
     std::string getFileSuffix() override;
+    void runMemoryLimit(rlimit& LIM) override;
+    bool enableSim() override;
+    bool gotErrorWhileRunning(bool error) override;
 private:
     void setASLimit() override;
 };

@@ -58,3 +58,15 @@ void Go::initCallCounter(int *call_counter) {
 std::string Go::getFileSuffix() {
     return "go";
 }
+
+void Go::runMemoryLimit(rlimit &LIM) {
+    Language::runMemoryLimit(LIM);
+}
+
+bool Go::enableSim() {
+    return Language::enableSim();
+}
+
+bool Go::gotErrorWhileRunning(bool error) {
+    return Language::gotErrorWhileRunning(error);
+}

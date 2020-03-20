@@ -130,3 +130,32 @@ int Language::getMemory(rusage ruse, pid_t pid) {
     return m_minflt;
 }
 
+void Language::buildChrootSandbox(const char* work_dir) {
+    chroot(work_dir);
+}
+
+void Language::runMemoryLimit(rlimit& LIM) {
+    // do nothing
+}
+
+void Language::fixACFlag(int &ACflg) {
+    // do nothing
+}
+
+bool Language::enableSim() {
+    return false;
+}
+
+void Language::fixFlagWithVMIssue(char *work_dir, int &ACflg, int &topmemory,
+                                  int mem_lmt) {
+    // do nothing
+}
+
+bool Language::gotErrorWhileRunning(bool error) {
+    return false;
+}
+
+bool Language::isValidExitCode(int exitcode) {
+    return (exitcode == 0x05 || exitcode == 0);
+}
+
