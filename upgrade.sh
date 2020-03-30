@@ -1,5 +1,6 @@
 #!/bin/bash
 CPU_CORE=`nproc`
+./shell/build_dependency.sh
 git fetch --all && \
 git reset --hard origin/master && \
 cmake ./ && \

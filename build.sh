@@ -1,6 +1,6 @@
 #!/bin/bash
 CPU_CORE=$(nproc)
-apt install build-essential cmake clang fp-compiler gcc g++ libgmp-dev libmysqlclient-dev
+./shell/build_dependency.sh
 cmake ./ && make -j$CPU_CORE && chmod a+x judge_client && mv ./judge_client /usr/bin
 mkdir /home/judge
 mkdir /home/judge/etc
