@@ -20,6 +20,7 @@ public:
     int getCompileResult(int status) override;
     std::string getFileSuffix() override;
     int getMemory(rusage ruse, pid_t pid) override;
+    bool gotErrorWhileRunning(bool error) override;
 };
 
 

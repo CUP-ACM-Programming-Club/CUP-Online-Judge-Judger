@@ -88,6 +88,10 @@ int Bash::getMemory(rusage ruse, pid_t pid) {
     return ret << 10;
 }
 
+bool Bash::gotErrorWhileRunning(bool error) {
+    return error;
+}
+
 extlang createInstancebash() {
     return new Bash;
 }
