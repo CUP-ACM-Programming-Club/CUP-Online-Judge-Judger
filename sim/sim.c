@@ -1,6 +1,6 @@
 /*	This file is part of the software similarity tester SIM.
 	Written by Dick Grune, Vrije Universiteit, Amsterdam.
-	$Id: sim.c,v 2.73 2017-12-10 16:00:05 dick Exp $
+	$Id: sim.c,v 2.69 2017-03-19 09:30:38 dick Exp $
 */
 
 #include	<stdio.h>
@@ -14,6 +14,7 @@
 #include	"newargs.h"
 #include	"token.h"
 #include	"tokenarray.h"
+#include	"language.h"
 #include	"text.h"
 #include	"runs.h"
 #include	"hash.h"
@@ -116,7 +117,7 @@ show_args(const char *msg, int argc, const char *argv[]) {
 int
 main(int argc, const char *argv[]) {
 
-	/* The value of Version derives from the string macro VERSION in the
+	/* The value of Version derives from the macro VERSION in the
 	   Makefile if present. If not, a build time stamp is created.
 	*/
 	char version[40];
@@ -160,6 +161,12 @@ main(int argc, const char *argv[]) {
 		if (!is_set_option('p'))
 		    fatal("option -P requires -p");
 	}
+	/* ZZ
+	if (is_set_option('u')) {
+		if (!is_set_option('p'))
+			fatal("option -u available with -p only");
+	}
+	*/
 
 	/* Treat the simple options */
 	if (is_set_option('v')) {
@@ -224,13 +231,15 @@ main(int argc, const char *argv[]) {
 		}
 	}
 	else {	/* The works */
-		Read_Input_Files(argc, argv);	/* turns files into texts */
-		Compare_Files();		/* turns texts into runs */
+		Read_Input_Files(argc, argv);
+		Make_Forward_References();
+		Compare_Files();
+		Free_Forward_References();
 		if (is_set_option('p')) {
-			Print_Percentages();
+			Show_Percentages();
 		} else {
 			Retrieve_Runs();
-			Print_Runs();
+			Show_Runs();
 		}
 	}
 

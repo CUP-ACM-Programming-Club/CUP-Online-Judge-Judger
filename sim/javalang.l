@@ -1,18 +1,18 @@
 %{
 /*	This file is part of the software similarity tester SIM.
 	Written by Dick Grune, Vrije Universiteit, Amsterdam.
-	$Id: javalang.l,v 1.22 2017-12-11 14:12:34 dick Exp $
+	$Id: javalang.l,v 1.16 2017-03-19 09:23:19 dick Exp $
 */
 
 /*
 	Java language front end for the similarity tester.
 	Author:	Dick Grune <dick@cs.vu.nl>
-	Date:	Nov. 1997
 */
 
 #include	"options.h"
 #include	"token.h"
-#include	"properties.h"
+#include	"language.h"
+#include	"algollike.h"
 #include	"idf.h"
 #include	"lex.h"
 #include	"lang.h"
@@ -21,7 +21,7 @@
 Token lex_token;
 size_t lex_nl_cnt;
 size_t lex_tk_cnt;
-size_t lex_non_ASCII_cnt;
+size_t lex_non_ascii_cnt;
 
 /* Language-dependent data */
 
@@ -88,7 +88,7 @@ idf2token(int hashing) {
 	return tk;
 }
 
-/* Token sets for properties module */
+/* Token sets for module algollike */
 const Token Non_Finals[] = {
 	IDF,		/* identifier */
 	NORM('{'),
@@ -162,7 +162,18 @@ const char *Subject = "Java programs";
 
 void
 Init_Language(void) {
-	Init_Language_Properties(Non_Finals, Non_Initials, Openers, Closers);
+	Init_Algol_Language(Non_Finals, Non_Initials, Openers, Closers);
+}
+
+
+int
+May_Be_Start_Of_Run(Token ch) {
+	return May_Be_Start_Of_Algol_Run(ch);
+}
+
+size_t
+Best_Run_Size(const Token *str, size_t size) {
+	return Best_Algol_Run_Size(str, size);
 }
 
 %}
@@ -173,9 +184,11 @@ Init_Language(void) {
 
 Layout		([ \t\r\f])
 ASCII95		([\040-\176])
-PseudoUTF8	([\201-\377])
 
-AnyQuoted	(\\.)
+Digit		([0-9a-fA-F])
+
+UniCode		(\\u{Digit}{Digit}{Digit}{Digit})
+AnyQuoted	((\\.)|{UniCode})
 StrChar		([^\"\n\\]|{AnyQuoted})
 ChrChar		([^\'\n\\]|{AnyQuoted})
 
@@ -186,8 +199,7 @@ UnsafeComChar	("*")
 
 SingleLineCom	("//".*)
 
-HexDigit	([0-9a-fA-F])
-Idf		(([A-Za-z_][A-Za-z0-9_]*)|{PseudoUTF8})
+Idf		([A-Za-z][A-Za-z0-9_]*)
 
 %%
 
@@ -222,14 +234,14 @@ Idf		(([A-Za-z_][A-Za-z0-9_]*)|{PseudoUTF8})
 	}
 
 \"{StrChar}*\"	{			/* strings */
-		return_ch(STR);
+		return_ch('"');
 	}
 
 \'{ChrChar}+\'	{			/* characters */
 		return_ch('\'');
 	}
 
-(0x)?{HexDigit}+("l"|"L")?	{      	/* numeral, passed as an identifier */
+(0x)?{Digit}+("l"|"L")?	{		/* numeral, passed as an identifier */
 		return_tk(IDF);
 	}
 
@@ -266,7 +278,7 @@ Idf		(([A-Za-z_][A-Za-z0-9_]*)|{PseudoUTF8})
 	}
 
 .	{				/* count non-ASCII chars */
-		lex_non_ASCII_cnt++;
+		lex_non_ascii_cnt++;
 	}
 
 %%

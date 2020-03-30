@@ -1,6 +1,6 @@
 /*	This file is part of the software similarity tester SIM.
 	Written by Dick Grune, Vrije Universiteit, Amsterdam.
-	$Id: percentages.c,v 1.35 2017-12-06 16:43:50 dick Exp $
+	$Id: percentages.c,v 1.31 2016-07-31 18:55:44 dick Exp $
 */
 
 #include	<stdio.h>
@@ -22,21 +22,16 @@ struct match {
 
 static struct match *match_list = 0;	/* to be allocated by new() */
 
-#ifdef	DB_PERC
-static float match_percentage(const struct match *m);
-#include	"percentages_db.i"
-#endif
-
 static void
 do_add_to_percentages(
     int rec_level, const struct text *txt0, const struct text *txt1,
     size_t size);
 static void print_perc_info(const struct match *m);
 
-static float
-match_percentage(const struct match *m) {
-	return (((float)m->ma_size)/((float)m->ma_size0));
-}
+#ifdef	DB_PERC
+static void db_print_match(const struct match *ma);
+static void db_print_match_list(const char *msg);
+#endif
 
 void
 add_to_percentages(
@@ -162,14 +157,38 @@ do_add_to_percentages(
    So we sort for percentage, and then reorder during printing.
 */
 
-/* begin instantiate */
-static void sort_match_list(struct match **listhook);
+/* instantiate sort_match_list(struct match **listhook) */
+static float
+match_percentage(const struct match *m) {
+	return (((float)m->ma_size)/((float)m->ma_size0));
+}
 #define	SORT_STRUCT		match
 #define	SORT_NAME		sort_match_list
 #define	SORT_BEFORE(p1,p2)	(match_percentage(p1) > match_percentage(p2))
 #define	SORT_NEXT		ma_next
 #include	"sortlist.bdy"
-/* end instantiate */
+
+#ifdef	DB_PERC
+static void
+db_print_match(const struct match *ma) {
+	fprintf(Debug_File, "%s < %s, %d/%d=%3.2f%%\n",
+		ma->ma_fname0, ma->ma_fname1,
+		ma->ma_size, ma->ma_size0,
+		match_percentage(ma)*100.0
+	);
+}
+
+static void
+db_print_match_list(const char *msg) {
+	fprintf(Debug_File, "\n\n**** DB_PERCENTAGES %s ****\n", msg);
+	const struct match *ma;
+
+	for (ma = match_list; ma; ma = ma->ma_next) {
+		db_print_match(ma);
+	}
+	fprintf(Debug_File, "\n");
+}
+#endif	/* DB_PERC */
 
 static void
 print_perc_info(const struct match *m) {
@@ -220,7 +239,7 @@ print_and_remove_perc_info_for_top_file(struct match **m_hook) {
 }
 
 static void
-print_match_list(void) {
+print_percentages(void) {
 #ifdef	DB_PERC
 	db_print_match_list("before listing match_list");
 #endif	/* DB_PERC */
@@ -232,7 +251,7 @@ print_match_list(void) {
 }
 
 void
-Print_Percentages(void) {
+Show_Percentages(void) {
 #ifdef	DB_PERC
 	db_print_match_list("before sort");
 #endif	/* DB_PERC */
@@ -240,5 +259,5 @@ Print_Percentages(void) {
 #ifdef	DB_PERC
 	db_print_match_list("after sort");
 #endif	/* DB_PERC */
-	print_match_list();
+	print_percentages();
 }
