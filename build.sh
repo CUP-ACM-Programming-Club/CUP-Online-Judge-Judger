@@ -2,11 +2,13 @@
 CPU_CORE=$(nproc)
 ./shell/build_dependency.sh
 cmake ./ && make -j$CPU_CORE && chmod a+x judge_client && mv ./judge_client /usr/bin
+useradd -m -u 1536 judge
 mkdir /home/judge
 mkdir /home/judge/etc
 mkdir /dev/shm/cupoj
 mkdir /dev/shm/cupoj/submission
-useradd -m -u 1536 judge
+chown judge /home/judge/*
+chgrp judge /home/judge/*
 cp -r etc/* /home/judge/etc/ &&
   chown -R judge /home/judge &&
   chgrp -R judge /home/judge &&
