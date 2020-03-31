@@ -7,6 +7,7 @@ mkdir /home/judge
 mkdir /home/judge/etc
 mkdir /dev/shm/cupoj
 mkdir /dev/shm/cupoj/submission
+mkdir /home/judge/submission
 chown judge /home/judge/*
 chgrp judge /home/judge/*
 cp -r etc/* /home/judge/etc/ &&

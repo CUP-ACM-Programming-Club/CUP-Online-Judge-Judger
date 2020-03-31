@@ -569,6 +569,9 @@ string getFileContent(const string& file) {
 
 void mk_shm_workdir(char *work_dir) {
     char shm_path[BUFFER_SIZE];
+    sprintf(shm_path, "%s/submission", oj_home);
+    execute_cmd("/bin/chown -R judge %s", shm_path);
+    execute_cmd("/bin/chgrp -R judge %s", shm_path);
     sprintf(shm_path, "/dev/shm/hustoj/%s", work_dir);
     execute_cmd("/bin/mkdir -p %s", shm_path);
     execute_cmd("/bin/ln -s %s %s/", shm_path, oj_home);
@@ -581,8 +584,12 @@ void mk_shm_workdir(char *work_dir) {
 
 void make_workdir(char* work_dir) {
     char shm_path[BUFFER_SIZE];
+    sprintf(shm_path, "%s/submission", oj_home);
+    execute_cmd("/bin/chown -R judge %s", shm_path);
+    execute_cmd("/bin/chgrp -R judge %s", shm_path);
     execute_cmd("/bin/mkdir -p %s", work_dir);
     execute_cmd("/bin/chown -R judge %s ", work_dir);
+    execute_cmd("/bin/chgrp -R judge %s ", work_dir);
     execute_cmd("/bin/chmod 755 %s", work_dir);
     sprintf(shm_path, "/dev/shm/hustoj/%s/", oj_home);
     execute_cmd("/bin/ln -s %s/data %s", oj_home, shm_path);
