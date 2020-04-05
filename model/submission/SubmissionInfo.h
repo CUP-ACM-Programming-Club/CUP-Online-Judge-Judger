@@ -6,6 +6,8 @@
 #define JUDGE_CLIENT_SUBMISSIONINFO_H
 
 #include <string>
+#include "../base/JSONVectorReader.h"
+
 using std::string;
 class SubmissionInfo {
 private:
@@ -18,6 +20,7 @@ private:
     string userId;
     int language;
     int solutionId;
+    void _read(JSONVectorReader&);
 
 public:
     SubmissionInfo& setSource(string&);
@@ -30,6 +33,7 @@ public:
     SubmissionInfo& setLanguage(int);
     SubmissionInfo& setSolutionId(int);
     SubmissionInfo& readFromFile(string&);
+    SubmissionInfo& readJSON(string&);
 
     string& getSource();
     string& getCustomInput();

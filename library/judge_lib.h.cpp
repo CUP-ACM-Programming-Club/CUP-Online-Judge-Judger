@@ -477,8 +477,11 @@ void getSolutionInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, int& p_id
 }
 
 void buildSubmissionInfo(SubmissionInfo& submissionInfo, string& judgerId) {
-    string filePath = string(oj_home) + "/submission/" + judgerId + ".json";
-    submissionInfo.readFromFile(filePath);
+    // string filePath = string(oj_home) + "/submission/" + judgerId + ".json";
+    string jsonFromStdin;
+    std::getline(cin, jsonFromStdin);
+    submissionInfo.readJSON(jsonFromStdin);
+    // submissionInfo.readFromFile(filePath);
 }
 
 void removeSubmissionInfo(string& uuid) {

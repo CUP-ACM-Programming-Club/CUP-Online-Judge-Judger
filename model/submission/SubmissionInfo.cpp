@@ -79,6 +79,26 @@ int SubmissionInfo::getLanguage() {
 
 SubmissionInfo &SubmissionInfo::readFromFile(string &file) {
     JSONVectorReader reader(file);
+    _read(reader);
+    return *this;
+}
+
+int SubmissionInfo::getSolutionId() {
+    return solutionId;
+}
+
+SubmissionInfo &SubmissionInfo::setSolutionId(int solutionId) {
+    this->solutionId = solutionId;
+}
+
+SubmissionInfo &SubmissionInfo::readJSON(string &json) {
+    JSONVectorReader reader;
+    reader.loadJSON(json);
+    _read(reader);
+    return *this;
+}
+
+void SubmissionInfo::_read(JSONVectorReader &reader) {
     if (reader.has("test_run") && reader.GetBool("test_run")) {
         this->customInput = reader.GetString("custom_input");
     }
@@ -90,14 +110,5 @@ SubmissionInfo &SubmissionInfo::readFromFile(string &file) {
     this->timeLimit = reader.GetDouble("time_limit");
     this->source = reader.GetString("source");
     this->solutionId = reader.GetInt("solution_id");
-    return *this;
-}
-
-int SubmissionInfo::getSolutionId() {
-    return solutionId;
-}
-
-SubmissionInfo &SubmissionInfo::setSolutionId(int solutionId) {
-    this->solutionId = solutionId;
 }
 
