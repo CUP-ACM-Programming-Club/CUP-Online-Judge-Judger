@@ -422,6 +422,8 @@ int detectArgType(const char *argument) {
             return _NO_MYSQL;
         } else if (!strcmp(argument + 1, "judger_id")) {
             return _JUDGER_ID;
+        } else if (!strcmp(argument + 1, "stdin")) {
+            return _STDIN;
         }
         else {
             return _ERROR;
@@ -477,11 +479,15 @@ void getSolutionInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, int& p_id
 }
 
 void buildSubmissionInfo(SubmissionInfo& submissionInfo, string& judgerId) {
-    // string filePath = string(oj_home) + "/submission/" + judgerId + ".json";
-    string jsonFromStdin;
-    std::getline(cin, jsonFromStdin);
-    submissionInfo.readJSON(jsonFromStdin);
-    // submissionInfo.readFromFile(filePath);
+    if (READ_FROM_STDIN) {
+        string jsonFromStdin;
+        std::getline(cin, jsonFromStdin);
+        submissionInfo.readJSON(jsonFromStdin);
+    }
+    else {
+        string filePath = string(oj_home) + "/submission/" + judgerId + ".json";
+        submissionInfo.readFromFile(filePath);
+    }
 }
 
 void removeSubmissionInfo(string& uuid) {

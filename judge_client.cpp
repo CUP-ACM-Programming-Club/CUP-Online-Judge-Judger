@@ -99,12 +99,11 @@ void init_mysql_conf() {
     string configDIR = oj_home;
     configDIR += "/etc/config.json";
     ConfigReader configReader(configDIR);
-    auto mysqlConf = configReader.GetObject("mysql");
-    strcpy(host_name, (*mysqlConf)["hostname"].GetString());
-    strcpy(user_name, (*mysqlConf)["username"].GetString());
-    strcpy(password, (*mysqlConf)["password"].GetString());
-    strcpy(db_name, (*mysqlConf)["db_name"].GetString());
-    database_port = (*mysqlConf)["port"].GetInt();
+    strcpy(host_name, configReader.GetString("hostname").c_str());
+    strcpy(user_name, configReader.GetString("username").c_str());
+    strcpy(password, configReader.GetString("password").c_str());
+    strcpy(db_name, configReader.GetString("db_name").c_str());
+    database_port = configReader.GetInt("port");
     javaTimeBonus = configReader.GetInt("java_time_bonus");
     java_memory_bonus = configReader.GetInt("java_memory_bonus");
     strcpy(java_xms, configReader.GetString("java_xms").c_str());
@@ -707,6 +706,8 @@ void init_parameters(int argc, char **argv, int &solution_id,
             no_sim = true;
         } else if (argType == _NO_MYSQL) {
             MYSQL_MODE = false;
+        } else if (argType == _STDIN) {
+            READ_FROM_STDIN = true;
         }
         else {
             ++i;

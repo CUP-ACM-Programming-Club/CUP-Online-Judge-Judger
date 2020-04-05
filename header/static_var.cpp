@@ -13,6 +13,7 @@ char oj_home[BUFFER_SIZE];
 int DEBUG = 0;
 int NO_RECORD = 0;
 bool MYSQL_MODE = true;
+bool READ_FROM_STDIN = false;
 int javaTimeBonus = 5;
 int java_memory_bonus = 512;
 char java_xms[BUFFER_SIZE];

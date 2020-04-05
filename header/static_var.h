@@ -134,7 +134,8 @@ enum ArgsType {
     _ADMIN = 7,
     _NO_SIM = 8,
     _NO_MYSQL = 9,
-    _JUDGER_ID = 10
+    _JUDGER_ID = 10,
+    _STDIN = 11
 };
 
 const int CODESIZE = 64 * ONE_KILOBYTE;
@@ -148,6 +149,7 @@ const int DEFAULT_SOLUTION_ID = 1000;
 extern int DEBUG;
 extern int NO_RECORD;
 extern bool MYSQL_MODE;
+extern bool READ_FROM_STDIN;
 extern int database_port;
 extern char host_name[BUFFER_SIZE];
 extern char user_name[BUFFER_SIZE];

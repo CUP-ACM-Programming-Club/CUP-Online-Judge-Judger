@@ -22,13 +22,11 @@ echo "请输入端口号"
 read PORT
 
 cat >/home/judge/etc/config.json <<-EOF {
-  "mysql": {
-    "hostname": "$HOSTNAME",
-    "username": "$USERNAME",
-    "password": "$PASSWORD",
-    "db_name": "jol",
-    "port": $PORT
-  },
+  "hostname": "$HOSTNAME",
+  "username": "$USERNAME",
+  "password": "$PASSWORD",
+  "db_name": "jol",
+  "port": $PORT,
   "running": $CPU_CORE,
   "sleep_time": 4,
   "total": 1,
