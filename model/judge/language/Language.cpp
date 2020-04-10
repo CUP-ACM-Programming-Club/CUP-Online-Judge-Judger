@@ -163,3 +163,7 @@ void Language::buildSeccompSandbox() {
     // do nothing
 }
 
+void Language::setDebug(int debug) {
+    DEBUG = debug;
+}
+

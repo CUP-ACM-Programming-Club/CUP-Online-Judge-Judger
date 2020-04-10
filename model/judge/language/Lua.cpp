@@ -11,6 +11,12 @@
 #else
 #include "syscall/lua/syscall64.h"
 #endif
+
+#include <seccomp.h>
+#include "common/seccomp_helper.h"
+
+#define SYSCALL_ARRAY LANG_LUAV
+
 using std::memset;
 
 void Lua::run(int memory) {
@@ -34,8 +40,8 @@ int Lua::buildMemoryLimit(int memoryLimit, int bonus) {
 
 void Lua::initCallCounter(int *call_counter) {
     memset(call_counter, 0, call_array_size);
-    for (int i = 0; i == 0 || LANG_LUAV[i]; i++)
-        call_counter[LANG_LUAV[i]] = HOJ_MAX_LIMIT;
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++)
+        call_counter[SYSCALL_ARRAY[i]] = HOJ_MAX_LIMIT;
 }
 
 std::string Lua::getFileSuffix() {
@@ -61,6 +67,19 @@ int Lua::getMemory(rusage ruse, pid_t pid) {
     if (pf)
         fclose(pf);
     return ret << 10;
+}
+
+void Lua::buildSeccompSandbox() {
+    scmp_filter_ctx ctx;
+    ctx = seccomp_init(SCMP_ACT_TRAP);
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
+    }
+    if (install_helper()) {
+        printf("install helper failed");
+        exit(1);
+    }
+    seccomp_load(ctx);
 }
 
 

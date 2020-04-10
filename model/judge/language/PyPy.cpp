@@ -13,6 +13,12 @@
 #else
 #include "syscall/pypy/syscall64.h"
 #endif
+
+#include <seccomp.h>
+#include "common/seccomp_helper.h"
+
+#define SYSCALL_ARRAY LANG_PYPYV
+
 using std::memset;
 const int STD_MB = 1 << 20;
 
@@ -58,8 +64,8 @@ int PyPy::buildMemoryLimit(int memoryLimit, int bonus) {
 
 void PyPy::initCallCounter(int *call_counter) {
     memset(call_counter, 0, call_array_size);
-    for (int i = 0; i == 0 || LANG_PYPYV[i]; ++i) {
-        call_counter[LANG_PYPYV[i]] = HOJ_MAX_LIMIT;
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; ++i) {
+        call_counter[SYSCALL_ARRAY[i]] = HOJ_MAX_LIMIT;
     }
 }
 
@@ -132,6 +138,18 @@ void PyPy::fixFlagWithVMIssue(char *work_dir, int &ACflg, int &topmemory, int me
         topmemory = mem_lmt * STD_MB;
     }
 }
+
+void PyPy::buildSeccompSandbox() {
+    scmp_filter_ctx ctx;
+    ctx = seccomp_init(SCMP_ACT_TRAP);
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
+    }
+    if (install_helper()) {
+        printf("install helper failed");
+        exit(1);
+    }
+    seccomp_load(ctx);}
 
 extlang createInstancepypy () {
     return new PyPy;

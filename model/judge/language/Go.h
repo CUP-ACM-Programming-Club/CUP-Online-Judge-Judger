@@ -16,6 +16,7 @@ public:
     double buildTimeLimit(double timeLimit, double bonus) override;
     int buildMemoryLimit(int memoryLimit, int bonus) override;
     void initCallCounter(int* call_counter) override;
+    void buildSeccompSandbox() override;
     std::string getFileSuffix() override;
     void runMemoryLimit(rlimit& LIM) override;
     bool enableSim() override;

@@ -13,6 +13,12 @@
 #include "syscall/csharp/syscall64.h"
 #endif
 using std::memset;
+
+#include "seccomp.h"
+#include "common/seccomp_helper.h"
+
+#define SYSCALL_ARRAY LANG_CSV
+
 void Csharp::run(int memory) {
     execl("/mono", "/mono", "--debug", "Main.exe", (char *) nullptr);
 }
@@ -60,8 +66,8 @@ int Csharp::buildMemoryLimit(int memoryLimit, int bonus) {
 
 void Csharp::initCallCounter(int *call_counter) {
     memset(call_counter, 0, call_array_size);
-    for (int i = 0; i == 0 || LANG_CSV[i]; i++)
-        call_counter[LANG_CSV[i]] = HOJ_MAX_LIMIT;
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++)
+        call_counter[SYSCALL_ARRAY[i]] = HOJ_MAX_LIMIT;
 }
 
 std::string Csharp::getFileSuffix() {
@@ -70,6 +76,19 @@ std::string Csharp::getFileSuffix() {
 
 bool Csharp::gotErrorWhileRunning(bool error) {
     return error;
+}
+
+void Csharp::buildSeccompSandbox() {
+    scmp_filter_ctx ctx;
+    ctx = seccomp_init(SCMP_ACT_TRAP);
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
+    }
+    if (install_helper()) {
+        printf("install helper failed");
+        exit(1);
+    }
+    seccomp_load(ctx);
 }
 
 extlang createInstancecsharp () {

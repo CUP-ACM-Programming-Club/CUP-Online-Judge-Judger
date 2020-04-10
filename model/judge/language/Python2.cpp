@@ -14,6 +14,12 @@
 #include "util/util.h"
 
 #endif
+
+#include <seccomp.h>
+#include "common/seccomp_helper.h"
+
+#define SYSCALL_ARRAY LANG_YV
+
 const int STD_MB = 1 << 20;
 
 using std::memset;
@@ -36,8 +42,8 @@ int Python2::buildMemoryLimit(int memoryLimit, int bonus) {
 
 void Python2::initCallCounter(int *call_counter) {
     memset(call_counter, 0, call_array_size);
-    for (int i = 0; i == 0 || LANG_YV[i]; ++i) {
-        call_counter[LANG_YV[i]] = HOJ_MAX_LIMIT;
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; ++i) {
+        call_counter[SYSCALL_ARRAY[i]] = HOJ_MAX_LIMIT;
     }
 }
 
@@ -113,6 +119,19 @@ void Python2::fixFlagWithVMIssue(char *work_dir, int &ACflg, int &topmemory, int
         ACflg = MEMORY_LIMIT_EXCEEDED;
         topmemory = mem_lmt * STD_MB;
     }
+}
+
+void Python2::buildSeccompSandbox() {
+    scmp_filter_ctx ctx;
+    ctx = seccomp_init(SCMP_ACT_TRAP);
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
+    }
+    if (install_helper()) {
+        printf("install helper failed");
+        exit(1);
+    }
+    seccomp_load(ctx);
 }
 
 

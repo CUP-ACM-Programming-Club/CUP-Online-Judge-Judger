@@ -12,6 +12,7 @@ class Objc : public C11 {
 public:
     void buildRuntime(const char* work_dir) override;
     void initCallCounter(int* call_counter) override;
+    void buildSeccompSandbox() override;
     std::string getFileSuffix() override;
     int getMemory(rusage ruse, pid_t pid) override;
 };

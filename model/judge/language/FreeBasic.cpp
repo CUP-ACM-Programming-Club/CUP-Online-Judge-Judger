@@ -11,6 +11,11 @@
 #include "syscall/freebasic/syscall64.h"
 #endif
 
+#include "seccomp.h"
+#include "common/seccomp_helper.h"
+
+#define SYSCALL_ARRAY LANG_BASICV
+
 extlang createInstancefreebasic () {
     return new FreeBasic;
 }
@@ -38,8 +43,8 @@ int FreeBasic::buildMemoryLimit(int timeLimit, int bonus) {
 
 void FreeBasic::initCallCounter(int *call_counter) {
     memset(call_counter, 0, call_array_size);
-    for (int i = 0; i == 0 || LANG_BASICV[i]; i++)
-        call_counter[LANG_BASICV[i]] = HOJ_MAX_LIMIT;
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++)
+        call_counter[SYSCALL_ARRAY[i]] = HOJ_MAX_LIMIT;
 }
 
 void FreeBasic::setCompileExtraConfig() {
@@ -85,4 +90,17 @@ bool FreeBasic::enableSim() {
 
 bool FreeBasic::gotErrorWhileRunning(bool error) {
     return Language::gotErrorWhileRunning(error);
+}
+
+void FreeBasic::buildSeccompSandbox() {
+    scmp_filter_ctx ctx;
+    ctx = seccomp_init(SCMP_ACT_TRAP);
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
+    }
+    if (install_helper()) {
+        printf("install helper failed");
+        exit(1);
+    }
+    seccomp_load(ctx);
 }

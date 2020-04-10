@@ -37,11 +37,13 @@ public:
     virtual bool gotErrorWhileRunning(bool error);
     virtual bool isValidExitCode(int exitcode);
     virtual ~Language();
+    virtual void setDebug(int debug);
 protected:
     virtual void setCPULimit();
     virtual void setFSizeLimit();
     virtual void setASLimit();
     virtual void setAlarm();
+    int DEBUG;
 };
 
 typedef Language* createLanguageInstance();

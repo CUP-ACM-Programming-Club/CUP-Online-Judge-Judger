@@ -11,6 +11,12 @@
 #else
 #include "syscall/perl/syscall64.h"
 #endif
+
+#include <seccomp.h>
+#include "common/seccomp_helper.h"
+
+#define SYSCALL_ARRAY LANG_PLV
+
 using std::memset;
 
 void Perl::run(int memory) {
@@ -35,8 +41,8 @@ int Perl::buildMemoryLimit(int memoryLimit, int bonus) {
 
 void Perl::initCallCounter(int *call_counter) {
     memset(call_counter, 0, call_array_size);
-    for (int i = 0; i == 0 || LANG_PLV[i]; i++)
-        call_counter[LANG_PLV[i]] = HOJ_MAX_LIMIT;
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++)
+        call_counter[SYSCALL_ARRAY[i]] = HOJ_MAX_LIMIT;
 }
 
 std::string Perl::getFileSuffix() {
@@ -63,6 +69,18 @@ int Perl::getMemory(rusage ruse, pid_t pid) {
         fclose(pf);
     return ret << 10;
 }
+
+void Perl::buildSeccompSandbox() {
+    scmp_filter_ctx ctx;
+    ctx = seccomp_init(SCMP_ACT_TRAP);
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
+    }
+    if (install_helper()) {
+        printf("install helper failed");
+        exit(1);
+    }
+    seccomp_load(ctx);}
 
 extlang createInstanceperl () {
     return new Perl;

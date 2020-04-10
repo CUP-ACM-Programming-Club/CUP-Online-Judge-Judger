@@ -15,6 +15,11 @@
 #include "syscall/java/syscall64.h"
 #endif
 
+#include <seccomp.h>
+#include "common/seccomp_helper.h"
+
+#define SYSCALL_ARRAY LANG_JV
+
 const int STD_MB = 1 << 20;
 
 using std::sprintf;
@@ -94,8 +99,8 @@ void Java::setExtraPolicy(const char* oj_home, const char* work_dir) {
 
 void Java::initCallCounter(int *call_counter) {
     memset(call_counter, 0, call_array_size);
-    for (int i = 0; i == 0 || LANG_JV[i]; i++)
-        call_counter[LANG_JV[i]] = HOJ_MAX_LIMIT;
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++)
+        call_counter[SYSCALL_ARRAY[i]] = HOJ_MAX_LIMIT;
 }
 
 void Java::setCompileMount(const char *work_dir) {
@@ -153,5 +158,18 @@ bool Java::gotErrorWhileRunning(bool error) {
 
 bool Java::isValidExitCode(int exitcode) {
     return (exitcode == 17 || Language::isValidExitCode(exitcode));
+}
+
+void Java::buildSeccompSandbox() {
+    scmp_filter_ctx ctx;
+    ctx = seccomp_init(SCMP_ACT_TRAP);
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
+    }
+    if (install_helper()) {
+        printf("install helper failed");
+        exit(1);
+    }
+    seccomp_load(ctx);
 }
 

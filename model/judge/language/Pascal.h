@@ -12,7 +12,8 @@ class Pascal : public C11 {
 public:
     void buildRuntime(const char* work_dir) override;
     void initCallCounter(int* call_counter) override;
-    void setCompileExtraConfig();
+    void buildSeccompSandbox() override;
+    void setCompileExtraConfig() override;
     std::string getFileSuffix() override;
     int getMemory(rusage ruse, pid_t pid) override;
 };
