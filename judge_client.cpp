@@ -415,8 +415,12 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
 
     //}
     // trace me
-    if (use_ptrace)
+    if (use_ptrace) {
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+    }
+    else {
+        languageModel->buildSeccompSandbox();
+    }
     // run me
     languageModel->buildChrootSandbox(work_dir);
 
@@ -532,7 +536,9 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
                 printf("out of memory %d\n", topmemory);
             if (ACflg == ACCEPT)
                 ACflg = MEMORY_LIMIT_EXCEEDED;
-            ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            if (use_ptrace) {
+                ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            }
             break;
         }
         //sig = status >> 8;/*status >> 8 EXITCODE*/
@@ -564,7 +570,9 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         if (languageModel->gotErrorWhileRunning(has_error) && !ALL_TEST_MODE) {
             ACflg = RUNTIME_ERROR;
             //addreinfo(solution_id);
-            ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            if (use_ptrace) {
+                ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            }
             break;
         }
 
@@ -573,7 +581,9 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
             && get_file_size(userfile)
                > get_file_size(outfile) * 2 + 1024) {
             ACflg = OUTPUT_LIMIT_EXCEEDED;
-            ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            if (use_ptrace) {
+                ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            }
             break;
         }
 
@@ -608,7 +618,9 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
                 }
                 print_runtimeerror(strsignal(exitcode));
             }
-            ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            if (use_ptrace) {
+                ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            }
             break;
         }
         if (WIFSIGNALED(status)) {
@@ -650,24 +662,26 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
          */
 
         // check the system calls
-        ptrace(PTRACE_GETREGS, pidApp, NULL, &reg);
-        if (call_counter[reg.REG_SYSCALL]) {
-            //call_counter[reg.REG_SYSCALL]--;
-        } else if (record_call) {
-            call_counter[reg.REG_SYSCALL] = 1;
+        if (use_ptrace) {
+            ptrace(PTRACE_GETREGS, pidApp, NULL, &reg);
+            if (call_counter[reg.REG_SYSCALL]) {
+                //call_counter[reg.REG_SYSCALL]--;
+            } else if (record_call) {
+                call_counter[reg.REG_SYSCALL] = 1;
 
-        } else { //do not limit JVM syscall for using different JVM
-            ACflg = RUNTIME_ERROR;
-            string _error;
-            _error = string("Current Program use not allowed system call.\nSolution ID:") + to_string(solution_id) +
-                     "\n";
-            _error += string("Syscall ID:") + to_string(reg.REG_SYSCALL) + "\n";
+            } else { //do not limit JVM syscall for using different JVM
+                ACflg = RUNTIME_ERROR;
+                string _error;
+                _error = string("Current Program use not allowed system call.\nSolution ID:") + to_string(solution_id) +
+                         "\n";
+                _error += string("Syscall ID:") + to_string(reg.REG_SYSCALL) + "\n";
 
-            write_log(oj_home, _error.c_str());
-            print_runtimeerror(_error.c_str());
-            ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+                write_log(oj_home, _error.c_str());
+                print_runtimeerror(_error.c_str());
+                ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            }
+            ptrace(PTRACE_SYSCALL, pidApp, NULL, NULL);
         }
-        ptrace(PTRACE_SYSCALL, pidApp, NULL, NULL);
     }
 
     usedtime += (ruse.ru_utime.tv_sec * 1000 + ruse.ru_utime.tv_usec / 1000);

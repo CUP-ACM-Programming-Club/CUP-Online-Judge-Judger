@@ -20,6 +20,15 @@ endif ()
 set(CMAKE_CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/out)
+
+macro (add_library _name)
+    # invoke built-in add_executable
+    _add_library(${ARGV})
+    if (TARGET ${_name})
+        target_link_libraries(${_name} seccomp)
+    endif()
+endmacro()
+
 add_library(c11 SHARED C11.h C11.cpp Language.h Language.cpp util/util.h util/util.cpp syscall/c11/syscall32.h syscall/c11/syscall64.h)
 add_library(c99 SHARED C99.h C99.cpp C11.h C11.cpp Language.h Language.cpp util/util.h util/util.cpp syscall/c11/syscall32.h syscall/c11/syscall64.h)
 add_library(bash SHARED Bash.h Bash.cpp Language.cpp Language.h util/util.h util/util.cpp common/BonusLimit.cpp common/BonusLimit.h syscall/bash/syscall32.h syscall/bash/syscall64.h)

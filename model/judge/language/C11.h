@@ -17,6 +17,7 @@ public:
     std::string getFileSuffix() override;
     void runMemoryLimit(rlimit& LIM) override;
     bool enableSim() override;
+    void buildSeccompSandbox() override;
     bool gotErrorWhileRunning(bool error) override;
 };
 

@@ -10,6 +10,7 @@
 #else
 #include "syscall/c11/syscall64.h"
 #endif
+#include "seccomp.h"
 using std::memset;
 void C11::run(int memory) {
     execl("./Main", "./Main", (char *) nullptr);
@@ -43,6 +44,15 @@ bool C11::enableSim() {
 
 bool C11::gotErrorWhileRunning(bool error) {
     return error;
+}
+
+void C11::buildSeccompSandbox() {
+    scmp_filter_ctx ctx;
+    ctx = seccomp_init(SCMP_ACT_KILL);
+    for (int i = 0; i == 0 || LANG_CV[i]; i++) {
+        seccomp_rule_add(ctx, SCMP_ACT_ALLOW, LANG_CV[i], 0);
+    }
+    seccomp_load(ctx);
 }
 
 extern "C" Language* createInstancec11() {

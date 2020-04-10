@@ -28,6 +28,7 @@ public:
     virtual int fixACStatus(int acFlag);
     virtual int getMemory(rusage ruse, pid_t pid);
     virtual void buildChrootSandbox(const char* work_dir);
+    virtual void buildSeccompSandbox();
     virtual void runMemoryLimit(rlimit& LIM);
     virtual void fixACFlag(int& ACflg);
     virtual bool enableSim();

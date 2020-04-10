@@ -159,3 +159,7 @@ bool Language::isValidExitCode(int exitcode) {
     return (exitcode == 0x05 || exitcode == 0);
 }
 
+void Language::buildSeccompSandbox() {
+    // do nothing
+}
+
