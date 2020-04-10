@@ -38,5 +38,6 @@ cp -r etc/* /home/judge/etc/ &&
   cp sim_text.exe /usr/bin/sim_text &&
   cp sim_lisp.exe /usr/bin/sim_scm &&
   cp sim.sh /usr/bin/ &&
-  chmod +x /usr/bin/sim.sh
+  chmod +x /usr/bin/sim.sh &&
+  cd ../
 ./shell/build_config.sh
