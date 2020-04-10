@@ -114,6 +114,7 @@ void init_mysql_conf() {
     SHARE_MEMORY_RUN = configReader.GetInt("shm_run");
     use_max_time = configReader.GetInt("use_max_time");
     use_ptrace = configReader.GetInt("use_ptrace");
+    ALL_TEST_MODE = configReader.GetInt("all_test_mode");
     //  fclose(fp);
 }
 
@@ -1058,7 +1059,9 @@ int main(int argc, char **argv) {
         bundle.setPassRate(pass_rate / num_of_test);
         webSocket << bundle.toJSONString();
     }
-    ACflg = finalACflg;
+    if (ALL_TEST_MODE) {
+        ACflg = finalACflg;
+    }
     if (ACflg == ACCEPT && PEflg == PRESENTATION_ERROR) {
         ACflg = PRESENTATION_ERROR;
     }

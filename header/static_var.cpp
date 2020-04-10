@@ -19,7 +19,7 @@ int java_memory_bonus = 512;
 char java_xms[BUFFER_SIZE];
 char java_xmx[BUFFER_SIZE];
 int sim_enable = 0;
-int ALL_TEST_MODE = 0;
+int ALL_TEST_MODE = 1;
 int full_diff = 0;
 int use_max_time = 0;
 
