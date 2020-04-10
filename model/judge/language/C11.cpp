@@ -106,10 +106,6 @@ static int install_helper() {
         perror("sigprocmask");
         return -1;
     }
-    if (install_helper()) {
-        printf("install helper failed");
-        exit(1);
-    }
     return 0;
 }
 
@@ -152,6 +148,10 @@ void C11::buildSeccompSandbox() {
     ctx = seccomp_init(SCMP_ACT_TRAP);
     for (int i = 0; i == 0 || LANG_CV[i]; i++) {
         seccomp_rule_add(ctx, SCMP_ACT_ALLOW, LANG_CV[i], 0);
+    }
+    if (install_helper()) {
+        printf("install helper failed");
+        exit(1);
     }
     seccomp_load(ctx);
 }
