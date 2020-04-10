@@ -419,9 +419,6 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     if (use_ptrace) {
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     }
-    else {
-        languageModel->buildSeccompSandbox();
-    }
     // run me
     languageModel->buildChrootSandbox(work_dir);
 
@@ -463,6 +460,9 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
     LIM.rlim_cur = static_cast<rlim_t>(STD_MB * mem_lmt / 2 * 3);
     LIM.rlim_max = static_cast<rlim_t>(STD_MB * mem_lmt * 2);
     languageModel->runMemoryLimit(LIM);
+    if (!use_ptrace) {
+        languageModel->buildSeccompSandbox();
+    }
     languageModel->run(mem_lmt);
     //sleep(1);
     fflush(stderr);
