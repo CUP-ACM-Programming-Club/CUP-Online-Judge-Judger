@@ -89,6 +89,7 @@ int SubmissionInfo::getSolutionId() {
 
 SubmissionInfo &SubmissionInfo::setSolutionId(int solutionId) {
     this->solutionId = solutionId;
+    return *this;
 }
 
 SubmissionInfo &SubmissionInfo::readJSON(string &json) {
