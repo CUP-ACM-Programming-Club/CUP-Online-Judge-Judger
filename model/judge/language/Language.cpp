@@ -32,15 +32,15 @@ void Language::setCPULimit() {
 
 void Language::setFSizeLimit() {
     struct rlimit LIM;
-    LIM.rlim_max = static_cast<rlim_t>(10 * COMPILE_STD_MB);
-    LIM.rlim_cur = static_cast<rlim_t>(10 * COMPILE_STD_MB);
+    LIM.rlim_max = static_cast<rlim_t>(30 * COMPILE_STD_MB);
+    LIM.rlim_cur = static_cast<rlim_t>(30 * COMPILE_STD_MB);
     setrlimit(RLIMIT_FSIZE, &LIM);
 }
 
 void Language::setASLimit() {
     struct rlimit LIM;
-    LIM.rlim_max = static_cast<rlim_t>(COMPILE_STD_MB * 256);
-    LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB * 256);
+    LIM.rlim_max = static_cast<rlim_t>(COMPILE_STD_MB * 768);
+    LIM.rlim_cur = static_cast<rlim_t>(COMPILE_STD_MB * 768);
     setrlimit(RLIMIT_AS, &LIM);
 }
 
