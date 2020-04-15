@@ -146,7 +146,7 @@ extern Language* getLanguageModel(int language);
 
 extern MySQLSubmissionAdapter* getAdapter();
 
-extern Compare* getCompareModel();
+extern Compare::Compare* getCompareModel();
 
 extern bool isPython(int language);
 #endif //JUDGE_CLIENT_JUDGE_LIB_H
