@@ -3,8 +3,6 @@
 //
 #include "judge_lib.h"
 #include "../header/static_var.h"
-#include "../model/submission/SubmissionInfo.h"
-#include "../external/mysql/MySQLSubmissionAdapter.h"
 #include <dirent.h>
 #include <dlfcn.h>
 
@@ -169,95 +167,6 @@ const char *getFileNameFromPath(const char *path) {
     return path;
 }
 
-bool isJava(const int lang) {
-    switch (lang) {
-        case JAVA:
-        case JAVA6:
-        case JAVA7:
-        case JAVA8:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool isC(const int lang) {
-    switch (lang) {
-        case L_C11:
-        case L_C99:
-        case CLANG:
-        case CLANG11:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool isCPP(const int lang) {
-    switch (lang) {
-        case CPP11:
-        case L_CPP17:
-        case CPP98:
-        case CLANGPP:
-        case CLANGPP17:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool isCOrCPP(const int lang) {
-    return isC(lang) || isCPP(lang);
-}
-
-
-bool is_number(const string &s) {
-    for (auto c:s) {
-        if (!isdigit(c))return false;
-    }
-    return true;
-}
-
-bool check_valid_presentation_error(const char *ansfile, const char *userfile) {
-    fstream user(userfile), ans(ansfile);
-    string u, a;
-    while (user >> u) {
-        ans >> a;
-        if (is_number(a)) {
-            if (a != u) {
-                return false;
-            }
-        } else {
-            break;
-        }
-    }
-    return true;
-}
-
-
-void make_diff_out_full(FILE *f1, FILE *f2, int c1, int c2, const char *path) {
-
-    execute_cmd("echo '========[%s]========='>>diff.out", getFileNameFromPath(path));
-    execute_cmd("echo '------测试输入前100行------'>>diff.out");
-    execute_cmd("head -100 data.in>>diff.out");
-    execute_cmd("echo '\n------测试输出前100行-----'>>diff.out");
-    execute_cmd("head -100 '%s'>>diff.out", path);
-    execute_cmd("echo '\n------用户输出前100行-----'>>diff.out");
-    execute_cmd("head -100 user.out>>diff.out");
-    execute_cmd("echo '\n------测试输出(左)与用户输出(右)前200行的区别-----'>>diff.out");
-    execute_cmd("diff '%s' user.out -y|head -200>>diff.out", path);
-    execute_cmd("echo '=============================='>>diff.out");
-
-}
-
-void make_diff_out_simple(FILE *f1, FILE *f2, int c1, int c2, const char *path) {
-    execute_cmd("echo '========[%s]========='>>diff.out", getFileNameFromPath(path));
-    execute_cmd("echo '=======diff out 100 lines====='>>diff.out");
-    execute_cmd("diff '%s' user.out -y|head -100>>diff.out", path);
-    execute_cmd("echo '=============================='>>diff.out");
-}
-
-
 void delnextline(char s[]) {
     auto L = static_cast<int>(strlen(s));
     while (L > 0 && (s[L - 1] == '\n' || s[L - 1] == '\r'))
@@ -289,19 +198,6 @@ int isInFile(const char fname[]) {
     else
         return l - 3;
 }
-
-void move_to_next_nonspace_character(int &c, FILE *&f, int &ret) {
-    while (isspace(c) || iscntrl(c)) {
-        do {
-            c = fgetc(f);
-        } while (isspace(c) || iscntrl(c));
-    }
-}
-
-bool is_not_character(int c) {
-    return (iscntrl(c) || isspace(c));
-}
-
 
 void umount(char *work_dir) {
     execute_cmd("/bin/umount -f %s/proc", work_dir);
@@ -335,57 +231,6 @@ char *escape(char s[], const char t[]) {
     s[j] = '\0';
     return s;
 }
-
-int fix_python_mis_judge(char *work_dir, int &ACflg, int &topmemory,
-                         int mem_lmt) {
-    int comp_res = execute_cmd(
-            "/bin/grep 'MemoryError'  %s/error.out", work_dir);
-
-    if (!comp_res) {
-        printf("Python need more Memory!");
-        ACflg = MEMORY_LIMIT_EXCEEDED;
-        topmemory = mem_lmt * STD_MB;
-    }
-
-    return comp_res;
-}
-
-int fix_java_mis_judge(char *work_dir, int &ACflg, int &topmemory,
-                       int mem_lmt) {
-    int comp_res;
-    execute_cmd("chmod 700 %s/error.out", work_dir);
-    if (DEBUG)
-        execute_cmd("cat %s/error.out", work_dir);
-    comp_res = execute_cmd("/bin/grep 'Exception'  %s/error.out", work_dir);
-    if (!comp_res) {
-        printf("Exception reported\n");
-        ACflg = RUNTIME_ERROR;
-    }
-    execute_cmd("cat %s/error.out", work_dir);
-
-    comp_res = execute_cmd(
-            "/bin/grep 'java.lang.OutOfMemoryError'  %s/error.out", work_dir);
-
-    if (!comp_res) {
-        printf("JVM need more Memory!");
-        ACflg = MEMORY_LIMIT_EXCEEDED;
-        topmemory = mem_lmt * STD_MB;
-    }
-
-    if (!comp_res) {
-        printf("JVM need more Memory or Threads!");
-        ACflg = MEMORY_LIMIT_EXCEEDED;
-        topmemory = mem_lmt * STD_MB;
-    }
-    comp_res = execute_cmd("/bin/grep 'Could not create'  %s/error.out",
-                           work_dir);
-    if (!comp_res) {
-        printf("jvm need more resource,tweak -Xmx(OJ_JAVA_BONUS) Settings");
-        ACflg = RUNTIME_ERROR;
-    }
-    return comp_res;
-}
-
 
 void clean_workdir(char *work_dir) {
     umount(work_dir);
@@ -494,7 +339,7 @@ void removeSubmissionInfo(string& uuid) {
     execute_cmd("/bin/rm -rf %s/submission/%s.json", oj_home, uuid.c_str());
 }
 
-vector<pair<string, int> >getFileList(const string& path, function<int(const char*)> func) {
+vector<pair<string, int> >getFileList(const string& path, const function<int(const char*)>& func) {
     auto* dp = opendir(path.c_str());
     dirent* dirp;
     if (dp == nullptr) {
@@ -542,13 +387,13 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
         //c cpp will
         string suffix = languageModel->getFileSuffix();
         if (suffix == "c") {
-            execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
-                        solution_id, "c", pid, solution_id,
+            execute_cmd("/bin/ln -s %s/data/%d/ac/%d.%s %s/data/%d/ac/%d.%s", oj_home, pid,
+                        solution_id, "c", oj_home, pid, solution_id,
                         "cc");
         }
         else if (suffix == "cc") {
-            execute_cmd("/bin/ln -s ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s", pid,
-                        solution_id, "cc", pid, solution_id,
+            execute_cmd("/bin/ln -s %s/data/%d/ac/%d.%s %s/data/%d/ac/%d.%s", oj_home, pid,
+                        solution_id, "cc", oj_home, pid, solution_id,
                         "c");
         }
 
@@ -570,10 +415,9 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id) {
 string getFileContent(const string& file) {
     string content, tmp;
     fstream fileStream(file.c_str());
-    while (getline(fileStream, tmp)) {
-        content += tmp + "\n";
-    }
-    return content;
+    stringstream ss;
+    ss << fileStream.rdbuf();
+    return ss.str();
 }
 
 void mk_shm_workdir(char *work_dir) {
@@ -638,26 +482,6 @@ void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
     execute_cmd("/bin/cp %s/data/%d/*.dic %s/", oj_home, p_id, work_dir);
     sprintf(outfile, "%s/data/%d/%s.out", oj_home, p_id, fname0);
     sprintf(userfile, "%s/run%d/user.out", oj_home, runner_id);
-}
-
-
-void fix_python_syntax_error_response(int &ACflg, int lang) {
-    if (ACflg != ACCEPT) return;
-    if (lang == PYTHON2 || lang == PYTHON3 || lang == PYPY || lang == PYPY3) {
-        cerr << "Try to get sizeof error.out" << endl;
-        auto error_size = get_file_size("error.out");
-        cerr << "Error size:" << error_size << endl;
-        if (error_size > 0) {
-            fstream ferr("error.out");
-            string tmp, content;
-            while (getline(ferr, tmp)) {
-                content += tmp;
-            }
-            if (content.find("SyntaxError") != content.npos) {
-                ACflg = RUNTIME_ERROR;
-            }
-        }
-    }
 }
 
 void print_runtimeerror(const char *err) {

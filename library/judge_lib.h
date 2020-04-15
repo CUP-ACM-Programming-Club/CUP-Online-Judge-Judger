@@ -55,15 +55,6 @@ extern void read_int(char *buf, const char *key, int &value);
 
 extern const char *getFileNameFromPath(const char *path);
 
-extern bool isJava(const int lang);
-
-extern bool isC(const int);
-
-extern bool isCPP(const int);
-
-extern bool isCOrCPP(const int);
-
-
 extern bool is_number(const string &s);
 
 extern bool check_valid_presentation_error(const char *ansfile, const char *userfile);
@@ -88,13 +79,6 @@ extern void umount(char *work_dir);
 
 extern char *escape(char s[], const char t[]);
 
-extern int fix_python_mis_judge(char *work_dir, int &ACflg, int &topmemory,
-                         int mem_lmt);
-
-extern int fix_java_mis_judge(char *work_dir, int &ACflg, int &topmemory,
-                       int mem_lmt);
-
-
 extern void clean_workdir(char *work_dir);
 
 extern int detectArgType(const char* argument);
@@ -105,15 +89,13 @@ extern bool initWebSocketConnection(string&& ip, int port);
 
 extern bool initWebSocketConnection(string& ip, int port);
 
-extern void get_solution_info_from_mysql(int, int&, char*, int&);
-
 extern void getSolutionInfoFromSubmissionInfo(SubmissionInfo&, int&, char*, int&);
 
 extern void buildSubmissionInfo(SubmissionInfo&, string&);
 
 extern void removeSubmissionInfo(string&);
 
-extern vector<pair<string, int> >getFileList(const string& path, function<int(const char*)>);
+extern vector<pair<string, int> >getFileList(const string& path, const function<int(const char*)>&);
 
 extern vector<pair<string, int> >getFileList(const string& path);
 
@@ -129,8 +111,6 @@ extern int get_proc_status(int pid, const char *mark);
 
 extern void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
                    char *work_dir, char *outfile, char *userfile, int runner_id);
-
-extern void fix_python_syntax_error_response(int &ACflg, int lang);
 
 extern void print_runtimeerror(const char *err);
 

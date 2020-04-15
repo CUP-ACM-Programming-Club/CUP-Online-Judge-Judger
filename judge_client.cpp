@@ -82,8 +82,6 @@ using ConfigReader = JSONVectorReader;
 #endif
 
 //static int sleep_tmp;
-#define ZOJ_COM
-
 int call_counter[call_array_size];
 static char LANG_NAME[BUFFER_SIZE];
 
@@ -118,8 +116,6 @@ void init_mysql_conf() {
     //  fclose(fp);
 }
 
-
-
 /***
  int compare_diff(const char *file1,const char *file2){
  char diff[1024];
@@ -133,8 +129,6 @@ void init_mysql_conf() {
 
  }
  */
-
-
 
 /*
  * translated from ZOJ judger r367
@@ -312,9 +306,9 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
     // parent
     int tempmemory;
     shared_ptr<Language> languageModel(getLanguageModel(lang));
-    if (DEBUG)
+    if (DEBUG) {
         printf("pid=%d judging %s\n", pidApp, infile);
-
+    }
     int status, sig, exitcode;
     struct user_regs_struct reg{};
     struct rusage ruse{};
@@ -322,9 +316,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         topmemory = get_proc_status(pidApp, "VmRSS:") << 10;
     while (true) {
         // check the usage
-
         wait4(pidApp, &status, 0, &ruse);
-
         //jvm gc ask VM before need,so used kernel page fault times and page size
         tempmemory = languageModel->getMemory(ruse, pidApp);
         topmemory = max(tempmemory, topmemory);
@@ -346,10 +338,10 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
         if (has_error) {
             if (DEBUG) {
                 cerr << "Catch error:" << endl;
-                string tmp;
                 fstream err("error.out");
-                while (getline(err, tmp))
-                    cerr << tmp << endl;
+                stringstream ss;
+                ss << err.rdbuf();
+                cerr << ss.str() << endl;
             }
             //ACflg = OJ_RE;
             fstream file("error.out", ios::ate);
