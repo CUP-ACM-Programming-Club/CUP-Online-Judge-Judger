@@ -292,7 +292,7 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
             shared_ptr<Compare::Compare> compare(getCompareModel());
             compare->setDebug(DEBUG);
             comp_res = compare->compare(outfile, userfile);
-
+        }
         if (comp_res == WRONG_ANSWER) {
             ACflg = WRONG_ANSWER;
             if (DEBUG)
