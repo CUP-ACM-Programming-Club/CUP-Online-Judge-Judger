@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData">
+    <serverData>
+      <paths name="Remote Host (c506070d-1705-429b-9125-d3aa99b1eb5b)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/tmp.0o7sXIw6D4" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="mc (81d12b9e-a48f-424e-90cf-e925ac5c401b)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/tmp.gCoS44iMTd" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="seccomp (09c7dd46-9dd9-4b32-b659-57026c969c05)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/tmp.ncVQ8FNaeS" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

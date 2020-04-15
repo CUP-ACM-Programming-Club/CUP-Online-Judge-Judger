@@ -717,47 +717,36 @@ string getRuntimeInfoContents(const string& filename) {
     return runtimeInfo;
 }
 
-Language* getLanguageModel(int language) {
-    string languageName = languageNameReader.GetString(to_string(language));
-    void* languageHandler = dlopen(("/usr/lib/cupjudge/lib" + languageName + ".so").c_str(), RTLD_LAZY);
-    if (!languageHandler) {
-        cerr << "Cannot load library: " << dlerror() << endl;
+template<class Instance>
+Instance* getDynamicLibraryInstance (const char* dynamicLibraryPath, const char* createInstanceMethodName) {
+    void* handler = dlopen(dynamicLibraryPath, RTLD_LAZY);
+    if (!handler) {
+        cerr << "Cannot load library: " << dynamicLibraryPath << ": " << dlerror() << endl;
         exit(1);
     }
     dlerror();
-    createLanguageInstance* createInstance = (createLanguageInstance*) dlsym(languageHandler, (string("createInstance") + languageName).c_str());
+    Instance* (*createInstance)();
+    createInstance = (Instance *(*)())(dlsym(handler, createInstanceMethodName));
     const char* dlsym_error = dlerror();
     if (dlsym_error) {
-        cerr << "Cannot load symbol create: " << dlsym_error << endl;
+        cerr << "Cannot load symbol " << createInstanceMethodName << " create: " << dlsym_error << endl;
         exit(1);
     }
-//    destroyLanguageInstance* destroyInstance = (destroyLanguageInstance*) dlsym(languageHandler, (string("destroyInstance") + languageName).c_str());
-//    dlsym_error = dlerror();
-//    if (dlsym_error) {
-//        cerr << "Cannot load symbol create: " << dlsym_error << endl;
-//        exit(1);
-//    }
+    return createInstance();
+}
 
-    Language* languageInstance = createInstance();
-    return languageInstance;
+
+Language* getLanguageModel(int language) {
+    string languageName = languageNameReader.GetString(to_string(language));
+    return getDynamicLibraryInstance<Language>(("/usr/lib/cupjudge/lib" + languageName + ".so").c_str(), (string("createInstance") + languageName).c_str());
 }
 
 MySQLSubmissionAdapter* getAdapter() {
-    void* adapterHandler = dlopen("/usr/lib/cupjudge/libmysql.so", RTLD_LAZY);
-    if (!adapterHandler) {
-        cerr << "Cannot load library libmysql.so: " << dlerror() << endl;
-        exit(1);
-    }
-    dlerror();
-    createMySQLAdapterInstance* createInstance = (createMySQLAdapterInstance*) dlsym(adapterHandler, "createInstance");
-    const char* dlsym_error = dlerror();
-    if (dlsym_error) {
-        cerr << "Cannot load symbol create: libmysql: " << dlsym_error << endl;
-        exit(1);
-    }
+    return getDynamicLibraryInstance<MySQLSubmissionAdapter>("/usr/lib/cupjudge/libmysql.so", "createInstance");
+}
 
-    MySQLSubmissionAdapter* adapter = createInstance();
-    return adapter;
+Compare::Compare* getCompareModel() {
+    return getDynamicLibraryInstance<Compare::Compare>("/usr/lib/cupjudge/libcompare.so", "createInstance");
 }
 
 bool isPython(int language) {

@@ -13,6 +13,7 @@
 #include "json.hpp"
 #include "../model/submission/SubmissionInfo.h"
 #include "../model/judge/language/Language.h"
+#include "../external/compare/Compare.h"
 #include "../external/mysql/MySQLSubmissionAdapter.h"
 #include <cstdarg>
 #include <future>
@@ -144,6 +145,8 @@ extern string getRuntimeInfoContents(const string& filename);
 extern Language* getLanguageModel(int language);
 
 extern MySQLSubmissionAdapter* getAdapter();
+
+extern Compare* getCompareModel();
 
 extern bool isPython(int language);
 #endif //JUDGE_CLIENT_JUDGE_LIB_H

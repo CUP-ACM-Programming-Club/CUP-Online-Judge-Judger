@@ -3,22 +3,7 @@ CPU_CORE=`nproc`
 ./shell/build_dependency.sh
 git fetch --all && \
 git reset --hard origin/master && \
-cmake ./ && \
-make -j$CPU_CORE && \
-chmod a+x judge_client && \
-mv judge_client /usr/bin && \
-cd model/judge/language && \
-cmake ./ && \
-make -j$CPU_CORE && \
-cd build/out && \
-mkdir -p /usr/lib/cupjudge && \
-cp * /usr/lib/cupjudge/ && \
-cd ../../../../../ && \
-cd external/mysql && \
-cmake ./ && \
-make -j$CPU_CORE && \
-cp -r build/out/* /usr/lib/cupjudge/ && \
-cd ../../ && \
+./shell/build_source_code.sh && \
 chgrp -R judge /usr/lib/cupjudge && \
 chown -R judge /usr/lib/cupjudge
 

@@ -7,8 +7,9 @@
 
 
 #include "Compare.h"
+#define IGNORE_ESOL
 
-class CompareImpl: public Compare {
+class CompareImpl: public Compare::Compare {
 public:
     int compare(const char* stdAnswerFile, const char* userOutputFile) override;
 };

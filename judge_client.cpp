@@ -119,47 +119,6 @@ void init_mysql_conf() {
 }
 
 
-void find_next_nonspace(int &c1, int &c2, FILE *&f1, FILE *&f2, int &ret) {
-    // Find the next non-space character or \n.
-    while ((isspace(c1)) || (isspace(c2))) {
-        if (c1 != c2) {
-            if (c2 == EOF) {
-                do {
-                    c1 = fgetc(f1);
-                } while (isspace(c1));
-                continue;
-            } else if (c1 == EOF) {
-                do {
-                    c2 = fgetc(f2);
-                } while (isspace(c2));
-                continue;
-#ifdef IGNORE_ESOL
-            } else if (isspace(c1) && isspace(c2)) {
-                while (c2 == '\n' && isspace(c1) && c1 != '\n')
-                    c1 = fgetc(f1);
-                while (c1 == '\n' && isspace(c2) && c2 != '\n')
-                    c2 = fgetc(f2);
-
-#else
-                } else if ((c1 == '\r' && c2 == '\n')) {
-                c1 = fgetc(f1);
-            } else if ((c2 == '\r' && c1 == '\n')) {
-                c2 = fgetc(f2);
-#endif
-            } else {
-                if (DEBUG)
-                    printf("%d=%c\t%d=%c", c1, c1, c2, c2);
-                ret = PRESENTATION_ERROR;
-            }
-        }
-        if (isspace(c1)) {
-            c1 = fgetc(f1);
-        }
-        if (isspace(c2)) {
-            c2 = fgetc(f2);
-        }
-    }
-}
 
 /***
  int compare_diff(const char *file1,const char *file2){
@@ -182,171 +141,6 @@ void find_next_nonspace(int &c1, int &c2, FILE *&f1, FILE *&f2, int &ret) {
  * http://code.google.com/p/zoj/source/browse/trunk/judge_client/client/text_checker.cc#25
  *
  */
-int choose = 1;
-
-
-int compare_zoj(const char *file1, const char *file2) {
-    if (DEBUG && choose) {
-        do {
-            fstream user_out(file1), error_file(file2);
-            string tmp;
-            cout << "Display user file?(0/1)" << endl;
-            cin >> choose;
-            if (choose) {
-                cout << "user running file" << endl;
-                while (getline(user_out, tmp))
-                    cout << tmp << endl;
-            } else break;
-            cout << "Display error file?(0/1)" << endl;
-            cin >> choose;
-            if (choose) {
-                cout << "error msg" << endl;
-                while (getline(error_file, tmp))
-                    cerr << tmp << endl;
-            } else break;
-        } while (0);
-    }
-    int ret = ACCEPT;
-    int c1, c2;
-    FILE *f1, *f2;
-    f1 = fopen(file1, "re");
-    f2 = fopen(file2, "re");
-    auto judge_file_end_or_detect_presentation_error = [&](int c1, int c2, FILE *&f1, FILE *&f2, int &ret) -> void {
-        if (is_not_character(c1) && c1 != EOF) {
-            auto temp_ret = ret;
-            if (c2 != EOF)
-                ret = PRESENTATION_ERROR;
-            move_to_next_nonspace_character(c1, f1, ret);
-            if (c1 == EOF) {
-                if (is_not_character(c2)) {
-                    move_to_next_nonspace_character(c2, f2, ret);
-                }
-                if (c2 == EOF) {
-                    ret = temp_ret;
-                }
-            }
-        }
-    };
-    if (!f1 || !f2) {
-        ret = RUNTIME_ERROR;
-    } else
-        for (;;) {
-            // Find the first non-space character at the beginning of line.
-            // Blank lines are skipped.
-            c1 = fgetc(f1);
-            c2 = fgetc(f2);
-            find_next_nonspace(c1, c2, f1, f2, ret);
-            // Compare the current line.
-            for (;;) {
-                // Read until 2 files return a space or 0 together.
-                while ((!isspace(c1) && c1) || (!isspace(c2) && c2)) {
-                    if (c1 == EOF && c2 == EOF) {
-                        goto end;
-                    }
-                    if (c1 == EOF || c2 == EOF) {
-                        break;
-                    }
-
-                    if (c1 != c2) {
-                        if (DEBUG) {
-                            cerr << "c1:" << (char) c1 << " c2:" << (char) c2 << endl;
-                        }
-                        // Consecutive non-space characters should be all exactly the same
-                        ret = WRONG_ANSWER;
-                        goto end;
-                    }
-                    c1 = fgetc(f1);
-                    c2 = fgetc(f2);
-                    while (c1 == '\r')c1 = fgetc(f1);
-                    //while(c2 == '\r')c2 = fgetc(f2);
-                    if (c1 != c2) {
-                        cerr << "c1:" << c1 << " c2:" << c2 << endl;
-                        judge_file_end_or_detect_presentation_error(c1, c2, f1, f2, ret);
-                        judge_file_end_or_detect_presentation_error(c2, c1, f2, f1, ret);
-                    }
-                }
-                find_next_nonspace(c1, c2, f1, f2, ret);
-                if (c1 == EOF && c2 == EOF) {
-                    goto end;
-                }
-                if (c1 == EOF || c2 == EOF) {
-                    ret = WRONG_ANSWER;
-                    goto end;
-                }
-
-                if ((c1 == '\n' || !c1) && (c2 == '\n' || !c2)) {
-                    break;
-                }
-            }
-        }
-    end:
-    if (ret == PRESENTATION_ERROR) {
-        if (!check_valid_presentation_error(file1, file2)) {
-            ret = WRONG_ANSWER;
-        }
-    }
-    if (ret == WRONG_ANSWER || ret == PRESENTATION_ERROR) {
-        if (full_diff)
-            make_diff_out_full(f1, f2, c1, c2, file1);
-        else
-            make_diff_out_simple(f1, f2, c1, c2, file1);
-    }
-    if (f1)
-        fclose(f1);
-    if (f2)
-        fclose(f2);
-    return ret;
-}
-
-
-int compare(const char *file1, const char *file2) {
-#ifdef ZOJ_COM
-    //compare ported and improved from zoj don't limit file size
-    return compare_zoj(file1, file2);
-#endif
-#ifndef ZOJ_COM
-    //the original compare from the first version of hustoj has file size limit
-    //and waste memory
-    FILE *f1,*f2;
-    char *s1,*s2,*p1,*p2;
-    int PEflg;
-    s1=new char[STD_F_LIM+512];
-    s2=new char[STD_F_LIM+512];
-    if (!(f1=fopen(file1,"re")))
-        return OJ_AC;
-    for (p1=s1;EOF!=fscanf(f1,"%s",p1);)
-        while (*p1) p1++;
-    fclose(f1);
-    if (!(f2=fopen(file2,"re")))
-        return OJ_RE;
-    for (p2=s2;EOF!=fscanf(f2,"%s",p2);)
-        while (*p2) p2++;
-    fclose(f2);
-    if (strcmp(s1,s2)!=0) {
-        //              printf("A:%s\nB:%s\n",s1,s2);
-        delete[] s1;
-        delete[] s2;
-
-        return OJ_WA;
-    } else {
-        f1=fopen(file1,"re");
-        f2=fopen(file2,"re");
-        PEflg=0;
-        while (PEflg==0 && fgets(s1,STD_F_LIM,f1) && fgets(s2,STD_F_LIM,f2)) {
-            delnextline(s1);
-            delnextline(s2);
-            if (strcmp(s1,s2)==0) continue;
-            else PEflg=1;
-        }
-        delete [] s1;
-        delete [] s2;
-        fclose(f1);fclose(f2);
-        if (PEflg) return OJ_PE;
-        else return OJ_AC;
-    }
-#endif
-}
-
 int compile(int lang, char *work_dir) {
     int pid;
     //webSocket << ws_send(solution_id, 2, NOT_FINISHED, ZERO_TIME, ZERO_MEMORY, ZERO_PASSPOINT, ZERO_PASSRATE);
@@ -495,8 +289,10 @@ void judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
         if (isspj) {
             comp_res = SpecialJudge::newInstance().setDebug(DEBUG).run(oj_home, p_id, infile, outfile, userfile, usercode, global_work_dir);
         } else {
-            comp_res = compare(outfile, userfile);
-        }
+            shared_ptr<Compare::Compare> compare(getCompareModel());
+            compare->setDebug(DEBUG);
+            comp_res = compare->compare(outfile, userfile);
+
         if (comp_res == WRONG_ANSWER) {
             ACflg = WRONG_ANSWER;
             if (DEBUG)

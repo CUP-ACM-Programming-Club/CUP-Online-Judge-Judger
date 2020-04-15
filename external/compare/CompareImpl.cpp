@@ -237,10 +237,10 @@ int CompareImpl::compare(const char *stdAnswerFile, const char *userOutputFile) 
     return compare_zoj(stdAnswerFile, userOutputFile, DEBUG, full_diff);
 }
 
-extern "C" Compare* createInstance() {
+extern "C" Compare::Compare* createInstance() {
     return new CompareImpl;
 }
 
-extern "C" void destroyInstance(Compare* compare) {
+extern "C" void destroyInstance(Compare::Compare* compare) {
     delete compare;
 }

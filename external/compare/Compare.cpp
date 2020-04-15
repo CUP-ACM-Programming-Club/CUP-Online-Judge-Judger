@@ -3,19 +3,20 @@
 //
 
 #include "Compare.h"
+namespace Compare {
+    int Compare::getDebug() {
+        return DEBUG;
+    }
 
-int Compare::getDebug() {
-    return DEBUG;
-}
+    void Compare::setDebug(int debug) {
+        DEBUG = debug;
+    }
 
-void Compare::setDebug(int debug) {
-    DEBUG = debug;
-}
+    void Compare::setFullDiff(int fullDiff) {
+        full_diff = fullDiff;
+    }
 
-void Compare::setFullDiff(int fullDiff) {
-    full_diff = fullDiff;
-}
-
-int Compare::getFullDiff() {
-    return full_diff;
+    int Compare::getFullDiff() {
+        return full_diff;
+    }
 }
