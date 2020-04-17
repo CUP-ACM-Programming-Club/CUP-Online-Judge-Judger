@@ -550,8 +550,9 @@ void watch_solution_with_file_id(pid_t pidApp, char *infile, int &ACflg, int iss
     int status, sig, exitcode;
     struct user_regs_struct reg{};
     struct rusage ruse{};
-    if (topmemory == 0)
+    if (topmemory == 0) {
         topmemory = get_proc_status(pidApp, "VmRSS:") << 10;
+    }
     while (true) {
         // check the usage
         wait4(pidApp, &status, 0, &ruse);
@@ -723,7 +724,7 @@ runJudgeTask(int runner_id, int language, char *work_dir, pair<string, int> &inf
              int problemId, char *usercode, int num_of_test, string &global_work_dir) {
     int call_counter[call_array_size], PEflg;
     char infile[BUFFER_SIZE], outfile[BUFFER_SIZE], userfile[BUFFER_SIZE];
-    int topmemory;
+    int topmemory = 0;
     InitManager::initSyscallLimits(language, call_counter, record_call, call_array_size);
     prepare_files_with_id(infilePair.first.c_str(), infilePair.second, infile, problemId, work_dir, outfile,
                           userfile, runner_id, num_of_test);
@@ -761,11 +762,11 @@ runParallelJudge(int runner_id, int language, char *work_dir, char *usercode, in
                              submissionInfo.getProblemId(), usercode, num_of_test, global_work_dir));
         ++num_of_test;
     }
-    JudgeSeriesResult finalResult = {20, 0, 0, 0, 0};
+    JudgeSeriesResult finalResult = {3, 0, 0, 0, 0};
     for (auto &res: result) {
         JudgeResult r = res.get();
         cout << "Flag " << r.ACflg << "Memory " << r.topMemory << "UsedTime " << r.usedTime << "Num " << r.num << endl;
-        finalResult.ACflg = min(finalResult.ACflg, r.ACflg);
+        finalResult.ACflg = max(finalResult.ACflg, r.ACflg);
         finalResult.topMemory = max(finalResult.topMemory, r.topMemory);
         finalResult.usedTime = max(finalResult.usedTime, r.usedTime);
         finalResult.pass_point += r.ACflg == ACCEPT;
@@ -922,6 +923,12 @@ int main(int argc, char **argv) {
         languageModel = shared_ptr<Language>(getLanguageModel(lang));
         adapter->getProblemInfo(abs(p_id), timeLimit, memoryLimit, SPECIAL_JUDGE);
         adapter->getSolution(solution_id, work_dir, lang, usercode, languageModel->getFileSuffix().c_str(), DEBUG);
+        submissionInfo.setLanguage(lang);
+        submissionInfo.setSolutionId(solution_id);
+        submissionInfo.setTimeLimit(timeLimit);
+        submissionInfo.setMemoryLimit(memoryLimit);
+        submissionInfo.setProblemId(p_id);
+        submissionInfo.setSpecialJudge(SPECIAL_JUDGE);
     } else {
         buildSubmissionInfo(submissionInfo, judgerId);
         getSolutionInfoFromSubmissionInfo(submissionInfo, p_id, user_id, lang);
@@ -1077,9 +1084,9 @@ int main(int argc, char **argv) {
         bundle.setUsedTime(min(r.usedTime, timeLimit * 1000));
         bundle.setMemoryUse(min(r.topMemory / ONE_KILOBYTE, memoryLimit * STD_MB / ONE_KILOBYTE));
         bundle.setPassPoint(r.pass_point);
-        bundle.setPassRate(r.pass_point / max(num_of_test, 1));
+        bundle.setPassRate(double(r.pass_point) / max(num_of_test, 1));
         webSocket << bundle.toJSONString();
-        ACflg = r.ACflg;
+        finalACflg = ACflg = r.ACflg;
         topmemory = r.topMemory;
         usedtime = r.usedTime;
         pass_point = pass_rate = r.pass_point;
