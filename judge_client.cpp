@@ -761,7 +761,7 @@ runParallelJudge(int runner_id, int language, char *work_dir, char *usercode, in
                              submissionInfo.getProblemId(), usercode, num_of_test, global_work_dir));
         ++num_of_test;
     }
-    JudgeSeriesResult finalResult = {{20, 0, 0, 0}, 0};
+    JudgeSeriesResult finalResult = {20, 0, 0, 0, 0};
     for (auto &res: result) {
         JudgeResult r = res.get();
         cout << "Flag " << r.ACflg << "Memory " << r.topMemory << "UsedTime " << r.usedTime << "Num " << r.num << endl;

@@ -144,10 +144,14 @@ struct JudgeResult {
     double usedTime;
     int topMemory;
     int num;
+    JudgeResult() = default;
+    JudgeResult(int ACflg, double usedTime, int topMemory, int num): ACflg(ACflg), usedTime(usedTime), topMemory(topMemory), num(num){}
 };
 
 struct JudgeSeriesResult : JudgeResult{
-    int pass_point;
+    int pass_point = 0;
+    JudgeSeriesResult() = default;
+    JudgeSeriesResult(int ACflg, double usedTime, int topMemory, int num, int pass_point): JudgeResult(ACflg, usedTime, topMemory, num), pass_point(pass_point){}
 };
 
 struct TaskInfo {
