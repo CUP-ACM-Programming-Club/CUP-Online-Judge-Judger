@@ -5,6 +5,7 @@
 #include "../header/static_var.h"
 #include <dirent.h>
 #include <dlfcn.h>
+#include <unistd.h>
 
 using namespace std;
 using json = nlohmann::json;
@@ -484,6 +485,23 @@ void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
     sprintf(userfile, "%s/run%d/user.out", oj_home, runner_id);
 }
 
+void prepare_files_with_id(const char *filename, int namelen, char *infile, int &p_id,
+                   char *work_dir, char *outfile, char *userfile, int runner_id, int file_id) {
+    //              printf("ACflg=%d %d check a file!\n",ACflg,solution_id);
+
+    char fname0[BUFFER_SIZE];
+    char fname[BUFFER_SIZE];
+    strncpy(fname0, filename, static_cast<size_t>(namelen));
+    fname0[namelen] = 0;
+    escape(fname, fname0);
+    printf("%s\n%s\n", fname0, fname);
+    sprintf(infile, "%s/data/%d/%s%d.in", oj_home, p_id, fname, file_id);
+    execute_cmd("/bin/cp '%s' %s/data%d.in", infile, work_dir, file_id);
+    execute_cmd("/bin/cp %s/data/%d/*.dic %s/", oj_home, p_id, work_dir);
+    sprintf(outfile, "%s/data/%d/%s.out", oj_home, p_id, fname0);
+    sprintf(userfile, "%s/run%d/user%d.out", oj_home, runner_id, file_id);
+}
+
 void print_runtimeerror(const char *err) {
     FILE *ferr = fopen("error.out", "a+");
     fprintf(ferr, "Runtime Error:%s\n", err);
@@ -571,6 +589,15 @@ MySQLSubmissionAdapter* getAdapter() {
 
 Compare::Compare* getCompareModel() {
     return getDynamicLibraryInstance<Compare::Compare>("/usr/lib/cupjudge/libcompare.so", "createInstance");
+}
+
+void setRunUser () {
+    while (setgid(1536) != 0)
+        sleep(1);
+    while (setuid(1536) != 0)
+        sleep(1);
+    while (setresuid(1536, 1536, 1536) != 0)
+        sleep(1);
 }
 
 bool isPython(int language) {

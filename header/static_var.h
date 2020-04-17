@@ -6,6 +6,7 @@
 #define JUDGE_CLIENT_STATIC_VAR_H
 
 #include <thread>
+#include <utility>
 #include "../model/websocket/WebSocketSender.h"
 #include "../model/base/Bundle.h"
 #include "../model/base/ThreadPool.h"
@@ -138,14 +139,28 @@ enum ArgsType {
     _STDIN = 11
 };
 
-const int CODESIZE = 64 * ONE_KILOBYTE;
-const int BUFFER_SIZE = 5 * ONE_KILOBYTE;
-const int STD_MB = ONE_MEGABYTE;
-const int COMPILE_STD_MB = (int) (STD_MB * 1.5);
+struct JudgeResult {
+    int ACflg;
+    double usedTime;
+    int topMemory;
+    int num;
+};
+
+struct TaskInfo {
+    string infile;
+    string outfile;
+    string userfile;
+    TaskInfo(string infile, string outfile, string userfile):infile(std::move(infile)), outfile(std::move(outfile)),userfile(std::move(userfile)){}
+};
+
+constexpr int CODESIZE = 64 * ONE_KILOBYTE;
+constexpr int BUFFER_SIZE = 5 * ONE_KILOBYTE;
+constexpr int STD_MB = ONE_MEGABYTE;
+constexpr int COMPILE_STD_MB = (int) (STD_MB * 1.5);
 //#define STD_T_LIM 2
-const int STD_F_LIM = STD_MB * 32;
+constexpr int STD_F_LIM = STD_MB * 32;
 //#define STD_M_LIM (STD_MB<<7)
-const int DEFAULT_SOLUTION_ID = 1000;
+constexpr int DEFAULT_SOLUTION_ID = 1000;
 extern int DEBUG;
 extern int NO_RECORD;
 extern bool MYSQL_MODE;

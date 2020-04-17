@@ -112,6 +112,9 @@ extern int get_proc_status(int pid, const char *mark);
 extern void prepare_files(const char *filename, int namelen, char *infile, int &p_id,
                    char *work_dir, char *outfile, char *userfile, int runner_id);
 
+extern void prepare_files_with_id(const char *filename, int namelen, char *infile, int &p_id,
+                           char *work_dir, char *outfile, char *userfile, int runner_id, int file_id);
+
 extern void print_runtimeerror(const char *err);
 
 extern void getProblemInfoFromSubmissionInfo(SubmissionInfo& submissionInfo, double& time_lmt, int& mem_lmt, int& isspj);
@@ -129,4 +132,6 @@ extern MySQLSubmissionAdapter* getAdapter();
 extern Compare::Compare* getCompareModel();
 
 extern bool isPython(int language);
+
+extern void setRunUser();
 #endif //JUDGE_CLIENT_JUDGE_LIB_H
