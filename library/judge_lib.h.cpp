@@ -3,6 +3,7 @@
 //
 #include "judge_lib.h"
 #include "../header/static_var.h"
+#include "json.hpp"
 #include <dirent.h>
 #include <dlfcn.h>
 #include <unistd.h>
