@@ -195,6 +195,7 @@ extern int SHARE_MEMORY_RUN;
 
 extern char record_call;
 extern int use_ptrace;
+extern int enable_parallel;
 extern int judger_number;
 extern bool admin;
 extern bool no_sim;

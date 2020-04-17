@@ -32,6 +32,7 @@ int SHARE_MEMORY_RUN = 0;
 
 char record_call = 0;
 int use_ptrace = 1;
+int enable_parallel = 0;
 int judger_number = 0;
 bool admin = false;
 bool no_sim = false;

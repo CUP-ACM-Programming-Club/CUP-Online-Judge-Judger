@@ -113,6 +113,7 @@ void init_mysql_conf() {
     use_max_time = configReader.GetInt("use_max_time");
     use_ptrace = configReader.GetInt("use_ptrace");
     ALL_TEST_MODE = configReader.GetInt("all_test_mode");
+    enable_parallel = configReader.GetInt("enable_parallel");
     //  fclose(fp);
 }
 
@@ -185,7 +186,7 @@ int compile(int lang, char *work_dir) {
  */
 
 void run_solution_parallel(int &lang, char *work_dir, double &time_lmt, double &usedtime,
-                  int &mem_lmt, int fileId) {
+                           int &mem_lmt, int fileId) {
     shared_ptr<Language> languageModel(getLanguageModel(lang));
     char input[BUFFER_SIZE], userOutput[BUFFER_SIZE], errorOutput[BUFFER_SIZE];
     sprintf(input, "data%d.in", fileId);
@@ -311,9 +312,9 @@ void run_solution(int &lang, char *work_dir, double &time_lmt, double &usedtime,
 }
 
 JudgeResult judge_solution(int &ACflg, double &usedtime, double time_lmt, int isspj,
-                    int p_id, char *infile, char *outfile, char *userfile, char *usercode, int &PEflg,
-                    int lang, char *work_dir, int &topmemory, int mem_lmt,
-                    int solution_id, int num_of_test, string& global_work_dir) {
+                           int p_id, char *infile, char *outfile, char *userfile, char *usercode, int &PEflg,
+                           int lang, char *work_dir, int &topmemory, int mem_lmt,
+                           int solution_id, int num_of_test, string &global_work_dir) {
     //usedtime-=1000;
     shared_ptr<Language> languageModel(getLanguageModel(lang));
     cout << "Used time" << endl;
@@ -335,7 +336,8 @@ JudgeResult judge_solution(int &ACflg, double &usedtime, double time_lmt, int is
     // compare
     if (ACflg == ACCEPT) {
         if (isspj) {
-            comp_res = SpecialJudge::newInstance().setDebug(DEBUG).run(oj_home, p_id, infile, outfile, userfile, usercode, global_work_dir);
+            comp_res = SpecialJudge::newInstance().setDebug(DEBUG).run(oj_home, p_id, infile, outfile, userfile,
+                                                                       usercode, global_work_dir);
         } else {
             shared_ptr<Compare::Compare> compare(getCompareModel());
             compare->setDebug(DEBUG);
@@ -535,9 +537,9 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
 }
 
 void watch_solution_with_file_id(pid_t pidApp, char *infile, int &ACflg, int isspj,
-                    char *userfile, char *outfile, int solution_id, int lang,
-                    int &topmemory, int mem_lmt, double &usedtime, double time_lmt, int &p_id,
-                    int &PEflg, char *work_dir, int file_id) {
+                                 char *userfile, char *outfile, int solution_id, int lang,
+                                 int &topmemory, int mem_lmt, double &usedtime, double time_lmt, int &p_id,
+                                 int &PEflg, char *work_dir, int file_id) {
     // parent
     int tempmemory;
     char errorFile[BUFFER_SIZE];
@@ -716,9 +718,10 @@ void watch_solution_with_file_id(pid_t pidApp, char *infile, int &ACflg, int iss
     //clean_session(pidApp);
 }
 
-JudgeResult runJudgeTask(int runner_id, int language, char* work_dir, pair<string, int>&infilePair, int ACflg, int SPECIAL_JUDGE,
-        int solution_id, double timeLimit, double usedtime, int memoryLimit,
-        int problemId, char* usercode, int num_of_test, string& global_work_dir) {
+JudgeResult
+runJudgeTask(int runner_id, int language, char *work_dir, pair<string, int> &infilePair, int ACflg, int SPECIAL_JUDGE,
+             int solution_id, double timeLimit, double usedtime, int memoryLimit,
+             int problemId, char *usercode, int num_of_test, string &global_work_dir) {
     int call_counter[call_array_size], PEflg;
     char infile[BUFFER_SIZE], outfile[BUFFER_SIZE], userfile[BUFFER_SIZE];
     int topmemory;
@@ -730,11 +733,10 @@ JudgeResult runJudgeTask(int runner_id, int language, char* work_dir, pair<strin
     auto pid = fork();
     if (pid == CHILD_PROCESS) {
         run_solution_parallel(language, work_dir, timeLimit, usedtime, memoryLimit, num_of_test);
-    }
-    else {
+    } else {
         watch_solution_with_file_id(pid, infile, ACflg, SPECIAL_JUDGE, userfile, outfile,
-                       solution_id, language, topmemory, memoryLimit, usedtime, timeLimit,
-                       problemId, PEflg, work_dir, num_of_test);
+                                    solution_id, language, topmemory, memoryLimit, usedtime, timeLimit,
+                                    problemId, PEflg, work_dir, num_of_test);
         judge_solution(ACflg, usedtime, timeLimit, SPECIAL_JUDGE, problemId, infile,
                        outfile, userfile, usercode, PEflg, language, work_dir, topmemory,
                        memoryLimit, solution_id, num_of_test, global_work_dir);
@@ -742,25 +744,27 @@ JudgeResult runJudgeTask(int runner_id, int language, char* work_dir, pair<strin
     }
 }
 
-JudgeSeriesResult runParallelJudge (int runner_id, int language, char* work_dir, char* usercode,int timeLimit, int usedtime, int memoryLimit, vector<pair<string, int>>& inFileList,
-        int& ACflg, int SPECIAL_JUDGE, string& global_work_dir, SubmissionInfo& submissionInfo) {
-    ThreadPool pool(max(std::thread::hardware_concurrency(), 1));
+JudgeSeriesResult
+runParallelJudge(int runner_id, int language, char *work_dir, char *usercode, int timeLimit, int usedtime,
+                 int memoryLimit, vector<pair<string, int>> &inFileList,
+                 int &ACflg, int SPECIAL_JUDGE, string &global_work_dir, SubmissionInfo &submissionInfo) {
+    ThreadPool pool(max(int(std::thread::hardware_concurrency()), 1));
     vector<future<JudgeResult>> result;
     int num_of_test = 0;
-    for (auto& infilePair: inFileList) {
+    for (auto &infilePair: inFileList) {
         double usedtime = 0;
-        
+
         result.emplace_back(
                 pool.enqueue(runJudgeTask,
-                        runner_id, submissionInfo.getLanguage(), work_dir, infilePair,
-                        ACflg, SPECIAL_JUDGE, submissionInfo.getSolutionId(),
-                        submissionInfo.getTimeLimit(), usedtime, submissionInfo.getMemoryLimit(),
-                        submissionInfo.getProblemId(), usercode, num_of_test, global_work_dir));
+                             runner_id, submissionInfo.getLanguage(), work_dir, infilePair,
+                             ACflg, SPECIAL_JUDGE, submissionInfo.getSolutionId(),
+                             submissionInfo.getTimeLimit(), usedtime, submissionInfo.getMemoryLimit(),
+                             submissionInfo.getProblemId(), usercode, num_of_test, global_work_dir));
         ++num_of_test;
     }
     JudgeSeriesResult finalResult = {20, 0, 0, 0, 0};
-    for(auto& res: result) {
-        JudgeResult r = std::move(res.get());
+    for (auto &res: result) {
+        JudgeResult r = res.get();
         cout << "Flag " << r.ACflg << "Memory " << r.topMemory << "UsedTime " << r.usedTime << "Num " << r.num << endl;
         finalResult.ACflg = min(finalResult.ACflg, r.ACflg);
         finalResult.topMemory = max(finalResult.topMemory, r.topMemory);
@@ -771,7 +775,7 @@ JudgeSeriesResult runParallelJudge (int runner_id, int language, char* work_dir,
 }
 
 void init_parameters(int argc, char **argv, int &solution_id,
-                     int &runner_id, string& judgerId) {
+                     int &runner_id, string &judgerId) {
     if (argc < 3) {
         fprintf(stderr, "Usage:%s solution_id runner_id.\n", argv[0]);
         fprintf(stderr, "Multi:%s solution_id runner_id judge_base_path.\n",
@@ -801,8 +805,7 @@ void init_parameters(int argc, char **argv, int &solution_id,
             MYSQL_MODE = false;
         } else if (argType == _STDIN) {
             READ_FROM_STDIN = true;
-        }
-        else {
+        } else {
             ++i;
             if (i >= argc) {
                 error = true;
@@ -833,8 +836,7 @@ void init_parameters(int argc, char **argv, int &solution_id,
     if (!error) {
         chdir(oj_home);
         return;
-    }
-    else {// old parameter pass way
+    } else {// old parameter pass way
         DEBUG = (argc > 4);
         if (argc > 5 && !strcmp(argv[5], "DEBUG")) {
             NO_RECORD = 1;
@@ -909,10 +911,10 @@ int main(int argc, char **argv) {
     if (MYSQL_MODE) {
         adapter = shared_ptr<MySQLSubmissionAdapter>(getAdapter());
         adapter->setPort(database_port)
-        .setDBName(db_name)
-        .setUserName(user_name)
-        .setHostName(host_name)
-        .setPassword(password);
+                .setDBName(db_name)
+                .setUserName(user_name)
+                .setHostName(host_name)
+                .setPassword(password);
         if (!adapter->start()) {
             cerr << "Failed to create a MYSQL connection." << endl;
             exit(1); //exit if mysql is down
@@ -921,8 +923,7 @@ int main(int argc, char **argv) {
         languageModel = shared_ptr<Language>(getLanguageModel(lang));
         adapter->getProblemInfo(abs(p_id), timeLimit, memoryLimit, SPECIAL_JUDGE);
         adapter->getSolution(solution_id, work_dir, lang, usercode, languageModel->getFileSuffix().c_str(), DEBUG);
-    }
-    else {
+    } else {
         buildSubmissionInfo(submissionInfo, judgerId);
         getSolutionInfoFromSubmissionInfo(submissionInfo, p_id, user_id, lang);
         languageModel = shared_ptr<Language>(getLanguageModel(lang));
@@ -997,8 +998,7 @@ int main(int argc, char **argv) {
         printf("running a custom input...\n");
         if (MYSQL_MODE) {
             adapter->getCustomInput(solution_id, work_dir);
-        }
-        else {
+        } else {
             getCustomInputFromSubmissionInfo(submissionInfo);
         }
         InitManager::initSyscallLimits(lang, call_counter, record_call, call_array_size);
@@ -1044,7 +1044,7 @@ int main(int argc, char **argv) {
             cout << "test_run_out:" << endl << test_run_out << endl;
         }
 
-        if(usedtime == timeLimit * 1000) {
+        if (usedtime == timeLimit * 1000) {
             test_run_out += "\n测试运行中发生运行超时，程序被强制停止";
         }
 
@@ -1064,7 +1064,7 @@ int main(int argc, char **argv) {
     }
     int total_point = 0;
     int pass_point = ZERO_PASSPOINT;
-    vector<pair<string, int> >inFileList = getFileList(fullpath, isInFile);
+    vector<pair<string, int> > inFileList = getFileList(fullpath, isInFile);
     num_of_test = inFileList.size();
     total_point = inFileList.size();
     bundle.setJudger(http_username);
@@ -1072,75 +1072,77 @@ int main(int argc, char **argv) {
     bundle.setResult(RUNNING_JUDGING);
     bundle.setTotalPoint(total_point);
     webSocket << bundle.toJSONString();
-    auto r = runParallelJudge(runner_id, lang, work_dir, usercode, timeLimit, usedtime, memoryLimit, inFileList, ACflg, SPECIAL_JUDGE, global_work_dir, submissionInfo);
-    bundle.setUsedTime(min(r.usedTime, timeLimit * 1000));
-    bundle.setMemoryUse(min(r.topMemory / ONE_KILOBYTE, memoryLimit * STD_MB / ONE_KILOBYTE));
-    bundle.setPassPoint(r.pass_point);
-    bundle.setPassRate(r.pass_point / max(num_of_test, 1));
-    webSocket << bundle.toJSONString();
-    ACflg = r.ACflg;
-    topmemory = r.topMemory;
-    usedtime = r.usedTime;
-    pass_point = pass_rate = r.pass_point;
-    /*
-    for (auto& infilePair: inFileList) {
-        if(!(ALL_TEST_MODE || ACflg == ACCEPT || ACflg == PRESENTATION_ERROR) && ACflg != TIME_LIMIT_EXCEEDED) {
-            break;
-        }
-        if(ACflg == RUNTIME_ERROR) {
-            break;
-        }
-
-        if (ACflg <= PRESENTATION_ERROR) {
-            ++num_of_test;
-            prepare_files(infilePair.first.c_str(), infilePair.second, infile, p_id, work_dir, outfile,
-                          userfile, runner_id);
-            InitManager::initSyscallLimits(lang, call_counter, record_call, call_array_size);
-            pid_t pidApp = fork();
-
-            if (pidApp == CHILD_PROCESS) {
-                run_solution(lang, work_dir, timeLimit, usedtime, memoryLimit);
-            } else {
-                watch_solution(pidApp, infile, ACflg, SPECIAL_JUDGE, userfile, outfile,
-                               solution_id, lang, topmemory, memoryLimit, usedtime, timeLimit,
-                               p_id, PEflg, work_dir);
-                judge_solution(ACflg, usedtime, timeLimit, SPECIAL_JUDGE, p_id, infile,
-                               outfile, userfile, usercode, PEflg, lang, work_dir, topmemory,
-                               memoryLimit, solution_id, num_of_test, global_work_dir);
-                if (use_max_time) {
-                    max_case_time = max(usedtime, max_case_time);
-                    usedtime = ZERO_TIME;
-                }
-            }
-
-            if (usedtime > timeLimit * 1000 || ACflg == TIME_LIMIT_EXCEEDED) {
-                cout << "Time Limit Exceeded" << endl;
-                ACflg = TIME_LIMIT_EXCEEDED;
-                usedtime = timeLimit * 1000;
-            }
-
-            if (ACflg == ACCEPT) {
-                ++pass_point;
-            }
-
-            if (ALL_TEST_MODE) {
-                if (ACflg == ACCEPT) {
-                    ++pass_rate;
-                }
-                if (finalACflg < ACflg) {
-                    finalACflg = ACflg;
-                }
-
-                ACflg = ACCEPT;
-            }
-        }
-        bundle.setUsedTime(min(usedtime, timeLimit * 1000));
-        bundle.setMemoryUse(min(topmemory / ONE_KILOBYTE, memoryLimit * STD_MB / ONE_KILOBYTE));
-        bundle.setPassPoint(pass_point);
-        bundle.setPassRate(pass_rate / num_of_test);
+    if (enable_parallel) {
+        auto r = runParallelJudge(runner_id, lang, work_dir, usercode, timeLimit, usedtime, memoryLimit, inFileList,
+                                  ACflg, SPECIAL_JUDGE, global_work_dir, submissionInfo);
+        bundle.setUsedTime(min(r.usedTime, timeLimit * 1000));
+        bundle.setMemoryUse(min(r.topMemory / ONE_KILOBYTE, memoryLimit * STD_MB / ONE_KILOBYTE));
+        bundle.setPassPoint(r.pass_point);
+        bundle.setPassRate(r.pass_point / max(num_of_test, 1));
         webSocket << bundle.toJSONString();
+        ACflg = r.ACflg;
+        topmemory = r.topMemory;
+        usedtime = r.usedTime;
+        pass_point = pass_rate = r.pass_point;
+    } else {
+        for (auto &infilePair: inFileList) {
+            if (!(ALL_TEST_MODE || ACflg == ACCEPT || ACflg == PRESENTATION_ERROR) && ACflg != TIME_LIMIT_EXCEEDED) {
+                break;
+            }
+            if (ACflg == RUNTIME_ERROR) {
+                break;
+            }
+
+            if (ACflg <= PRESENTATION_ERROR) {
+                ++num_of_test;
+                prepare_files(infilePair.first.c_str(), infilePair.second, infile, p_id, work_dir, outfile,
+                              userfile, runner_id);
+                InitManager::initSyscallLimits(lang, call_counter, record_call, call_array_size);
+                pid_t pidApp = fork();
+
+                if (pidApp == CHILD_PROCESS) {
+                    run_solution(lang, work_dir, timeLimit, usedtime, memoryLimit);
+                } else {
+                    watch_solution(pidApp, infile, ACflg, SPECIAL_JUDGE, userfile, outfile,
+                                   solution_id, lang, topmemory, memoryLimit, usedtime, timeLimit,
+                                   p_id, PEflg, work_dir);
+                    judge_solution(ACflg, usedtime, timeLimit, SPECIAL_JUDGE, p_id, infile,
+                                   outfile, userfile, usercode, PEflg, lang, work_dir, topmemory,
+                                   memoryLimit, solution_id, num_of_test, global_work_dir);
+                    if (use_max_time) {
+                        max_case_time = max(usedtime, max_case_time);
+                        usedtime = ZERO_TIME;
+                    }
+                }
+
+                if (usedtime > timeLimit * 1000 || ACflg == TIME_LIMIT_EXCEEDED) {
+                    cout << "Time Limit Exceeded" << endl;
+                    ACflg = TIME_LIMIT_EXCEEDED;
+                    usedtime = timeLimit * 1000;
+                }
+
+                if (ACflg == ACCEPT) {
+                    ++pass_point;
+                }
+
+                if (ALL_TEST_MODE) {
+                    if (ACflg == ACCEPT) {
+                        ++pass_rate;
+                    }
+                    if (finalACflg < ACflg) {
+                        finalACflg = ACflg;
+                    }
+
+                    ACflg = ACCEPT;
+                }
+            }
+            bundle.setUsedTime(min(usedtime, timeLimit * 1000));
+            bundle.setMemoryUse(min(topmemory / ONE_KILOBYTE, memoryLimit * STD_MB / ONE_KILOBYTE));
+            bundle.setPassPoint(pass_point);
+            bundle.setPassRate(pass_rate / num_of_test);
+            webSocket << bundle.toJSONString();
+        }
     }
-    */
     if (ALL_TEST_MODE) {
         ACflg = finalACflg;
     }
