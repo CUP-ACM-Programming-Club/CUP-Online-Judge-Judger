@@ -1,5 +1,4 @@
 #include <utility>
-#include "../../library/json.hpp"
 //
 // Created by Ryan on 2018-12-18.
 //
@@ -7,9 +6,11 @@
 
 using std::cerr;
 using std::endl;
-using nlohmann::detail::type_error;
 #include "Bundle.h"
 #include "../../library/judge_lib.h"
+#include "../../library/json.hpp"
+using nlohmann::detail::type_error;
+using nlohmann::json;
 
 bool Bundle::setValue(const string& key, Pack val) {
     try {

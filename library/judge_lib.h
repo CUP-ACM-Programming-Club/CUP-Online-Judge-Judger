@@ -10,7 +10,6 @@
 #include <iostream>
 #include <fstream>
 #include <deque>
-#include "json.hpp"
 #include "../model/submission/SubmissionInfo.h"
 #include "../model/judge/language/Language.h"
 #include "../external/compare/Compare.h"
@@ -19,7 +18,6 @@
 #include <future>
 
 using namespace std;
-using json = nlohmann::json;
 // urlencoded function copied from http://www.geekhideout.com/urlcode.shtml
 /* Converts a hex character to its integer value */
 extern char from_hex(char ch);
