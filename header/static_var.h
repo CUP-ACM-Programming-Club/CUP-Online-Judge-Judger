@@ -147,7 +147,7 @@ struct JudgeResult {
 };
 
 struct JudgeSeriesResult : JudgeResult{
-    int pass_point = 0;
+    int pass_point;
 };
 
 struct TaskInfo {
