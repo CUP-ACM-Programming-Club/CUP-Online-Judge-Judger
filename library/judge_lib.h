@@ -34,11 +34,6 @@ extern long get_file_size(const char *filename);
 
 extern bool utf8_check_is_valid(const string &string);
 
-
-extern string ws_send(const int &solution_id, const int &state, const int &finished, const double &time,
-               const int &memory, const int &pass_point, const double &pass_rate, const string &test_run_result = "",
-               const string &compile_info = "", const int sim = 0, const int sim_s_id = 0);
-
 extern int execute_cmd(const char *fmt, ...);
 
 extern int after_equal(const char *c);

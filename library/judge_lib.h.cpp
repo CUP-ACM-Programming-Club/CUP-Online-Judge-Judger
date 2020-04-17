@@ -3,13 +3,11 @@
 //
 #include "judge_lib.h"
 #include "../header/static_var.h"
-#include "json.hpp"
 #include <dirent.h>
 #include <dlfcn.h>
 #include <unistd.h>
 
 using namespace std;
-using json = nlohmann::json;
 // urlencoded function copied from http://www.geekhideout.com/urlcode.shtml
 /* Converts a hex character to its integer value */
 char from_hex(char ch) {
@@ -72,44 +70,6 @@ bool utf8_check_is_valid(const string &string) {
         }
     }
     return true;
-}
-
-
-string ws_send(const int &solution_id, const int &state, const int &finished, const double &time,
-               const int &memory, const int &pass_point, const double &pass_rate, const string &test_run_result,
-               const string &compile_info, const int sim, const int sim_s_id) {
-    json send_msg;
-    send_msg["type"] = "judger";
-    send_msg["value"]["solution_id"] = solution_id;
-    send_msg["value"]["state"] = state;
-    send_msg["value"]["finish"] = finished;
-    send_msg["value"]["time"] = time;
-    send_msg["value"]["memory"] = memory;
-    send_msg["value"]["pass_rate"] = pass_rate;
-    send_msg["value"]["pass_point"] = pass_point;
-    send_msg["value"]["sim"] = sim;
-    send_msg["value"]["sim_s_id"] = sim_s_id;
-    if (test_run_result.length()) {
-        if (utf8_check_is_valid(test_run_result)) {
-            send_msg["value"]["test_run_result"] = test_run_result;
-        } else {
-            send_msg["value"]["test_run_result"] = string("检测到非法UTF-8输出");
-        }
-    }
-    if (compile_info.length()) {
-        if (utf8_check_is_valid(compile_info)) {
-            send_msg["value"]["compile_info"] = compile_info;
-        } else {
-            send_msg["value"]["compile_info"] = string("检测到非法UTF-8输出");
-        }
-    }
-    return send_msg.dump();
-    /*
-    string s="{\"solution_id\":"+to_string(solution_id)+",\"state\":"+to_string(state)+",\"finish\":"+to_string(finished);
-    s+=",\"time\":"+to_string(time)+",\"memory\":"+to_string(memory)+",\"pass_point\":"+to_string(pass_point)+"";
-    s+="}";
-    return s;
-     */
 }
 
 int execute_cmd(const char *fmt, ...) {
