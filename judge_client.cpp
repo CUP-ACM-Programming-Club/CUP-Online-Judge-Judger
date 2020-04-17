@@ -744,7 +744,7 @@ JudgeResult runJudgeTask(int runner_id, int language, char* work_dir, pair<strin
 
 JudgeSeriesResult runParallelJudge (int runner_id, int language, char* work_dir, char* usercode,int timeLimit, int usedtime, int memoryLimit, vector<pair<string, int>>& inFileList,
         int& ACflg, int SPECIAL_JUDGE, string& global_work_dir, SubmissionInfo& submissionInfo) {
-    ThreadPool pool(4);
+    ThreadPool pool(max(std::thread::hardware_concurrency(), 1));
     vector<future<JudgeResult>> result;
     int num_of_test = 0;
     for (auto& infilePair: inFileList) {
