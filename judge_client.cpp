@@ -352,7 +352,7 @@ JudgeResult judge_solution(int &ACflg, double &usedtime, double time_lmt, int is
     }
     //jvm popup messages, if don't consider them will get miss-WrongAnswer
     languageModel->fixFlagWithVMIssue(work_dir, ACflg, topmemory, mem_lmt);
-    return {ACflg, usedtime, topmemory};
+    return {ACflg, usedtime, topmemory, 0};
 }
 
 void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
