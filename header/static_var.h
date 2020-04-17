@@ -146,6 +146,10 @@ struct JudgeResult {
     int num;
 };
 
+struct JudgeSeriesResult : JudgeResult{
+    int pass_point = 0;
+}
+
 struct TaskInfo {
     string infile;
     string outfile;

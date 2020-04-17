@@ -742,7 +742,7 @@ JudgeResult runJudgeTask(int runner_id, int language, char* work_dir, pair<strin
     }
 }
 
-void runParallelJudge (int runner_id, int language, char* work_dir, char* usercode,int timeLimit, int usedtime, int memoryLimit, vector<pair<string, int>>& inFileList,
+JudgeSeriesResult runParallelJudge (int runner_id, int language, char* work_dir, char* usercode,int timeLimit, int usedtime, int memoryLimit, vector<pair<string, int>>& inFileList,
         int& ACflg, int SPECIAL_JUDGE, string& global_work_dir, SubmissionInfo& submissionInfo) {
     ThreadPool pool(4);
     vector<future<JudgeResult>> result;
@@ -758,10 +758,16 @@ void runParallelJudge (int runner_id, int language, char* work_dir, char* userco
                         submissionInfo.getProblemId(), usercode, num_of_test, global_work_dir));
         ++num_of_test;
     }
+    JudgeSeriesResult finalResult = {20, 0, 0, 0, 0};
     for(auto& res: result) {
         JudgeResult r = std::move(res.get());
         cout << "Flag " << r.ACflg << "Memory " << r.topMemory << "UsedTime " << r.usedTime << "Num " << r.num << endl;
+        finalResult.ACflg = min(finalResult.ACflg, r.ACflg);
+        finalResult.topMemory = max(finalResult.topMemory, r.topMemory);
+        finalResult.usedTime = max(finalResult.usedTime, r.usedTime);
+        finalResult.pass_point += r.ACflg == ACCEPT;
     }
+    return JudgeResult;
 }
 
 void init_parameters(int argc, char **argv, int &solution_id,
@@ -1065,7 +1071,17 @@ int main(int argc, char **argv) {
     bundle.setResult(RUNNING_JUDGING);
     bundle.setTotalPoint(total_point);
     webSocket << bundle.toJSONString();
-    runParallelJudge(runner_id, lang, work_dir, usercode, timeLimit, usedtime, memoryLimit, inFileList, ACflg, SPECIAL_JUDGE, global_work_dir, submissionInfo);
+    auto r = runParallelJudge(runner_id, lang, work_dir, usercode, timeLimit, usedtime, memoryLimit, inFileList, ACflg, SPECIAL_JUDGE, global_work_dir, submissionInfo);
+    bundle.setUsedTime(min(r.usedTime, timeLimit * 1000));
+    bundle.setMemoryUse(min(r.topMemory / ONE_KILOBYTE, memoryLimit * STD_MB / ONE_KILOBYTE));
+    bundle.setPassPoint(r.pass_point);
+    bundle.setPassRate(r.pass_point / num_of_test);
+    webSocket << bundle.toJSONString();
+    ACflg = r.ACflg;
+    topmemory = r.topMemory;
+    usedtime = r.usedTime;
+    pass_point = pass_rate = r.pass_point;
+    /*
     for (auto& infilePair: inFileList) {
         if(!(ALL_TEST_MODE || ACflg == ACCEPT || ACflg == PRESENTATION_ERROR) && ACflg != TIME_LIMIT_EXCEEDED) {
             break;
@@ -1123,6 +1139,7 @@ int main(int argc, char **argv) {
         bundle.setPassRate(pass_rate / num_of_test);
         webSocket << bundle.toJSONString();
     }
+    */
     if (ALL_TEST_MODE) {
         ACflg = finalACflg;
     }
