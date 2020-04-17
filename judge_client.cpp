@@ -725,9 +725,9 @@ JudgeResult runJudgeTask(int runner_id, int language, char* work_dir, pair<strin
     InitManager::initSyscallLimits(language, call_counter, record_call, call_array_size);
     prepare_files_with_id(infilePair.first.c_str(), infilePair.second, infile, problemId, work_dir, outfile,
                           userfile, runner_id, num_of_test);
-    auto pid = fork();
     cout << "infile: " << infile << " outfile " << outfile << " userfile " << userfile << endl;
     cout << "num of test: " << num_of_test << endl;
+    auto pid = fork();
     if (pid == CHILD_PROCESS) {
         run_solution_parallel(language, work_dir, timeLimit, usedtime, memoryLimit, num_of_test);
     }
