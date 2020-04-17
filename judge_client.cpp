@@ -59,7 +59,6 @@
 #include "external/mysql/MySQLSubmissionAdapter.h"
 
 using namespace std;
-using json = nlohmann::json;
 using CompilerArgsReader = JSONVectorReader;
 using ConfigReader = JSONVectorReader;
 //
