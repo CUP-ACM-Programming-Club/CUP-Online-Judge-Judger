@@ -9,7 +9,6 @@
 #include <mutex>
 #include <thread>
 #include "../../library/easywsclient.hpp"
-#include "../../library/json.hpp"
 #include "../base/ThreadPool.h"
 #include "../../library/judge_lib.h"
 
@@ -36,16 +35,10 @@ public:
 
 	WebSocketSender &emit(const std::string &str);
 
-	WebSocketSender &emit(const nlohmann::json &json);
 
 	WebSocketSender &send(const std::string &str);
 
-	WebSocketSender &send(const nlohmann::json &json);
-
 	WebSocketSender &operator<<(const std::string &str);
-
-	WebSocketSender &operator<<(const nlohmann::json &json);
-
 private:
 	easywsclient::WebSocket::pointer wsconnect;
 	bool connected;

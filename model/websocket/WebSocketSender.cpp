@@ -5,7 +5,6 @@
 #include "WebSocketSender.h"
 #define LOCK(lock) std::lock_guard<std::mutex> lockGuard(lock)
 using namespace std;
-using json = nlohmann::json;
 using easywsclient::WebSocket;
 ThreadPool threadPool_(std::thread::hardware_concurrency());
 
@@ -58,27 +57,12 @@ WebSocketSender &WebSocketSender::operator<<(const string &str) {
     return emit(str);
 }
 
-WebSocketSender &WebSocketSender::emit(const json &json) {
-    return emit(json.dump());
-}
-
-WebSocketSender &WebSocketSender::operator<<(const json &json) {
-    if (isConnected())
-        return emit(json.dump());
-    else
-        return *this;
-}
-
 bool WebSocketSender::isConnected() {
     return connected;
 }
 
 WebSocketSender &WebSocketSender::send(const string &str) {
     return emit(str);
-}
-
-WebSocketSender &WebSocketSender::send(const json &json) {
-    return emit(json);
 }
 
 bool WebSocketSender::close() {
