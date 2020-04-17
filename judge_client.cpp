@@ -191,8 +191,6 @@ void run_solution_parallel(int &lang, char *work_dir, double &time_lmt, double &
     sprintf(input, "data%d.in", fileId);
     sprintf(userOutput, "user%d.out", fileId);
     sprintf(errorOutput, "error%d.out", fileId);
-    freopen("user.out", "w", stdout);
-    freopen("error.out", "a+", stderr);
     nice(19);
     // now the user is "judger"
     chdir(work_dir);
@@ -321,6 +319,7 @@ JudgeResult judge_solution(int &ACflg, double &usedtime, double time_lmt, int is
     cout << "Used time" << endl;
     cout << usedtime << endl;
     cout << time_lmt * 1000 * (use_max_time ? 1 : num_of_test) << endl;
+    cout << "judge solution: infile: " << infile << " outfile: " << outfile << " userfile: " << userfile << endl;
     int comp_res;
     if (!ALL_TEST_MODE)
         num_of_test = static_cast<int>(1.0);

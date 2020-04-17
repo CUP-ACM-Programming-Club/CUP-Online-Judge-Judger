@@ -495,7 +495,7 @@ void prepare_files_with_id(const char *filename, int namelen, char *infile, int 
     fname0[namelen] = 0;
     escape(fname, fname0);
     printf("%s\n%s\n", fname0, fname);
-    sprintf(infile, "%s/data/%d/%s%d.in", oj_home, p_id, fname, file_id);
+    sprintf(infile, "%s/data/%d/%s.in", oj_home, p_id, fname);
     execute_cmd("/bin/cp '%s' %s/data%d.in", infile, work_dir, file_id);
     execute_cmd("/bin/cp %s/data/%d/*.dic %s/", oj_home, p_id, work_dir);
     sprintf(outfile, "%s/data/%d/%s.out", oj_home, p_id, fname0);
