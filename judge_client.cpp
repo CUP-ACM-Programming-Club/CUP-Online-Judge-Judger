@@ -767,7 +767,7 @@ JudgeSeriesResult runParallelJudge (int runner_id, int language, char* work_dir,
         finalResult.usedTime = max(finalResult.usedTime, r.usedTime);
         finalResult.pass_point += r.ACflg == ACCEPT;
     }
-    return JudgeResult;
+    return finalResult;
 }
 
 void init_parameters(int argc, char **argv, int &solution_id,
