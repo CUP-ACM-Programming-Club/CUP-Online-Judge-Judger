@@ -727,6 +727,8 @@ JudgeResult runJudgeTask(int runner_id, int language, char* work_dir, pair<strin
     prepare_files_with_id(infilePair.first.c_str(), infilePair.second, infile, problemId, work_dir, outfile,
                           userfile, runner_id, num_of_test);
     auto pid = fork();
+    cout << "infile: " << infile << " outfile " << outfile << " userfile " << userfile << endl;
+    cout << "num of test: " << num_of_test << endl;
     if (pid == CHILD_PROCESS) {
         run_solution_parallel(language, work_dir, timeLimit, usedtime, memoryLimit, num_of_test);
     }
@@ -759,7 +761,7 @@ void runParallelJudge (int runner_id, int language, char* work_dir, char* userco
     }
     for(auto& res: result) {
         JudgeResult r = std::move(res.get());
-        cout << "Flag" << r.ACflg << "Memory" << r.topMemory << "UsedTime" << r.usedTime << "Num" << r.num << endl;
+        cout << "Flag " << r.ACflg << "Memory " << r.topMemory << "UsedTime " << r.usedTime << "Num " << r.num << endl;
     }
 }
 
