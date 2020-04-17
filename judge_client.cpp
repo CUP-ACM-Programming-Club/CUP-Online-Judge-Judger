@@ -1065,6 +1065,7 @@ int main(int argc, char **argv) {
     int total_point = 0;
     int pass_point = ZERO_PASSPOINT;
     vector<pair<string, int> >inFileList = getFileList(fullpath, isInFile);
+    num_of_test = inFileList.size();
     total_point = inFileList.size();
     bundle.setJudger(http_username);
     bundle.setSolutionID(solution_id);
@@ -1075,7 +1076,7 @@ int main(int argc, char **argv) {
     bundle.setUsedTime(min(r.usedTime, timeLimit * 1000));
     bundle.setMemoryUse(min(r.topMemory / ONE_KILOBYTE, memoryLimit * STD_MB / ONE_KILOBYTE));
     bundle.setPassPoint(r.pass_point);
-    bundle.setPassRate(r.pass_point / num_of_test);
+    bundle.setPassRate(r.pass_point / max(num_of_test, 1));
     webSocket << bundle.toJSONString();
     ACflg = r.ACflg;
     topmemory = r.topMemory;
