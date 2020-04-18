@@ -1,4 +1,5 @@
 #!/bin/bash
+./shell/build_dependency.sh
 CPU_CORE=$(nproc)
 cmake ./ &&
 make -j$CPU_CORE &&
