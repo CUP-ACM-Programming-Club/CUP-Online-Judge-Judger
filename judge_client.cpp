@@ -538,7 +538,7 @@ void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
 void watch_solution_with_file_id(pid_t pidApp, char *infile, int &ACflg, int isspj,
                                  char *userfile, char *outfile, int solution_id, int lang,
                                  int &topmemory, int mem_lmt, double &usedtime, double time_lmt, int &p_id,
-                                 int &PEflg, char *work_dir, int file_id) {
+                                 int &PEflg, char *work_dir, int file_id, int* call_counter) {
     // parent
     int tempmemory;
     char errorFile[BUFFER_SIZE];
@@ -736,7 +736,7 @@ runJudgeTask(int runner_id, int language, char *work_dir, pair<string, int> &inf
     } else {
         watch_solution_with_file_id(pid, infile, ACflg, SPECIAL_JUDGE, userfile, outfile,
                                     solution_id, language, topmemory, memoryLimit, usedtime, timeLimit,
-                                    problemId, PEflg, work_dir, num_of_test);
+                                    problemId, PEflg, work_dir, num_of_test, call_counter);
         judge_solution(ACflg, usedtime, timeLimit, SPECIAL_JUDGE, problemId, infile,
                        outfile, userfile, usercode, PEflg, language, work_dir, topmemory,
                        memoryLimit, solution_id, num_of_test, global_work_dir);

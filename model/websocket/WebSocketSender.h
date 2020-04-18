@@ -5,7 +5,9 @@
 #ifndef JUDGE_CLIENT_WEBSOCKETSENDER_H
 #define JUDGE_CLIENT_WEBSOCKETSENDER_H
 
-#include <bits/stdc++.h>
+#include <iostream>
+#include <string>
+#include <vector>
 #include <mutex>
 #include <thread>
 #include "../../library/easywsclient.hpp"
