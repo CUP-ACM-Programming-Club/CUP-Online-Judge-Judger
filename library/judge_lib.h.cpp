@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <unistd.h>
+#include <sstream>
 
 using namespace std;
 // urlencoded function copied from http://www.geekhideout.com/urlcode.shtml

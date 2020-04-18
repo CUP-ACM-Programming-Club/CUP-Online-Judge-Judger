@@ -3,6 +3,7 @@
 //
 
 #include "WebSocketSender.h"
+#include <algorithm>
 #define LOCK(lock) std::lock_guard<std::mutex> lockGuard(lock)
 using namespace std;
 using easywsclient::WebSocket;
