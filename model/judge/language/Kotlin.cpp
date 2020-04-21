@@ -66,7 +66,6 @@ void Kotlin::setCompileProcessLimit() {
     Language::setCPULimit();
     this->setAlarm();
     Language::setFSizeLimit();
-    Language::setASLimit();
 }
 
 void Kotlin::setAlarm() {
