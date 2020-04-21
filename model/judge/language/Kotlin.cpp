@@ -15,7 +15,9 @@
 
 using std::memset;
 
+#ifndef SYSCALL_ARRAY
 #define SYSCALL_ARRAY LANG_JV
+#endif
 
 std::string Kotlin::getFileSuffix() {
     return "kt";
