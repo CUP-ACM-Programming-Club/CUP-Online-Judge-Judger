@@ -38,6 +38,7 @@ public:
     virtual bool isValidExitCode(int exitcode);
     virtual ~Language();
     virtual void setDebug(int debug);
+    virtual bool supportParallel();
 protected:
     virtual void setCPULimit();
     virtual void setFSizeLimit();

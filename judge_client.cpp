@@ -1078,7 +1078,7 @@ int main(int argc, char **argv) {
     bundle.setResult(RUNNING_JUDGING);
     bundle.setTotalPoint(total_point);
     webSocket << bundle.toJSONString();
-    if (enable_parallel) {
+    if (enable_parallel && languageModel->supportParallel()) {
         auto r = runParallelJudge(runner_id, lang, work_dir, usercode, timeLimit, usedtime, memoryLimit, inFileList,
                                   ACflg, SPECIAL_JUDGE, global_work_dir, submissionInfo);
         bundle.setUsedTime(min(r.usedTime, timeLimit * 1000));

@@ -167,3 +167,7 @@ void Language::setDebug(int debug) {
     DEBUG = debug;
 }
 
+bool Language::supportParallel() {
+    return true;
+}
+

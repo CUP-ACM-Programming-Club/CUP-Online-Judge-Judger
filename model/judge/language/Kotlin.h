@@ -12,6 +12,7 @@ public:
     void run(int memory) override;
     void compile(std::vector<std::string>&, const char*, const char*) override;
     std::string getFileSuffix() override;
+    bool supportParallel() override;
 };
 
 

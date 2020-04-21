@@ -28,6 +28,10 @@ void Kotlin::compile(std::vector<std::string>& _args, const char* java_xms, cons
     Language::compile(_args, java_xms, java_xmx);
 }
 
+bool Kotlin::supportParallel() {
+    return false;
+}
+
 extlang createInstancekotlin () {
     return new Kotlin;
 }
