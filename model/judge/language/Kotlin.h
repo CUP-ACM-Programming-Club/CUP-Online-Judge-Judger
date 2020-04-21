@@ -1,15 +1,15 @@
 //
-// Created by Haoyuan Li on 2019/12/24.
+// Created by Haoyuan Li on 2020/4/21.
 //
 
-#ifndef JUDGE_CLIENT_BASH_H
-#define JUDGE_CLIENT_BASH_H
+#ifndef JUDGE_LIBRARY_KOTLIN_H
+#define JUDGE_LIBRARY_KOTLIN_H
 
 
 #include "Language.h"
 #include "common/BonusLimit.h"
 
-class Bash : public Language, protected BonusLimit {
+class Kotlin : public Language, BonusLimit {
 public:
     void run(int memory) override;
     void setProcessLimit() override;
@@ -18,11 +18,9 @@ public:
     int buildMemoryLimit(int memoryLimit, int bonus) override;
     void initCallCounter(int* call_counter) override;
     void buildSeccompSandbox() override;
-    int getCompileResult(int status) override;
     std::string getFileSuffix() override;
-    int getMemory(rusage ruse, pid_t pid) override;
     bool gotErrorWhileRunning(bool error) override;
 };
 
 
-#endif //JUDGE_CLIENT_BASH_H
+#endif //JUDGE_LIBRARY_KOTLIN_H
