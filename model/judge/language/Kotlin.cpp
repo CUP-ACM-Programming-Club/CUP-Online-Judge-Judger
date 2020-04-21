@@ -61,3 +61,11 @@ void Kotlin::buildSeccompSandbox() {
 bool Kotlin::gotErrorWhileRunning(bool error) {
     return error;
 }
+
+extlang createInstancekotlin () {
+    return new Kotlin;
+}
+
+deslang destroyInstancekotlin (Language* language) {
+    delete language;
+}
