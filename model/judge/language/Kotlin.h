@@ -18,8 +18,12 @@ public:
     int buildMemoryLimit(int memoryLimit, int bonus) override;
     void initCallCounter(int* call_counter) override;
     void buildSeccompSandbox() override;
+    void setCompileProcessLimit() override;
     std::string getFileSuffix() override;
     bool gotErrorWhileRunning(bool error) override;
+
+protected:
+    void setAlarm() override;
 };
 
 

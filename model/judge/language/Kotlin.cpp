@@ -62,6 +62,17 @@ bool Kotlin::gotErrorWhileRunning(bool error) {
     return error;
 }
 
+void Kotlin::setCompileProcessLimit() {
+    Language::setCPULimit();
+    this->setAlarm();
+    Language::setFSizeLimit();
+    Language::setASLimit();
+}
+
+void Kotlin::setAlarm() {
+    alarm(50);
+}
+
 extlang createInstancekotlin () {
     return new Kotlin;
 }
