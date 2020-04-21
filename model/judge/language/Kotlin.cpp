@@ -65,7 +65,7 @@ bool Kotlin::gotErrorWhileRunning(bool error) {
 void Kotlin::setCompileProcessLimit() {
     Language::setCPULimit();
     this->setAlarm();
-    Language::setFSizeLimit();
+    // Language::setFSizeLimit();
 }
 
 void Kotlin::setAlarm() {
