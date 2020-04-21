@@ -73,6 +73,10 @@ void Kotlin::setAlarm() {
     alarm(50);
 }
 
+void Kotlin::setCompileMount(const char *work_dir) {
+    // do nothing
+}
+
 extlang createInstancekotlin () {
     return new Kotlin;
 }
