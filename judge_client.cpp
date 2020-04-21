@@ -1088,7 +1088,7 @@ int main(int argc, char **argv) {
         webSocket << bundle.toJSONString();
         finalACflg = ACflg = r.ACflg;
         topmemory = r.topMemory;
-        usedtime = r.usedTime;
+        usedtime = max_case_time = min(r.usedTime, timeLimit * 1000);
         pass_point = pass_rate = r.pass_point;
     } else {
         for (auto &infilePair: inFileList) {
