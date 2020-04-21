@@ -53,3 +53,11 @@ void Kotlin::buildSeccompSandbox() {
     }
     seccomp_load(ctx);
 }
+
+extlang createInstancekotlin () {
+    return new Kotlin;
+}
+
+deslang destroyInstancekotlin (Language* language) {
+    delete language;
+}
