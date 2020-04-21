@@ -1,48 +1,44 @@
 //
-// Created by Haoyuan Li on 2020/4/21.
+// Created by Haoyuan Li on 2020/4/22.
 //
 
 #include "Kotlin.h"
 #include <unistd.h>
-#include <seccomp.h>
-#include "util/util.h"
-#include "common/seccomp_helper.h"
+#include <cstring>
 #ifdef __i386
-#include "syscall/kotlin/syscall32.h"
+#include "syscall/java/syscall32.h"
 #else
-#include "syscall/kotlin/syscall64.h"
+#include "syscall/java/syscall64.h"
 #endif
+#include "common/seccomp_helper.h"
+#include <seccomp.h>
 
-#define SYSCALL_ARRAY LANG_KTV
+using std::memset;
+
+#define SYSCALL_ARRAY LANG_JV
 
 std::string Kotlin::getFileSuffix() {
     return "kt";
 }
 
 void Kotlin::run(int memory) {
-    execl("./Main.kexe", "./Main.kexe", (char*) nullptr);
+    char java_xms[1 << 7];
+    char java_xmx[1 << 7];
+    sprintf(java_xms, "-Xmx%dM", memory);
+    sprintf(java_xmx, "-XX:MaxMetaspaceSize=%dM", memory);
+    execl("/usr/bin/java", "/usr/bin/java", "-jar", java_xms, java_xmx,
+          "-Djava.security.manager",
+          "-Djava.security.policy=./java.policy", "Main.jar", (char *) nullptr);
 }
 
-void Kotlin::buildRuntime(const char *work_dir) {
-    Language::buildRuntime(work_dir);
+void Kotlin::compile(std::vector<std::string>& _args, const char* java_xms, const char* java_xmx) {
+    Language::compile(_args, java_xms, java_xmx);
 }
 
 void Kotlin::initCallCounter(int *call_counter) {
-    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+    memset(call_counter, 0, call_array_size);
+    for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++)
         call_counter[SYSCALL_ARRAY[i]] = HOJ_MAX_LIMIT;
-    }
-}
-
-void Kotlin::setProcessLimit() {
-    Language::setProcessLimit();
-}
-
-double Kotlin::buildTimeLimit(double timeLimit, double bonus) {
-    return BonusLimit::buildBonusTimeLimit(timeLimit, bonus);
-}
-
-int Kotlin::buildMemoryLimit(int memoryLimit, int bonus) {
-    return BonusLimit::buildBonusMemoryLimit(memoryLimit, bonus);
 }
 
 void Kotlin::buildSeccompSandbox() {
@@ -56,30 +52,4 @@ void Kotlin::buildSeccompSandbox() {
         exit(1);
     }
     seccomp_load(ctx);
-}
-
-bool Kotlin::gotErrorWhileRunning(bool error) {
-    return error;
-}
-
-void Kotlin::setCompileProcessLimit() {
-    Language::setCPULimit();
-    this->setAlarm();
-    // Language::setFSizeLimit();
-}
-
-void Kotlin::setAlarm() {
-    alarm(50);
-}
-
-void Kotlin::setCompileMount(const char *work_dir) {
-    // do nothing
-}
-
-extlang createInstancekotlin () {
-    return new Kotlin;
-}
-
-deslang destroyInstancekotlin (Language* language) {
-    delete language;
 }
