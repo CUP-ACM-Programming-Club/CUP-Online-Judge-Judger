@@ -34,6 +34,13 @@
   "22": [
     "kotlinc",
     "Main.kt",
+    "-include-runtime",
+    "-d",
+    "Main.jar"
+  ],
+  "31": [
+    "kotlinc",
+    "Main.kt",
     "-o",
     "Main",
     "-opt"
