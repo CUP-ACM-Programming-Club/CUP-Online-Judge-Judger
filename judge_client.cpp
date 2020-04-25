@@ -153,7 +153,7 @@ int compile(int lang, char *work_dir) {
         auto args = compilerArgsReader.GetArray(to_string(lang));
         languageModel->compile(args, java_xms, java_xmx);
         if (DEBUG) {
-            cout << "Copilation end!\n" << endl;
+            cout << "Compilation end!\n" << endl;
         }
         //exit(!system("cat ce.txt"));
         exit(0);
