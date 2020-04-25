@@ -145,13 +145,14 @@ int compile(int lang, char *work_dir) {
     pid = fork();
     if (pid == CHILD_PROCESS) {
         languageModel->setCompileProcessLimit();
-        // languageModel->setCompileMount(work_dir);
+        languageModel->setCompileMount(work_dir);
         languageModel->setCompileExtraConfig();
         setRunUser();
         if (DEBUG)
             cout << "Lang:" << lang << endl;
         auto args = compilerArgsReader.GetArray(to_string(lang));
         languageModel->compile(args, java_xms, java_xmx);
+        // fixme: issue caused by non-compile language
         if (DEBUG) {
             cout << "Compilation end!\n" << endl;
         }
