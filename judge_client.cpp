@@ -980,6 +980,7 @@ int main(int argc, char **argv) {
         clean_workdir(work_dir);
         removeSubmissionInfo(judgerId);
         write_log(oj_home, "compile error");
+        umount(work_dir);
         exit(0);
     } else {
         umount(work_dir);
