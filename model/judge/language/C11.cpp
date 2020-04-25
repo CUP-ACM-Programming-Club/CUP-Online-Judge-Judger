@@ -17,7 +17,7 @@ using std::memset;
 #define SYSCALL_ARRAY LANG_CV
 
 void C11::run(int memory) {
-    execl("./Main", "./Main", (char *) nullptr);
+    execv("./Main", args);
 }
 
 void C11::buildRuntime(const char *work_dir) {
@@ -54,8 +54,12 @@ void C11::buildSeccompSandbox() {
     scmp_filter_ctx ctx;
     ctx = seccomp_init(SCMP_ACT_TRAP);
     for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        if (SYSCALL_ARRAY[i] == 59) {
+            continue;
+        }
         seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
     }
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(execve), 1, SCMP_A0(SCMP_CMP_EQ, (scmp_datum_t)(args)));
     if (install_helper()) {
         printf("install helper failed");
         exit(1);

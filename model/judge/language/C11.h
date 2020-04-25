@@ -19,6 +19,8 @@ public:
     bool enableSim() override;
     void buildSeccompSandbox() override;
     bool gotErrorWhileRunning(bool error) override;
+private:
+    static constexpr char* args[] = {"./Main", (char*)nullptr};
 };
 
 
