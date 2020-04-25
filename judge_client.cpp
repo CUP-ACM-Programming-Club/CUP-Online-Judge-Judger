@@ -145,8 +145,8 @@ int compile(int lang, char *work_dir) {
     pid = fork();
     if (pid == CHILD_PROCESS) {
         languageModel->setCompileProcessLimit();
-        languageModel->setCompileExtraConfig();
         languageModel->setCompileMount(work_dir);
+        languageModel->setCompileExtraConfig();
         setRunUser();
         if (DEBUG)
             cout << "Lang:" << lang << endl;

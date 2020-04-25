@@ -116,10 +116,6 @@ char **JavaScript::getArgs() {
     return args;
 }
 
-void JavaScript::compile(std::vector<std::string> &, const char *, const char *) {
-    // do nothing
-}
-
 extlang createInstancejavascript() {
     return new JavaScript;
 }
