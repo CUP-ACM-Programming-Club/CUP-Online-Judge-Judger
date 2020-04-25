@@ -237,8 +237,8 @@ void run_solution_parallel(int &lang, char *work_dir, double &time_lmt, double &
     LIM.rlim_max = static_cast<rlim_t>(STD_MB << 7);
     setrlimit(RLIMIT_STACK, &LIM);
     // set the memory
-    LIM.rlim_cur = static_cast<rlim_t>(STD_MB * mem_lmt / 2 * 3);
-    LIM.rlim_max = static_cast<rlim_t>(STD_MB * mem_lmt * 2);
+    LIM.rlim_cur = static_cast<rlim_t>(STD_MB * mem_lmt);
+    LIM.rlim_max = static_cast<rlim_t>(STD_MB * mem_lmt);
     languageModel->runMemoryLimit(LIM);
     if (!use_ptrace) {
         languageModel->buildSeccompSandbox();
