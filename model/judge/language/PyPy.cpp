@@ -23,7 +23,7 @@ using std::memset;
 const int STD_MB = 1 << 20;
 
 void PyPy::run(int memory) {
-    execl("/pypy/bin/pypy", "/pypy/bin/pypy", "Main.py", (char *) nullptr);
+    execv(args[0], args);
 }
 
 void PyPy::buildRuntime(const char *work_dir) {
@@ -141,15 +141,24 @@ void PyPy::fixFlagWithVMIssue(char *work_dir, int &ACflg, int &topmemory, int me
 
 void PyPy::buildSeccompSandbox() {
     scmp_filter_ctx ctx;
-    ctx = seccomp_init(SCMP_ACT_TRAP);
+    ctx = seccomp_init(SCMP_ACT_KILL);
     for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        if (SYSCALL_ARRAY[i] == 59) {
+            continue;
+        }
         seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
     }
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(execve), 1, SCMP_A1(SCMP_CMP_EQ, (scmp_datum_t)(getArgs())));
     if (install_helper()) {
         printf("install helper failed");
         exit(1);
     }
-    seccomp_load(ctx);}
+    seccomp_load(ctx);
+}
+
+char **PyPy::getArgs() {
+    return args;
+}
 
 extlang createInstancepypy () {
     return new PyPy;

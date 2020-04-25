@@ -6,10 +6,13 @@
 #include "unistd.h"
 #include "util/util.h"
 #include <cstring>
+
 #ifdef __i386
 #include "syscall/php/syscall32.h"
 #else
+
 #include "syscall/php/syscall64.h"
+
 #endif
 
 #include <seccomp.h>
@@ -20,7 +23,7 @@
 using std::memset;
 
 void Php::run(int memory) {
-    execl("/php", "/php", "Main.php", (char *) nullptr);
+    execv(args[0], args);
 }
 
 void Php::buildRuntime(const char *work_dir) {
@@ -64,10 +67,14 @@ std::string Php::getFileSuffix() {
 
 void Php::buildSeccompSandbox() {
     scmp_filter_ctx ctx;
-    ctx = seccomp_init(SCMP_ACT_TRAP);
+    ctx = seccomp_init(SCMP_ACT_KILL);
     for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        if (SYSCALL_ARRAY[i] == 59) {
+            continue;
+        }
         seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
     }
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(execve), 1, SCMP_A1(SCMP_CMP_EQ, (scmp_datum_t) (getArgs())));
     if (install_helper()) {
         printf("install helper failed");
         exit(1);
@@ -75,10 +82,14 @@ void Php::buildSeccompSandbox() {
     seccomp_load(ctx);
 }
 
+char **Php::getArgs() {
+    return args;
+}
+
 extlang createInstancephp() {
     return new Php;
 }
 
-deslang destroyInstancephp(Language* language) {
+deslang destroyInstancephp(Language *language) {
     delete language;
 }

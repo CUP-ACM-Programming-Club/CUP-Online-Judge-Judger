@@ -65,10 +65,14 @@ int Pascal::getMemory(rusage ruse, pid_t pid) {
 
 void Pascal::buildSeccompSandbox() {
     scmp_filter_ctx ctx;
-    ctx = seccomp_init(SCMP_ACT_TRAP);
+    ctx = seccomp_init(SCMP_ACT_KILL);
     for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        if (SYSCALL_ARRAY[i] == 59) {
+            continue;
+        }
         seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
     }
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(execve), 1, SCMP_A1(SCMP_CMP_EQ, (scmp_datum_t)(getArgs())));
     if (install_helper()) {
         printf("install helper failed");
         exit(1);

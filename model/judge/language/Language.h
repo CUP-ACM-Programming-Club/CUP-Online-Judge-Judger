@@ -44,6 +44,7 @@ protected:
     virtual void setFSizeLimit();
     virtual void setASLimit();
     virtual void setAlarm();
+    virtual char** getArgs();
     int DEBUG;
 };
 

@@ -19,8 +19,10 @@ public:
     bool enableSim() override;
     void buildSeccompSandbox() override;
     bool gotErrorWhileRunning(bool error) override;
+protected:
+    char** getArgs() override;
 private:
-    static constexpr char* args[] = {"./Main", (char*)nullptr};
+    char** args = (char*[]){"./Main", (char*)nullptr};
 };
 
 

@@ -11,9 +11,9 @@
 
 class Ruby : public Language, protected BonusLimit {
 public:
-    void run(int memory);
-    void setProcessLimit();
-    void buildRuntime(const char* work_dir);
+    void run(int memory) override;
+    void setProcessLimit() override;
+    void buildRuntime(const char* work_dir) override;
     double buildTimeLimit(double timeLimit, double bonus) override;
     int buildMemoryLimit(int memoryLimit, int bonus) override;
     void initCallCounter(int* call_counter) override;
@@ -21,6 +21,10 @@ public:
     int getCompileResult(int status) override;
     std::string getFileSuffix() override;
     int getMemory(rusage ruse, pid_t pid) override;
+protected:
+    char** getArgs() override;
+private:
+    char** args = (char*[]){"/ruby", "Main.rb", (char *) nullptr};
 };
 
 

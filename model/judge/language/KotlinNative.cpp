@@ -20,7 +20,7 @@ std::string KotlinNative::getFileSuffix() {
 }
 
 void KotlinNative::run(int memory) {
-    execl("./Main.kexe", "./Main.kexe", (char*) nullptr);
+    execv(args[0], args);
 }
 
 void KotlinNative::buildRuntime(const char *work_dir) {
@@ -47,10 +47,14 @@ int KotlinNative::buildMemoryLimit(int memoryLimit, int bonus) {
 
 void KotlinNative::buildSeccompSandbox() {
     scmp_filter_ctx ctx;
-    ctx = seccomp_init(SCMP_ACT_TRAP);
+    ctx = seccomp_init(SCMP_ACT_KILL);
     for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        if (SYSCALL_ARRAY[i] == 59) {
+            continue;
+        }
         seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
     }
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(execve), 1, SCMP_A1(SCMP_CMP_EQ, (scmp_datum_t)(getArgs())));
     if (install_helper()) {
         printf("install helper failed");
         exit(1);
@@ -74,6 +78,10 @@ void KotlinNative::setAlarm() {
 
 void KotlinNative::setCompileMount(const char *work_dir) {
     // do nothing
+}
+
+char **KotlinNative::getArgs() {
+    return args;
 }
 
 extlang createInstancekotlinnative () {

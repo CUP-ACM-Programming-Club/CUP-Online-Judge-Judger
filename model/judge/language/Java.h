@@ -29,9 +29,14 @@ public:
                             int mem_lmt) override;
     bool gotErrorWhileRunning(bool error) override;
     bool isValidExitCode(int exitcode) override;
+protected:
+    char** getArgs() override;
 private:
     void setAlarm() override;
     void setASLimit() override;
+    char **args = (char*[]){"java", "", "",
+                                    "-Djava.security.manager",
+                                    "-Djava.security.policy=./java.policy", "Main", (char *) nullptr};
 };
 
 

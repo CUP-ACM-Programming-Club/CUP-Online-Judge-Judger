@@ -22,9 +22,11 @@ public:
     std::string getFileSuffix() override;
     void setCompileMount(const char* work_dir) override;
     bool gotErrorWhileRunning(bool error) override;
-
 protected:
     void setAlarm() override;
+    char** getArgs() override;
+private:
+    char** args = (char*[]){"./Main.kexe", (char*) nullptr};
 };
 
 

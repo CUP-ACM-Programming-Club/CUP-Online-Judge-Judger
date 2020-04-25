@@ -171,3 +171,7 @@ bool Language::supportParallel() {
     return true;
 }
 
+char **Language::getArgs() {
+    return nullptr;
+}
+

@@ -22,6 +22,10 @@ public:
     std::string getFileSuffix() override;
     int getMemory(rusage ruse, pid_t pid) override;
     bool gotErrorWhileRunning(bool error) override;
+protected:
+    char** getArgs() override;
+private:
+    char** args = (char*[]){"/bin/bash", "Main.sh", (char *) nullptr};
 };
 
 

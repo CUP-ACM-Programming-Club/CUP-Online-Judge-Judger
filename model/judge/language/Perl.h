@@ -19,6 +19,10 @@ public:
     void buildSeccompSandbox() override;
     std::string getFileSuffix() override;
     int getMemory(rusage ruse, pid_t pid) override;
+protected:
+    char** getArgs() override;
+private:
+    char** args = (char*[]){"/perl", "Main.pl", (char *) nullptr};
 };
 
 

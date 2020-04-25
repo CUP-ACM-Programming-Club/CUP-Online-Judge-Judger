@@ -20,6 +20,10 @@ public:
     void buildSeccompSandbox() override;
     std::string getFileSuffix() override;
     bool gotErrorWhileRunning(bool error) override;
+protected:
+    char** getArgs() override;
+private:
+    char** args = (char*[]){"/mono", "--debug", "Main.exe", (char *) nullptr};
 };
 
 

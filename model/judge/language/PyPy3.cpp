@@ -23,7 +23,7 @@ using std::memset;
 const int STD_MB = 1 << 20;
 
 void PyPy3::run(int memory) {
-    execl("/pypy3/bin/pypy3", "/pypy3/bin/pypy3", "Main.py", (char *) nullptr);
+    execv(args[0], args);
 }
 
 void PyPy3::buildRuntime(const char *work_dir) {
@@ -154,15 +154,23 @@ void PyPy3::fixFlagWithVMIssue(char *work_dir, int &ACflg, int &topmemory, int m
 
 void PyPy3::buildSeccompSandbox() {
     scmp_filter_ctx ctx;
-    ctx = seccomp_init(SCMP_ACT_TRAP);
+    ctx = seccomp_init(SCMP_ACT_KILL);
     for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        if (SYSCALL_ARRAY[i] == 59) {
+            continue;
+        }
         seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
     }
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(execve), 1, SCMP_A1(SCMP_CMP_EQ, (scmp_datum_t)(getArgs())));
     if (install_helper()) {
         printf("install helper failed");
         exit(1);
     }
     seccomp_load(ctx);
+}
+
+char **PyPy3::getArgs() {
+    return args;
 }
 
 extlang createInstancepypy3() {

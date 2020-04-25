@@ -20,7 +20,7 @@
 
 using std::memset;
 void Schema::run(int memory) {
-    execl("/guile", "/guile", "Main.scm", (char *) nullptr);
+    execv(args[0], args);
 }
 
 void Schema::setProcessLimit() {
@@ -100,6 +100,10 @@ void Schema::buildSeccompSandbox() {
         exit(1);
     }
     seccomp_load(ctx);
+}
+
+char **Schema::getArgs() {
+    return args;
 }
 
 extlang createInstanceschema () {

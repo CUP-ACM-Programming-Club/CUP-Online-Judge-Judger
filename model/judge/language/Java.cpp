@@ -32,9 +32,9 @@ void Java::run(int memory) {
     char java_xmx[1 << 7];
     sprintf(java_xms, "-Xmx%dM", memory);
     sprintf(java_xmx, "-XX:MaxMetaspaceSize=%dM", memory);
-    execl("/usr/bin/java", "/usr/bin/java", java_xms, java_xmx,
-          "-Djava.security.manager",
-          "-Djava.security.policy=./java.policy", "Main", (char *) nullptr);
+    args[1] = java_xms;
+    args[2] = java_xmx;
+    execv("java", args);
 }
 
 void Java::setProcessLimit() {
@@ -162,14 +162,22 @@ bool Java::isValidExitCode(int exitcode) {
 
 void Java::buildSeccompSandbox() {
     scmp_filter_ctx ctx;
-    ctx = seccomp_init(SCMP_ACT_TRAP);
+    ctx = seccomp_init(SCMP_ACT_KILL);
     for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
+        if (SYSCALL_ARRAY[i] == 59) {
+            continue;
+        }
         seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SYSCALL_ARRAY[i], 0);
     }
+    seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(execve), 1, SCMP_A1(SCMP_CMP_EQ, (scmp_datum_t)(getArgs())));
     if (install_helper()) {
         printf("install helper failed");
         exit(1);
     }
     seccomp_load(ctx);
+}
+
+char **Java::getArgs() {
+    return args;
 }
 

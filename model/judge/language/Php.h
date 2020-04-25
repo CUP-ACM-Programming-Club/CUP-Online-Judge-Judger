@@ -18,6 +18,10 @@ public:
     void initCallCounter(int* call_counter) override;
     void buildSeccompSandbox() override;
     std::string getFileSuffix() override;
+protected:
+     char** getArgs() override;
+private:
+    char** args = (char*[]){"/php", "Main.php", (char *) nullptr};
 };
 
 

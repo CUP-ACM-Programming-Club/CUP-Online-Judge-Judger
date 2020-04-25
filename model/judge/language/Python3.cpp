@@ -23,7 +23,7 @@
 const int STD_MB = 1 << 20;
 using std::memset;
 void Python3::run(int memory) {
-    execl("/python3", "/python3", "Main.py", (char *) nullptr);
+    execv(args[0], args);
 }
 
 void Python3::buildRuntime(const char *work_dir) {
@@ -131,6 +131,10 @@ void Python3::buildSeccompSandbox() {
         exit(1);
     }
     seccomp_load(ctx);
+}
+
+char **Python3::getArgs() {
+    return args;
 }
 
 extlang createInstancepython3() {
