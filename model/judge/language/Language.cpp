@@ -51,7 +51,7 @@ void Language::setAlarm() {
 void Language::compile(std::vector<std::string>& _args, const char* java_xms, const char* java_xmx) {
     if (_args.empty()) {
         std::cout << "Nothing to do" << std::endl;
-        return;
+        execl("/bin/sh", "/bin/sh", "-c" "return 0", (char*) nullptr);
     }
     int len = static_cast<int>(_args.size());
     const char *args[len + 5];
