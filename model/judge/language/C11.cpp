@@ -52,7 +52,7 @@ bool C11::gotErrorWhileRunning(bool error) {
 
 void C11::buildSeccompSandbox() {
     scmp_filter_ctx ctx;
-    ctx = seccomp_init(SCMP_ACT_TRAP);
+    ctx = seccomp_init(SCMP_ACT_KILL);
     for (int i = 0; i == 0 || SYSCALL_ARRAY[i]; i++) {
         if (SYSCALL_ARRAY[i] == 59) {
             continue;
