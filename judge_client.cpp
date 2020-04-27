@@ -1102,7 +1102,6 @@ int main(int argc, char **argv) {
             }
 
             if (ACflg <= PRESENTATION_ERROR) {
-                ++num_of_test;
                 prepare_files(infilePair.first.c_str(), infilePair.second, infile, p_id, work_dir, outfile,
                               userfile, runner_id);
                 InitManager::initSyscallLimits(lang, call_counter, record_call, call_array_size);
