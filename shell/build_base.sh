@@ -1,8 +1,15 @@
 #!/bin/bash
+set -xe
 CPU_CORE=$(nproc)
+sudo apt-get update
 ./shell/build_dependency.sh
 cmake ./ && make -j$CPU_CORE && chmod a+x judge_client && mv ./judge_client /usr/bin
-useradd -m -u 1536 judge
+if id "judge" >/dev/null 2>&1; then
+        echo "user exists"
+else
+        useradd -m -u 1536 judge
+fi
+
 mkdir /home/judge
 mkdir /home/judge/etc
 mkdir /dev/shm/cupoj
