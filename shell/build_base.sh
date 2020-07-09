@@ -10,7 +10,6 @@ else
         useradd -m -u 1536 judge
 fi
 
-mkdir /home/judge
 mkdir /home/judge/etc
 mkdir /dev/shm/cupoj
 mkdir /dev/shm/cupoj/submission
