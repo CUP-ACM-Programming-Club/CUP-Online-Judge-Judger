@@ -11,6 +11,8 @@
 #include <thread>
 #include "utils.h"
 
+const unsigned BUFFER_SIZE = 1 << 20;
+
 int execute_cmd(const char *fmt, ...) {
     char cmd[1 << 20];
     va_list ap;
