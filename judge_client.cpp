@@ -734,6 +734,7 @@ runJudgeTask(int runner_id, int language, char *work_dir, pair<string, int> &inf
     auto pid = fork();
     if (pid == CHILD_PROCESS) {
         run_solution_parallel(language, work_dir, timeLimit, usedtime, memoryLimit, num_of_test);
+        return {};
     } else {
         watch_solution_with_file_id(pid, infile, ACflg, SPECIAL_JUDGE, userfile, outfile,
                                     solution_id, language, topmemory, memoryLimit, usedtime, timeLimit,

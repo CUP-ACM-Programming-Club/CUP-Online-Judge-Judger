@@ -36,6 +36,8 @@ extern bool utf8_check_is_valid(const string &string);
 
 extern int execute_cmd(const char *fmt, ...);
 
+extern int execute_timeout_cmd(long long timeout, const char *fmt, ...);
+
 extern int after_equal(const char *c);
 
 

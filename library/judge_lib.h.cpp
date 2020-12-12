@@ -9,6 +9,7 @@
 #include <sstream>
 
 using namespace std;
+using namespace std::chrono_literals;
 // urlencoded function copied from http://www.geekhideout.com/urlcode.shtml
 /* Converts a hex character to its integer value */
 char from_hex(char ch) {
@@ -81,6 +82,28 @@ int execute_cmd(const char *fmt, ...) {
     int ret = system(cmd);
     va_end(ap);
     return ret;
+}
+
+int execute_timeout_cmd(long long timeout, const char *fmt, ...) {
+    std::mutex m;
+    std::condition_variable cv;
+    int retValue;
+    char cmd[BUFFER_SIZE];
+    va_list ap;
+    va_start(ap, fmt);
+    vsprintf(cmd, fmt, ap);
+    std::thread t([&]() {
+        retValue = execute_cmd(cmd);
+        cv.notify_one();
+    });
+    t.detach();
+    {
+        std::unique_lock<std::mutex> l(m);
+        if (cv.wait_for(l, timeout * std::chrono::seconds(1)) == std::cv_status::timeout) {
+            throw std::runtime_error("Timeout");
+        }
+    }
+    return retValue;
 }
 
 int after_equal(const char *c) {
