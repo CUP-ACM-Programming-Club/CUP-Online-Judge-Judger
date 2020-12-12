@@ -6,6 +6,8 @@
 #define COMPARE_UTILS_H
 extern int execute_cmd(const char *fmt, ...);
 
+extern int execute_timeout_cmd(long long timeout, const char *fmt, ...);
+
 extern const char *getFileNameFromPath(const char *path);
 
 enum judge_procedure {
