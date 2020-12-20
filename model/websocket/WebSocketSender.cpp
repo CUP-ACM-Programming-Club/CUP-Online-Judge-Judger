@@ -7,32 +7,31 @@
 #define LOCK(lock) std::lock_guard<std::mutex> lockGuard(lock)
 using namespace std;
 using easywsclient::WebSocket;
-ThreadPool threadPool_(std::thread::hardware_concurrency());
 
-WebSocketSender::WebSocketSender(){
+WebSocketSender::WebSocketSender() {
     connected = false;
 }
 
-WebSocketSender::WebSocketSender(const string &url){
+WebSocketSender::WebSocketSender(const string &url) {
     LOCK(lock);
     initQueue(url);
     connected = true;
 }
 
-bool WebSocketSender::connect(const string &url) {
+SocketSender& WebSocketSender::connect(const string &url) {
     LOCK(lock);
     address_ = url;
     if (connected) {
-        return false;
+        return *this;
     }
     initQueue(url);
     connected = true;
-    return true;
+    return *this;
 }
 
-WebSocketSender &WebSocketSender::emit(const string &str) {
+SocketSender &WebSocketSender::emit(const string &str) {
     LOCK(lock);
-    taskQueue_.emplace_back(threadPool_.enqueue([this, str]{
+    taskQueue_.emplace_back(threadPool_.enqueue([this, str] {
         auto wsconnect = this->getConnection();
         wsconnect->send(str);
         wsconnect->poll();
@@ -47,14 +46,14 @@ WebSocketSender::~WebSocketSender() {
     LOCK(lock);
     drain();
     connected = false;
-    while(!wsconnectQueue.empty()) {
+    while (!wsconnectQueue.empty()) {
         auto connection = wsconnectQueue.front();
         wsconnectQueue.pop_front();
         delete connection;
     }
 }
 
-WebSocketSender &WebSocketSender::operator<<(const string &str) {
+SocketSender &WebSocketSender::operator<<(const string &str) {
     return emit(str);
 }
 
@@ -62,40 +61,53 @@ bool WebSocketSender::isConnected() {
     return connected;
 }
 
-WebSocketSender &WebSocketSender::send(const string &str) {
+SocketSender &WebSocketSender::send(const string &str) {
     return emit(str);
 }
 
-bool WebSocketSender::close() {
+SocketSender &WebSocketSender::close() {
     LOCK(lock);
     wsconnect->close();
     connected = false;
     delete wsconnect;
-    return !connected;
+    return *this;
 }
 
-bool WebSocketSender::setAddress(const std::string &addr) {
+SocketSender &WebSocketSender::setAddress(const std::string &addr) {
     LOCK(lock);
     address_ = addr;
-    return true;
+    return *this;
 }
 
-bool WebSocketSender::setPort(const int port) {
+SocketSender &WebSocketSender::setAddressAndPort(const std::string &addr) {
     LOCK(lock);
-    port_= port;
-    return true;
+    const auto pos = addr.find(':');
+    if (pos == std::string::npos) {
+        exit(1);
+    }
+    string address = addr.substr(0, pos);
+    string port = addr.substr(pos + 1);
+    address_ = std::move(address);
+    port_ = stoi(port);
+    return *this;
+}
+
+SocketSender &WebSocketSender::setPort(const int port) {
+    LOCK(lock);
+    port_ = port;
+    return *this;
 }
 
 void WebSocketSender::drain() {
     reverse(taskQueue_.begin(), taskQueue_.end());
-    while(!taskQueue_.empty()) {
+    while (!taskQueue_.empty()) {
         taskQueue_.back().get();
         taskQueue_.pop_back();
     }
 }
 
-void WebSocketSender::initQueue(const string& url) {
-    for(int i = 0, num = std::thread::hardware_concurrency(); i < num; ++i) {
+void WebSocketSender::initQueue(const string &url) {
+    for (int i = 0, num = std::thread::hardware_concurrency(); i < num; ++i) {
         wsconnectQueue.push_back(WebSocket::from_url(url));
     }
 }

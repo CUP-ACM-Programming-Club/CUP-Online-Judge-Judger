@@ -13,8 +13,9 @@
 #include "../../library/easywsclient.hpp"
 #include "../base/ThreadPool.h"
 #include "../../library/judge_lib.h"
+#include "../base/SocketSender.h"
 
-class WebSocketSender
+class WebSocketSender : public SocketSender
 {
 public:
 	WebSocketSender();
@@ -23,24 +24,24 @@ public:
 
 	~WebSocketSender();
 
-	bool connect(const std::string &url);
+	SocketSender& connect(const std::string &url) override;
 
-	bool setAddress(const std::string &addr);
+    SocketSender& setAddress(const std::string &addr) override;
 
-	bool setPort(const int port);
+    SocketSender& setPort(const int port) override;
 
-	bool setAddressAndPort(const std::string &addr);
+    SocketSender& setAddressAndPort(const std::string &addr) override;
 
-	bool close();
+    SocketSender& close() override;
 
-	bool isConnected();
+	bool isConnected() override;
 
-	WebSocketSender &emit(const std::string &str);
+    SocketSender &emit(const std::string &str) override;
 
 
-	WebSocketSender &send(const std::string &str);
+    SocketSender &send(const std::string &str) override;
 
-	WebSocketSender &operator<<(const std::string &str);
+    SocketSender &operator<<(const std::string &str) override;
 private:
 	easywsclient::WebSocket::pointer wsconnect;
 	bool connected;
@@ -54,6 +55,7 @@ private:
     void initQueue(const string& url);
     easywsclient::WebSocket::pointer getConnection();
     void recycleConnection(easywsclient::WebSocket::pointer pointer);
+    ThreadPool threadPool_ = ThreadPool(std::thread::hardware_concurrency());
 };
 
 
