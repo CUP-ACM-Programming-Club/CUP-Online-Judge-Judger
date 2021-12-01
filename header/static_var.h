@@ -120,7 +120,8 @@ enum judge_procedure {
     COMPILE_OK = 12,
     TEST_RUN = 13,
     SUBMITTED = 14,
-    SYSTEM_REJECTED = 15
+    SYSTEM_REJECTED = 15,
+    SYSTEM_ERROR = 16
 };
 
 enum ArgsType {

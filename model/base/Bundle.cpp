@@ -29,6 +29,9 @@ Bundle& Bundle::setSolutionID(int solution_id) {
 }
 
 Bundle& Bundle::setResult(int state) {
+    if (state > 16 || state < 0) {
+        state = 16;
+    }
     setValue("state", Pack(state));
     return *this;
 }
