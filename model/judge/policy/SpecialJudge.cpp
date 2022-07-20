@@ -55,7 +55,6 @@ int SpecialJudge::run(char *oj_home, int problem_id, char *infile, char *outfile
         }
          */
         freopen("diff.out", "a", stdout);
-
         struct rlimit LIM{}; // time limit, file limit& memory limit
 
         LIM.rlim_cur = FIVE;
@@ -67,8 +66,8 @@ int SpecialJudge::run(char *oj_home, int problem_id, char *infile, char *outfile
         // file limit
         LIM.rlim_cur = LIM.rlim_max = 50 * STD_MB;
         setrlimit(RLIMIT_FSIZE, &LIM);
-        LIM.rlim_cur = LIM.rlim_max = 1024 * STD_MB;
-        setrlimit(RLIMIT_AS, &LIM);
+        // LIM.rlim_cur = LIM.rlim_max = 1024 * STD_MB;
+        // setrlimit(RLIMIT_AS, &LIM);
         string dir = oj_home;
         dir += "/data/" + to_string(problem_id) + "/";
         if (~access((dir + "spj").c_str(), 0)) {
