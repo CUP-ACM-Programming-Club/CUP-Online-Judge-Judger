@@ -21,4 +21,6 @@ chown -R judge /home/judge &&
 chgrp -R judge /home/judge &&
 ./shell/build_source_code.sh
 chgrp -R judge /usr/lib/cupjudge &&
-chown -R judge /usr/lib/cupjudge
+chown -R judge /usr/lib/cupjudge &&
+cp ./shell/djudge.sh /usr/bin/ &&
+chmod a+x /usr/bin/djudge.sh
