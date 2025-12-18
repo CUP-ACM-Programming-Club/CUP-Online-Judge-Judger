@@ -34,7 +34,7 @@ protected:
 private:
     void setAlarm() override;
     void setASLimit() override;
-    char **args = (char*[]){"java", "", "",
+    char **args = (char*[]){"/usr/bin/java", "", "",
                                     "-Djava.security.manager",
                                     "-Djava.security.policy=./java.policy", "Main", (char *) nullptr};
 };

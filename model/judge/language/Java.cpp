@@ -34,7 +34,7 @@ void Java::run(int memory) {
     sprintf(java_xmx, "-XX:MaxMetaspaceSize=%dM", memory);
     args[1] = java_xms;
     args[2] = java_xmx;
-    execv("java", args);
+    execv("/usr/bin/java", args);
 }
 
 void Java::setProcessLimit() {

@@ -9,6 +9,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include <stdexcept>
 
 const unsigned BUFFER_SIZE = 1 << 20;
 
